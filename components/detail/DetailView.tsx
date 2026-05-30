@@ -1,104 +1,121 @@
-"use client";
-import React, { useState, useEffect, useRef, RefObject } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import DetailNarrative from "./DetailNarrative";
-import DetailVisual from "./DetailVisual";
-import type { NarrativeSection } from "./DetailNarrative";
+'use client';
+import React, { useRef, RefObject } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 
-// Register GSAP plugin
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
+import { Act0Narrative, Act0Visual }from '@/components/detail/acts/Act0';
+import { Act1Narrative, Act1Visual }from '@/components/detail/acts/Act1';
+import { Act2Narrative, Act2Visual }from '@/components/detail/acts/Act2';
+import { Act3Narrative, Act3Visual }from '@/components/detail/acts/Act3';
+import { Act4Narrative, Act4Visual }from '@/components/detail/acts/Act4';
 
-// Import all JSON data files
-import data2021Fall from "@/data/pivot_2021_Fall.json";
-import data2022Winter from "@/data/pivot_2022_Winter.json";
-import data2022Fall from "@/data/pivot_2022_Fall.json";
-import data2023Winter from "@/data/pivot_2023_Winter.json";
-import data2023Fall from "@/data/pivot_2023_Fall.json";
-import data2024Winter from "@/data/pivot_2024_Winter.json";
-import data2025Fall from "@/data/pivot_2025_Fall.json";
-import data2026Winter from "@/data/pivot_2026_Winter.json";
+gsap.registerPlugin(ScrollTrigger);
 
-interface SectionData {
-  id: string;
-  data: Record<string, unknown>;
-  title: string;
-  description: string;
-}
-
-const sections: SectionData[] = [
-  { id: "2021-fall", data: data2021Fall, title: "Fall 2021", description: "Initial semester with moderate activity. Students were adapting to new learning patterns." },
-  { id: "2022-winter", data: data2022Winter, title: "Winter 2022", description: "Winter break period showing reduced engagement across most days." },
-  { id: "2022-fall", data: data2022Fall, title: "Fall 2022", description: "Fall semester resurgence with increased participation across all weeks." },
-  { id: "2023-winter", data: data2023Winter, title: "Winter 2023", description: "New year beginning with steady growth in student interactions." },
-  { id: "2023-fall", data: data2023Fall, title: "Fall 2023", description: "Strong fall performance with peak engagement during mid-semester." },
-  { id: "2024-winter", data: data2024Winter, title: "Winter 2024", description: "Winter session showing consistent activity patterns." },
-  { id: "2025-fall", data: data2025Fall, title: "Fall 2025", description: "Record-breaking semester with highest overall engagement." },
-  { id: "2026-winter", data: data2026Winter, title: "Winter 2026", description: "Current winter term showing continued growth trajectory." },
+const ACTS = [
+  { id: 0, narrative: <Act0Narrative />, visual: <Act0Visual /> },
+  { id: 1, narrative: <Act1Narrative />, visual: <Act1Visual /> },
+  { id: 2, narrative: <Act2Narrative />, visual: <Act2Visual /> },
+  { id: 3, narrative: <Act3Narrative />, visual: <Act3Visual /> },
+  { id: 4, narrative: <Act4Narrative />, visual: <Act4Visual /> },
 ];
-
-const narrativeSections: NarrativeSection[] = sections.map(({ id, title, description }) => ({
-  id,
-  title,
-  description,
-}));
 
 interface DetailViewProps {
   scrollRef: RefObject<HTMLDivElement | null>;
-  isContentVisible: boolean;
+  isDetailVisible: boolean;
 }
 
-export default function DetailView({ scrollRef, isContentVisible }: DetailViewProps) {
-  const [activeSection, setActiveSection] = useState(0);
-  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const currentData = sections[activeSection].data;
+export default function DetailView({ scrollRef, isDetailVisible }: DetailViewProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const rightChartRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
+  useGSAP(() => {
+    const scroller = scrollRef.current;
+    if (!scroller) return;
 
-    // Create ScrollTriggers for each section
-    const triggers: ScrollTrigger[] = [];
-    sectionRefs.current.forEach((section, index) => {
-      if (!section) return;
-      const trigger = ScrollTrigger.create({
-        trigger: section,
-        scroller: container,
-        start: "top center",
-        end: "bottom center",
-        onEnter: () => setActiveSection(index),
-        onEnterBack: () => setActiveSection(index),
+    const texts = gsap.utils.toArray<HTMLElement>('.narrative-text');
+    const charts = gsap.utils.toArray<HTMLElement>('.chart-layer');
+
+    // Init: hide all charts except the first, dim all texts
+    gsap.set(charts.slice(1), { opacity: 0, y: 20 });
+    gsap.set(texts, { opacity: 0.2 });
+
+    texts.forEach((text, i) => {
+      ScrollTrigger.create({
+        trigger: text,
+        scroller,
+        start: "center center",
+        end: "center center",
+        onEnter: () => {
+          gsap.to(texts, { opacity: 0.2, duration: 0.5 });
+          gsap.to(text, { opacity: 1, duration: 0.5 });
+          gsap.to(charts, { opacity: 0, y: -20, duration: 0.5, stagger: 0 });
+          gsap.to(charts[i], { opacity: 1, y: 0, duration: 0.8, ease: "power2.out", overwrite: true });
+        },
+        onEnterBack: () => {
+          gsap.to(texts, { opacity: 0.2, duration: 0.5 });
+          gsap.to(text, { opacity: 1, duration: 0.5 });
+          gsap.to(charts, { opacity: 0, y: 20, duration: 0.5, stagger: 0 });
+          gsap.to(charts[i], { opacity: 1, y: 0, duration: 0.8, ease: "power2.out", overwrite: true });
+        },
       });
-      triggers.push(trigger);
     });
 
-    ScrollTrigger.refresh();
-
-    return () => {
-      triggers.forEach((t) => t.kill());
-    };
-  }, [scrollRef]);
+    // Pin the right chart column — must specify scroller for non-window scrolling
+    ScrollTrigger.create({
+      trigger: contentRef.current,
+      scroller,
+      start: "top top",
+      end: "bottom bottom",
+      pin: rightChartRef.current,
+    });
+  }, { scope: scrollRef });
 
   return (
-    <div className={`absolute inset-0 w-full h-full flex transition-all duration-500 ease-out ${
-        isContentVisible
-          ? "opacity-100 scale-100 z-20"
-          : "opacity-0 scale-98 pointer-events-none"
+    <div
+      ref={scrollRef}
+      className={`absolute inset-0 overflow-y-auto transition-all ease-out ${
+        isDetailVisible
+          ? "duration-1000 opacity-100 scale-100 z-20"
+          : "duration-200 opacity-0 scale-98 pointer-events-none"
       }`}
     >
-      <DetailNarrative
-        scrollRef={scrollRef}
-        isContentVisible={isContentVisible}
-        sections={narrativeSections}
-        activeSection={activeSection}
-        sectionRefs={sectionRefs}
-      />
-      <DetailVisual
-        isContentVisible={isContentVisible}
-        currentData={currentData}
-      />
+      <div ref={contentRef} className="flex relative bg-[#FAF8F5] text-amber-950 min-h-full">
+
+        {/* ===== Left: scrollable narrative text ===== */}
+        <div className="w-2/5 flex flex-col items-center">
+          {ACTS.map((act) => (
+            <div
+              key={`act-${act.id}-narrative`}
+              className="narrative-text h-screen flex flex-col justify-center px-12"
+            >
+                {act.narrative}
+            </div>
+          ))}
+        </div>
+
+        {/* ===== Right: pinned chart layers ===== */}
+        <div className="w-3/5 h-screen relative flex items-center justify-center p-8">
+          <div ref={rightChartRef} className="relative w-full h-full flex items-center justify-center">
+            <div className="chart-layer absolute inset-0 flex items-center justify-center">
+              <Act0Visual />
+            </div>
+            <div className="chart-layer absolute inset-0 flex items-center justify-center">
+              <Act1Visual />
+            </div>
+            <div className="chart-layer absolute inset-0 flex items-center justify-center">
+              <Act2Visual />
+            </div>
+            <div className="chart-layer absolute inset-0 flex items-center justify-center">
+              <Act3Visual />
+            </div>
+            <div className="chart-layer absolute inset-0 flex items-center justify-center">
+              <Act4Visual />
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }

@@ -16,7 +16,7 @@ export default function Landing() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isIntroDone, setIsIntroDone] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [isContentVisible, setIsContentVisible] = useState(false);
+  const [isDetailVisible, setIsDetailVisible] = useState(false);
   const leftScrollRef = useRef<HTMLDivElement>(null);
   const wheelLockRef = useRef(false);
 
@@ -28,7 +28,7 @@ export default function Landing() {
   }, [progress]);
 
   const closeDetail = () => {
-    setIsContentVisible(false);
+    setIsDetailVisible(false);
     setTimeout(() => setIsDetailOpen(false), 150);
   };
 
@@ -59,8 +59,6 @@ export default function Landing() {
     return () => window.removeEventListener("wheel", handleWheel);
   }, [isIntroDone, isDetailOpen]);
 
-  const handleTransitionComplete = (completedView: boolean) => setIsContentVisible(completedView);
-
   return (
     <div
       className={`h-screen w-screen flex flex-col flex-1 items-center justify-start font-serif overflow-hidden select-none transition-colors duration-1000 ease-in-out ${
@@ -87,7 +85,7 @@ export default function Landing() {
 
       <DetailView
         scrollRef={leftScrollRef}
-        isContentVisible={isContentVisible}
+        isDetailVisible={isDetailVisible}
       />
 
       <div className={`absolute inset-0 w-screen h-screen z-0 ${isLoaded ? "cursor-pointer" : "cursor-wait"}`} onClick={toggleView}>
@@ -98,7 +96,7 @@ export default function Landing() {
         >
           <Environment preset="city" environmentIntensity={1.5} />
           <Suspense fallback={null}>
-            <ThreeScene isDetailOpen={isDetailOpen} onTransitionComplete={handleTransitionComplete} />
+            <ThreeScene isDetailOpen={isDetailOpen} onPaperCovered={setIsDetailVisible} />
           </Suspense>
           <CameraController isDetailOpen={isDetailOpen} isLoaded={isLoaded} isIntroDone={isIntroDone} onIntroDone={() => setIsIntroDone(true)} />
         </Canvas>

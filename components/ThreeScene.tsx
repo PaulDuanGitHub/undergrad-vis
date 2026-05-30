@@ -5,25 +5,32 @@ import * as THREE from "three";
 
 interface ThreeSceneProps {
   isDetailOpen: boolean;
-  onTransitionComplete: (completedView: boolean) => void;
+  onPaperCovered: (completedView: boolean) => void;
 }
 
+const SHADOW_OFFSET_X = -0.01;
+const SHADOW_OFFSET_Y = -0.48;
+const SHADOW_OFFSET_Z = 0.12;
+const SHADOW_SIZE = 3;
+const SHADOW_OPACITY = 0.85;
+const SHADOW_TEXTURE_PATH = "/model/floor_bake.png";
+
 function Floor() {
-  const shadowMap = useTexture("/model/floor_bake.png");
+  const shadowMap = useTexture(SHADOW_TEXTURE_PATH);
   useMemo(() => {
     shadowMap.flipY = false;
     shadowMap.colorSpace = THREE.SRGBColorSpace;
   }, [shadowMap]);
 
   return (
-    <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[-0.01, -0.48, 0.12]}>
-      <planeGeometry args={[3, 3]} />
-      <meshBasicMaterial map={shadowMap} transparent opacity={0.85} depthWrite={false} />
+    <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[SHADOW_OFFSET_X, SHADOW_OFFSET_Y, SHADOW_OFFSET_Z]}>
+      <planeGeometry args={[SHADOW_SIZE, SHADOW_SIZE]} />
+      <meshBasicMaterial map={shadowMap} transparent opacity={SHADOW_OPACITY} depthWrite={false} />
     </mesh>
   );
 }
 
-export default function ThreeScene({ isDetailOpen, onTransitionComplete }: ThreeSceneProps) {
+export default function ThreeScene({ isDetailOpen, onPaperCovered }: ThreeSceneProps) {
   const { scene, animations } = useGLTF("/model/desk_web_3_baked_animation.glb");
   const mixer = useMemo(() => (animations.length ? new THREE.AnimationMixer(scene) : null), [scene, animations]);
 
@@ -50,7 +57,7 @@ export default function ThreeScene({ isDetailOpen, onTransitionComplete }: Three
     const action = mixer.clipAction(clip);
 
     const onFinished = () => {
-      if (isDetailOpen) onTransitionComplete(true);
+      if (isDetailOpen) onPaperCovered(true);
     };
 
     mixer.addEventListener("finished", onFinished);
@@ -66,13 +73,13 @@ export default function ThreeScene({ isDetailOpen, onTransitionComplete }: Three
         action.timeScale = -1;
         action.paused = false;
         action.play();
-        onTransitionComplete(false);
+        onPaperCovered(false);
       }
     }
     return () => {
       mixer.removeEventListener("finished", onFinished);
     };
-  }, [isDetailOpen, mixer, animations, onTransitionComplete]);
+  }, [isDetailOpen, mixer, animations, onPaperCovered]);
 
   useFrame((_, delta) => {
     mixer?.update(delta);
