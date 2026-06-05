@@ -13,3 +13,4 @@ export const PARALLAX_AMOUNT = 0.015;
 
 export const easeInOut = (t: number) => 0.5 * (1 - Math.cos(Math.PI * t));
 export const easeOutQuart = (t: number) => 1 - Math.pow(1 - t, 4);
+export const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);

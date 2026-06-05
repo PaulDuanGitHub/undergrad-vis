@@ -1,0 +1,2518 @@
+{
+  "2021 Fall": [
+    {
+      "relative_week": 0,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 5
+    }
+  ],
+  "2022 Winter": [
+    {
+      "relative_week": 0,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 15,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 15,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 15,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 15,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 15,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 15,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 15,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 16,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 16,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 16,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 16,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 16,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 16,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 16,
+      "day_of_week": 5
+    }
+  ],
+  "2022 Fall": [
+    {
+      "relative_week": 0,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 5
+    }
+  ],
+  "2023 Winter": [
+    {
+      "relative_week": 0,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 15,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 15,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 15,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 15,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 15,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 15,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 15,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 16,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 16,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 16,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 16,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 16,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 16,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 16,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 17,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 17,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 17,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 17,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 17,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 17,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 17,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 18,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 18,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 18,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 18,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 18,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 18,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 18,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 19,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 19,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 19,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 19,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 19,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 19,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 19,
+      "day_of_week": 5
+    }
+  ],
+  "2023 Fall": [
+    {
+      "relative_week": 0,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 5
+    }
+  ],
+  "2024 Winter": [
+    {
+      "relative_week": 0,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 5
+    }
+  ],
+  "2025 Fall": [
+    {
+      "relative_week": 0,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 14,
+      "day_of_week": 5
+    }
+  ],
+  "2026 Winter": [
+    {
+      "relative_week": 0,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 0,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 1,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 2,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 3,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 4,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 5,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 6,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 7,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 8,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 9,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 10,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 1
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 11,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 6
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 0
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 3
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 4
+    },
+    {
+      "relative_week": 12,
+      "day_of_week": 5
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 2
+    },
+    {
+      "relative_week": 13,
+      "day_of_week": 5
+    }
+  ]
+}
