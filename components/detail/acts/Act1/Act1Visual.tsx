@@ -120,7 +120,9 @@ function getSceneData(data: FileData[], emptyDaysData: CubesSceneProps['emptyDay
   const termLabels: any[] = [];
   const termBaseDates = getTermBaseDates(data);
 
-  const terms = Array.from(new Set(data.map(d => d.term))).sort();
+  const terms = [
+    '2021 Fall', '2022 Winter', '2022 Fall', '2023 Winter', '2023 Fall', '2024 Winter', '2025 Fall', '2026 Winter'
+  ]
 
   // 定义 1 + 3 + 3 + 1 的固定阵型字典 (Col, Row)
   const LAYOUT_1331 = [
@@ -158,7 +160,8 @@ function getSceneData(data: FileData[], emptyDaysData: CubesSceneProps['emptyDay
   termBlocks.forEach(block => {
     // 文字 Label 的坐标，保持 -1.5 偏移以左对齐
     termLabels.push({ 
-      term: block.term, courses: block.courses, 
+      term: block.term, courses: block.courses,
+      gridLabelPos: new THREE.Vector3(0, 0, 0),
       groupLabelPos: new THREE.Vector3(block.groupBaseX - 1.5, 0, block.groupBaseZ),
       heatmapLabelPos: new THREE.Vector3(block.heatmapBaseX - 1.5, 0, block.heatmapBaseZ),
       currentPos: new THREE.Vector3(block.groupBaseX - 1.5, 0, block.groupBaseZ) 
@@ -339,7 +342,10 @@ export function CubesScene({ data, emptyDaysData, step }: CubesSceneProps) {
     // ==========================================
     for (let i = 0; i < termLabels.length; i++) {
       const labelData = termLabels[i];
-      const targetLabelPos = step === 4 ? labelData.heatmapLabelPos : labelData.groupLabelPos;
+      let targetLabelPos = labelData.groupLabelPos;
+
+      if (step === 0) targetLabelPos = labelData.gridLabelPos;
+      if (step === 4) targetLabelPos = labelData.heatmapLabelPos;
       
       labelData.currentPos.lerp(targetLabelPos, delta * LERP_SPEED);
       
@@ -372,9 +378,9 @@ return (
 
       {/* --- Tooltip --- */}
       <group ref={tooltipGroupRef}>
-        <Html center className="pointer-events-none transition-opacity duration-200 z-50" style={{ opacity: hoveredIdx !== -1 && step !== 3 ? 1 : 0 }}>
+        <Html className="pointer-events-none transition-opacity duration-200 z-9999" style={{ opacity: hoveredIdx !== -1 && step !== 3 ? 1 : 0 }}>
           {tooltipData && (
-            <div className="bg-white/95 backdrop-blur-md px-4 py-3 rounded-xl shadow-xl border border-amber-900/10 whitespace-nowrap">
+            <div className="absolute right-5 bg-white/95 backdrop-blur-md px-4 py-3 rounded-xl shadow-xl border border-amber-900/10 whitespace-nowrap">
               {step < 3 && !tooltipData.isEmptyCube ? (
                 <>
                   <div className="text-[10px] uppercase tracking-widest text-amber-900/50 mb-1">
@@ -407,7 +413,6 @@ return (
           <Html 
             transform // 开启 CSS3D 模式
             rotation={[-Math.PI / 2, 0, 0]} // 旋转 -90 度，完全贴平地面
-            position={[0, 0, 0]} 
             className="pointer-events-none transition-opacity duration-700" 
             style={{ opacity: step >= 1 ? 1 : 0 }}
           >
@@ -459,10 +464,10 @@ return (
 // ==========================================
 // 5. Entry Point
 // ==========================================
-export default function Act0Visual({ step }: { step: number }) {
+export default function Act1Visual({ step }: { step: number }) {
   return (
-    <div className="w-full h-full flex-col items-center justify-center">
-      <Canvas shadows>
+    <div className="w-full h-full flex-col items-center justify-center overflow-visible">
+      <Canvas shadows style={{ overflow: 'visible' }}>
         <OrthographicCamera makeDefault zoom={14} near={0.1} far={1000} />
         <ambientLight intensity={0.6} />
         <directionalLight position={[10, 20, 10]} intensity={2} castShadow />

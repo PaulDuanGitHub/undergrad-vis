@@ -1,0 +1,123 @@
+{
+  ".blend": [
+    "ART 1TI3"
+  ],
+  ".c": [
+    "COMPSCI 1XC3",
+    "COMPSCI 2GA3",
+    "COMPSCI 3SH3"
+  ],
+  ".cpp": [
+    "COMPSCI 3GC3",
+    "DATASCI 2G03"
+  ],
+  ".docx": [
+    "ART 1UI3",
+    "ASTRON 1F03",
+    "COMPSCI 1XD3",
+    "COMPSCI 2XC3",
+    "COMPSCI 3AC3",
+    "COMPSCI 3DM3",
+    "COMPSCI 3GC3",
+    "COMPSCI 3N03",
+    "COMPSCI 3SH3",
+    "COMPSCI 4AL3",
+    "COMPSCI 4NL3",
+    "DATASCI 2G03",
+    "ENGLISH 3CP3",
+    "MATH 1B03",
+    "MUSIC 1AA3",
+    "STATS 2D03"
+  ],
+  ".elm": [
+    "COMPSCI 1XD3"
+  ],
+  ".h": [
+    "COMPSCI 1XC3"
+  ],
+  ".hs": [
+    "COMPSCI 1JC3",
+    "COMPSCI 3MI3"
+  ],
+  ".ipynb": [
+    "COMPSCI 1DM3",
+    "COMPSCI 1MD3",
+    "COMPSCI 4AL3",
+    "COMPSCI 4CR3",
+    "COMPSCI 4NL3",
+    "MUSIC 1AA3"
+  ],
+  ".java": [
+    "COMPSCI 2C03",
+    "COMPSCI 2ME3",
+    "COMPSCI 2SD3",
+    "COMPSCI 3AC3"
+  ],
+  ".kra": [
+    "ART 1TI3"
+  ],
+  ".md": [
+    "ART 1TI3",
+    "ART 1UI3",
+    "COMPSCI 1JC3",
+    "COMPSCI 3MI3",
+    "COMPSCI 4AL3",
+    "COMPSCI 4CR3",
+    "COMPSCI 4NL3",
+    "COMPSCI 4O03",
+    "ENGLISH 3CP3",
+    "MUSIC 1AA3"
+  ],
+  ".pptx": [
+    "COMPSCI 1XD3",
+    "COMPSCI 3SH3"
+  ],
+  ".py": [
+    "COMPSCI 2AC3",
+    "COMPSCI 2XC3",
+    "COMPSCI 3DM3",
+    "COMPSCI 4AL3",
+    "COMPSCI 4CR3",
+    "COMPSCI 4NL3",
+    "COMPSCI 4O03"
+  ],
+  ".tex": [
+    "ASTRON 1F03",
+    "COMPSCI 1JC3",
+    "COMPSCI 1XC3",
+    "COMPSCI 2AC3",
+    "COMPSCI 2C03",
+    "COMPSCI 2DB3",
+    "COMPSCI 2GA3",
+    "COMPSCI 2LC3",
+    "COMPSCI 2ME3",
+    "COMPSCI 2SD3",
+    "COMPSCI 2XC3",
+    "COMPSCI 3AC3",
+    "COMPSCI 3DM3",
+    "COMPSCI 3GC3",
+    "COMPSCI 3TB3",
+    "COMPSCI 4AL3",
+    "COMPSCI 4CR3",
+    "COMPSCI 4NL3",
+    "COMPSCI 4O03",
+    "MATH 1B03",
+    "PHYSICS 1A03",
+    "STATS 2DA3"
+  ],
+  ".txt": [
+    "ART 1UI3",
+    "COMPSCI 1MD3",
+    "COMPSCI 1XC3",
+    "COMPSCI 2DB3",
+    "COMPSCI 2SD3",
+    "COMPSCI 3MI3",
+    "COMPSCI 4NL3",
+    "DATASCI 2G03"
+  ],
+  ".xlsx": [
+    "ASTRON 1F03",
+    "COMPSCI 2XC3",
+    "PHYSICS 1A03"
+  ]
+}

@@ -9,7 +9,6 @@ import ThreeScene from "@/components/landing/ThreeScene";
 import CameraController from "@/components/landing/CameraController";
 import LoadingOverlay from "@/components/landing/LoadingOverlay";
 import DetailView from "@/components/detail/DetailView";
-// import SVGVisualizer from "@/components/SVGVisualizer";
 
 export default function Landing() {
   const { progress } = useProgress();
@@ -38,6 +37,13 @@ export default function Landing() {
     if (!isIntroDone) return;
     isDetailOpen ? closeDetail() : openDetail();
   };
+
+  // Scroll to top when detail view opens
+  useEffect(() => {
+    if (isDetailOpen && leftScrollRef.current) {
+      leftScrollRef.current.scrollTo({ top: 0, behavior: "instant" });
+    }
+  }, [isDetailOpen]);
 
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
@@ -94,7 +100,7 @@ export default function Landing() {
           gl={{ toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.0, alpha: true, antialias: true }}
           camera={{ fov: 45, position: INTRO_CAMERA_POSITION.toArray() }}
         >
-          <Environment preset="city" environmentIntensity={1.5} />
+          <ambientLight intensity={3.5} />
           <Suspense fallback={null}>
             <ThreeScene isDetailOpen={isDetailOpen} onPaperCovered={setIsDetailVisible} />
           </Suspense>

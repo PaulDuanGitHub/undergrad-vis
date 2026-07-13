@@ -1,7 +1,7 @@
 'use client';
 
 import { Canvas } from '@react-three/fiber'
-import Landing from '@/components/Landing';
+import Landing from '@/components/landing/Landing';
 
 export default function Home() {
   return (
