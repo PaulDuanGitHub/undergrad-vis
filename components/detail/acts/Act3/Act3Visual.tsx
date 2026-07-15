@@ -6,20 +6,20 @@ import { useGSAP } from "@gsap/react";
 import heavy_assignments_commits from "@/data/heavy_assignment_commits.json";
 import PunchcardHeatmap from "@/components/detail/acts/Act3/PunchcardHeatmap";
 import day_hour_counts from "@/data/day_hour_counts.json";
+import { useThemeVariable } from "@/hooks/useThemeVariable";
 
 interface Act3VisualProps {
   step: number;
   isActive: boolean;
 }
 
-const COLOR_GRAY = "#d1d5db"; // Tailwind gray-300
-const COLOR_AMBER = "#d97706"; // Tailwind amber-600
-const COLOR_DL = "#b45309"; // Tailwind amber-700
-
 export default function Act3Visual({ step, isActive }: Act3VisualProps) {
   const containerRef = useRef<SVGSVGElement>(null);
   const prevStep = useRef(step);
   const prevActive = useRef(isActive);
+
+  const COLOR_GRAY = useThemeVariable("--color-brand-light");
+  const COLOR_BRAND = useThemeVariable("--color-brand");
 
   // 悬浮状态管理
   const [hoveredTrack, setHoveredTrack] = useState<string | null>(null);
@@ -51,7 +51,7 @@ export default function Act3Visual({ step, isActive }: Act3VisualProps) {
     const scaleAll = scaleLinear().domain([maxAll, 0]).range([0, W_TRACK]);
 
     // 👇 调整行高：8px 带来极致的高密度压缩感
-    const ROW_H_FOCUS = 40;
+    const ROW_H_FOCUS = 30;
     const ROW_H_GRID = 9; 
 
     const freshStartY = (SVG_HEIGHT - freshData.length * ROW_H_FOCUS) / 2;
@@ -100,7 +100,7 @@ export default function Act3Visual({ step, isActive }: Act3VisualProps) {
       const lx1 = scaleSen(maxDay);
       const lx2 = scaleAll(maxDay);
 
-      return { ...d, id: `${d.course}_${d.name}`, isF, isS, t0, t1, t2, bubbles, lx0, lx1, lx2 };
+      return { ...d, id: `${d.term}_${i}`, isF, isS, t0, t1, t2, bubbles, lx0, lx1, lx2 };
     });
 
     const generateTicks = (maxD: number) => {
@@ -208,7 +208,7 @@ export default function Act3Visual({ step, isActive }: Act3VisualProps) {
 
     return (
       <g className={`axis-group ${className}`} transform={`translate(${x}, ${y})`} opacity={isVisible ? 1 : 0}>
-        <line x1={0} x2={w} y1={0} y2={0} stroke={COLOR_AMBER} strokeOpacity={0.3} />
+        <line x1={0} x2={w} y1={0} y2={0} stroke={COLOR_BRAND} strokeOpacity={0.3} />
         {ticks.map((t: number) => {
           const isInteger = t % 1 === 0;
           const cx = scale(t);
@@ -216,9 +216,9 @@ export default function Act3Visual({ step, isActive }: Act3VisualProps) {
 
           return (
             <g key={t} transform={`translate(${cx}, 0)`}>
-              <line y1={0} y2={isInteger ? 5 : 3} stroke={COLOR_AMBER} strokeOpacity={isInteger ? 0.8 : 0.4} />
+              <line y1={0} y2={isInteger ? 5 : 3} stroke={COLOR_BRAND} strokeOpacity={isInteger ? 0.8 : 0.4} />
               {isInteger && (
-                <text y={15} textAnchor="middle" className={`font-serif text-[12px] ${t === 0 ? 'fill-amber-700 font-bold' : 'fill-amber-900/50'}`}>
+                <text y={15} textAnchor="middle" className={`font-serif text-[12px] ${t === 0 ? 'fill-brand-700 font-bold' : 'fill-slate-500'}`}>
                   {t === 0 ? 'DL' : t}
                 </text>
               )}
@@ -261,7 +261,7 @@ export default function Act3Visual({ step, isActive }: Act3VisualProps) {
                   data-w0={d.t0.w} data-lx0={d.lx0}
                   data-w1={d.t1.w} data-lx1={d.lx1}
                   data-w2={d.t2.w} data-lx2={d.lx2}
-                  stroke={isHoveredTrack ? COLOR_AMBER : COLOR_AMBER} 
+                  stroke={isHoveredTrack ? COLOR_BRAND : COLOR_BRAND} 
                   strokeOpacity={isHoveredTrack ? 0.4 : 0.15} 
                   strokeWidth={isHoveredTrack ? 2 : 1}
                 />
@@ -278,7 +278,7 @@ export default function Act3Visual({ step, isActive }: Act3VisualProps) {
                         data-cx0={b.cx0} data-cx1={b.cx1} data-cx2={b.cx2} 
                         cy={0}
                         r={b.radius}
-                        fill={isTarget ? COLOR_AMBER : COLOR_GRAY}
+                        fill={isTarget ? COLOR_BRAND : COLOR_GRAY}
                         opacity={isFaded ? 0.1 : 0.8}
                       />
                     );

@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { scaleLinear } from "d3-scale";
 import { max } from "d3-array";
+import { useThemeVariable } from "@/hooks/useThemeVariable";
 
 interface PunchcardData {
   day_of_week: number;  // 0 (Mon) - 6 (Sun)
@@ -20,6 +21,8 @@ const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export default function PunchcardHeatmap({ data, width = 800, height = 300 }: PunchcardProps) {
   const [hoveredData, setHoveredData] = useState<PunchcardData | null>(null);
+
+  const COLOR_BRAND = useThemeVariable("--color-brand");
 
   const padding = { top: 30, right: 20, bottom: 40, left: 50 };
   const innerWidth = width - padding.left - padding.right;
@@ -40,9 +43,9 @@ export default function PunchcardHeatmap({ data, width = 800, height = 300 }: Pu
     <div className="relative w-full flex flex-col items-center">
       
       {/* 悬浮提示器 */}
-      <div className="h-6 mb-2 font-serif text-amber-950 text-sm tracking-widest">
+      <div className="h-6 mb-2 font-serif text-slate-900 text-sm tracking-widest">
         {hoveredData && hoveredData.count > 0 
-          ? `${hoveredData.count} files modified at ${hoveredData.hour}:00 on ${DAYS[hoveredData.day_of_week]}` 
+          ? <div><span className='text-brand' >{`${hoveredData.count}`}</span> {` files modified at ${hoveredData.hour}:00 on ${DAYS[hoveredData.day_of_week]}`}</div>
           : " "
         }
       </div>
@@ -58,7 +61,7 @@ export default function PunchcardHeatmap({ data, width = 800, height = 300 }: Pu
               y={i * cellHeight + cellHeight / 2}
               alignmentBaseline="middle"
               textAnchor="end"
-              className="fill-amber-900/40 font-serif text-[10px] uppercase tracking-widest"
+              className="fill-slate-400 font-serif text-[10px] uppercase tracking-widest"
             >
               {day}
             </text>
@@ -71,7 +74,7 @@ export default function PunchcardHeatmap({ data, width = 800, height = 300 }: Pu
               x={hour * cellWidth + cellWidth / 2}
               y={innerHeight + 25}
               textAnchor="middle"
-              className="fill-amber-900/40 font-serif text-[10px] tracking-widest"
+              className="fill-slate-400 font-serif text-[10px] tracking-widest"
             >
               {hour}:00
             </text>
@@ -79,7 +82,7 @@ export default function PunchcardHeatmap({ data, width = 800, height = 300 }: Pu
 
           {/* 背景网格线 (极简风) */}
           {DAYS.map((_, i) => (
-            <line key={`hline-${i}`} x1={0} y1={i * cellHeight + cellHeight / 2} x2={innerWidth} y2={i * cellHeight + cellHeight / 2} className="stroke-amber-900/5 stroke-[0.5px]" />
+            <line key={`hline-${i}`} x1={0} y1={i * cellHeight + cellHeight / 2} x2={innerWidth} y2={i * cellHeight + cellHeight / 2} className="stroke-slate-200 stroke-[0.5px]" />
           ))}
 
           {/* 渲染数据点 (Punchcard 洞眼) */}
@@ -96,9 +99,9 @@ export default function PunchcardHeatmap({ data, width = 800, height = 300 }: Pu
                 cx={cx}
                 cy={cy}
                 r={r}
-                fill="#d97706" // 琥珀色
+                fill={COLOR_BRAND}
                 opacity={d.count === 0 ? 0 : opacity}
-                className="transition-all duration-300 hover:fill-amber-950"
+                className="transition-all duration-300 hover:fill-brand-700"
                 onMouseEnter={() => setHoveredData(d)}
                 onMouseLeave={() => setHoveredData(null)}
               />

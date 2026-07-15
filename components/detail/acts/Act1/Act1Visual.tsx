@@ -16,21 +16,21 @@ const HOVER_SPEED = 8;
 const LERP_SPEED = 5;
 
 // --- Step 1-3 的阵型配置 (4列 x 2行) ---
-const GROUP_SPACING_X = 30; 
+const GROUP_SPACING_X = 27; 
 const GROUP_SPACING_Z = 25; 
 
 // --- Step 4 的阵型配置 (2列 x 4行，给日历流出更多横向空间) ---
 const HEATMAP_SPACING_X = 45; 
-const HEATMAP_SPACING_Z = 20; 
+const HEATMAP_SPACING_Z = 15; 
 
-const COLOR_GRAY = new THREE.Color("#9ca3af");
-const COLOR_AMBER = new THREE.Color("#d97706");
-const COURSE_COLORS = ["#059669", "#2563eb", "#e11d48", "#4f46e5", "#0d9488"].map(c => new THREE.Color(c));
+const COURSE_COLORS = ["#7C2A1F", "#F7B4A7", "#D4442E", "#FBD5CD", "#942E20"].map(c => new THREE.Color(c));
+const COLOR_GRAY = new THREE.Color("#94A3B8");
+const COLOR_BRAND = new THREE.Color("#D4442E");
 
-const HEATMAP_EMPTY = new THREE.Color("#f3f4f6"); 
-const HEATMAP_LOW = new THREE.Color("#fde68a");   
-const HEATMAP_MID = new THREE.Color("#d97706");   
-const HEATMAP_HIGH = new THREE.Color("#78350f");  
+const HEATMAP_EMPTY = new THREE.Color("#F5F5F4"); 
+const HEATMAP_LOW = new THREE.Color("#FBD5CD");   
+const HEATMAP_MID = new THREE.Color("#D4442E");   
+const HEATMAP_HIGH = new THREE.Color("#7C2A1F");  
 
 // ==========================================
 // 2. Types
@@ -236,7 +236,7 @@ function getCubeTargets(cube: ProcessedCube, step: number, isHovered: boolean) {
 
     targetColor = cube.colorGray;
     if (step >= 2) targetColor = cube.colorCourse;
-    if (isHovered) targetColor = step >= 2 ? cube.colorCourse.clone().lerp(new THREE.Color("white"), 0.5) : COLOR_AMBER;
+    if (isHovered) targetColor = step >= 2 ? cube.colorCourse.clone().lerp(new THREE.Color("white"), 0.5) : COLOR_BRAND;
     
     targetHeight = (step === 3 || isHovered) ? cube.fullHeight : cube.minHeight;
   }
@@ -380,22 +380,22 @@ return (
       <group ref={tooltipGroupRef}>
         <Html className="pointer-events-none transition-opacity duration-200 z-9999" style={{ opacity: hoveredIdx !== -1 && step !== 3 ? 1 : 0 }}>
           {tooltipData && (
-            <div className="absolute right-5 bg-white/95 backdrop-blur-md px-4 py-3 rounded-xl shadow-xl border border-amber-900/10 whitespace-nowrap">
+            <div className="absolute right-5 bg-white/95 backdrop-blur-md px-4 py-3 rounded-xl shadow-xl border border-slate-200 whitespace-nowrap">
               {step < 3 && !tooltipData.isEmptyCube ? (
                 <>
-                  <div className="text-[10px] uppercase tracking-widest text-amber-900/50 mb-1">
+                  <div className="text-[10px] uppercase tracking-widest text-slate-500 mb-1">
                     {tooltipData.term} <span className="mx-1">//</span> {tooltipData.course}
                   </div>
-                  <div className="text-lg font-serif text-amber-950 mb-1">{tooltipData.fileName}</div>
-                  <div className="text-xs text-amber-900/70">
-                    Total Versions: <span className="font-bold text-amber-600">{tooltipData.totalVersions}</span>
+                  <div className="text-lg font-serif text-slate-900 mb-1">{tooltipData.fileName} file</div>
+                  <div className="text-xs text-slate-600">
+                    Total Versions: <span className="font-bold text-brand">{tooltipData.totalVersions}</span>
                   </div>
                 </>
               ) : (step === 4 && (
-                <div className="text-sm font-serif text-amber-950 leading-relaxed">
-                  <span className="font-bold text-amber-600 text-base">{tooltipData.dailyCount}</span> 
+                <div className="text-sm font-serif text-slate-900 leading-relaxed">
+                  <span className="font-bold text-brand text-base">{tooltipData.dailyCount}</span> 
                   {' '}work {tooltipData.dailyCount === 1 ? 'file was' : 'files were'} created on<br />
-                  <span className="italic text-amber-900/80">{tooltipData.dateStr}</span>
+                  <span className="italic text-slate-600">{tooltipData.dateStr}</span>
                 </div>
               ))}
             </div>
@@ -417,11 +417,11 @@ return (
             style={{ opacity: step >= 1 ? 1 : 0 }}
           >
             {/* absolute right-0 让文本框紧紧贴在 3D 锚点的左侧向左延伸，绝对不会盖住右侧方块 */}
-            <div className="absolute right-0 top-0 pr-4 text-right flex flex-col items-end w-max -translate-y-4">
-              <span className="text-6xl font-light text-amber-950 mb-1">{label.term}</span>
-              <div className="flex flex-col items-end gap-1 overflow-hidden transition-all duration-700" style={{ maxHeight: (step === 2 || step === 3) ? '200px' : '0px', opacity: (step === 2 || step === 3) ? 1 : 0 }}>
+            <div className="absolute pr-4 right-0 text-right flex flex-col items-end w-max -translate-y-4" style={{ top: (step === 4) ? '-80px' : '80px' }}>
+              <span className="text-6xl font-light text-slate-900 mb-1">{label.term}</span>
+              <div className="flex flex-col items-end gap-1 overflow-hidden transition-all duration-700" style={{ maxHeight: (step === 2 || step === 3) ? '250px' : '0px', opacity: (step === 2 || step === 3) ? 1 : 0 }}>
                 {label.courses.map((course: string, cIdx: number) => (
-                  <div key={course} className="flex items-center gap-2 text-sm text-amber-900/70">
+                  <div key={course} className="flex items-center gap-2 text-sm text-slate-600">
                     <span className="text-4xl">{course}</span>
                     <span className="w-6 h-6 rounded-full" style={{ backgroundColor: `#${COURSE_COLORS[cIdx % COURSE_COLORS.length].getHexString()}` }} />
                   </div>
@@ -436,21 +436,21 @@ return (
           {/* Monday: 绑定 Z 轴第 2 行 */}
           <Html position={[0, 0, 1 * SPACING]} className="pointer-events-none transition-opacity duration-700" style={{ opacity: step === 4 ? 1 : 0 }}>
             {/* -translate-y-1/2 让文字垂直完美居中对齐方块 */}
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 pr-4 font-serif text-[10px] text-amber-900/40 uppercase tracking-widest">
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 font-serif text-[10px] text-slate-400 uppercase tracking-widest">
               Mon
             </div>
           </Html>
 
           {/* Wednesday: 绑定 Z 轴第 4 行 */}
           <Html position={[0, 0, 3 * SPACING]} className="pointer-events-none transition-opacity duration-700" style={{ opacity: step === 4 ? 1 : 0 }}>
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 pr-4 font-serif text-[10px] text-amber-900/40 uppercase tracking-widest">
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 font-serif text-[10px] text-slate-400 uppercase tracking-widest">
               Wed
             </div>
           </Html>
 
           {/* Friday: 绑定 Z 轴第 6 行 */}
           <Html position={[0, 0, 5 * SPACING]} className="pointer-events-none transition-opacity duration-700" style={{ opacity: step === 4 ? 1 : 0 }}>
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 pr-4 font-serif text-[10px] text-amber-900/40 uppercase tracking-widest">
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 font-serif text-[10px] text-slate-400 uppercase tracking-widest">
               Fri
             </div>
           </Html>

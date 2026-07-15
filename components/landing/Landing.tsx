@@ -68,7 +68,7 @@ export default function Landing() {
   return (
     <div
       className={`relative h-screen w-screen flex flex-col flex-1 items-center justify-start font-serif overflow-hidden select-none transition-colors duration-1000 ease-in-out ${
-        isDetailOpen ? "bg-[#DEE1E1]" : "bg-[#FAF8F5]"
+        isDetailOpen ? "bg-surface" : "bg-surface"
       }`}
     >
       <LoadingOverlay isLoaded={isLoaded} />
@@ -78,14 +78,13 @@ export default function Landing() {
           isDetailOpen ? "opacity-0 -translate-y-12" : "opacity-100 translate-y-0"
         }`}
       >
-        <div className="mt-10 text-stone-600 text-sm tracking-wider">My 2021 - 2026</div>
-        <h1 className="mt-6 text-6xl text-stone-850 tracking-tight">Productivity</h1>
-        <hr className="w-16 border-t border-[1.5px] border-amber-300 my-6" />
-        <div className="italic text-center px-4 text-stone-600">
-          Reporting & <span className="bg-amber-100 text-amber-900 px-2 py-0.5 rounded-sm">Visualization</span> for Undergraduate Academics
+        <div className="mt-10 text-text-secondary text-sm tracking-wider">My 2021 - 2026</div>
+        <h1 className="my-6 text-6xl text-text-primary tracking-tight">Productivity</h1>
+        <div className="italic text-center px-4 text-text-secondary">
+          A <span className="font-bold">visualization</span> of over 600 workfiles created during my undergraduate.
         </div>
         <div className="mt-6 pointer-events-auto">
-          By <a href="https://www.xianzhaoduan.com" target="_blank" rel="noreferrer" className="underline hover:text-amber-700 transition-colors">Paul Duan</a>
+          By <a href="https://www.xianzhaoduan.com" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">Paul Duan</a>
         </div>
       </div>
 

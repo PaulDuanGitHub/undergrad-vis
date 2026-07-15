@@ -1,123 +1,123 @@
 {
   ".blend": [
-    "ART 1TI3"
+    "Making Art and Understanding Technology & Images"
   ],
   ".c": [
-    "COMPSCI 1XC3",
-    "COMPSCI 2GA3",
-    "COMPSCI 3SH3"
+    "Development Basics",
+    "Computer Architecture",
+    "Operating Systems"
   ],
   ".cpp": [
-    "COMPSCI 3GC3",
-    "DATASCI 2G03"
+    "Computer Graphics",
+    "Scientific Computing"
   ],
   ".docx": [
-    "ART 1UI3",
-    "ASTRON 1F03",
-    "COMPSCI 1XD3",
-    "COMPSCI 2XC3",
-    "COMPSCI 3AC3",
-    "COMPSCI 3DM3",
-    "COMPSCI 3GC3",
-    "COMPSCI 3N03",
-    "COMPSCI 3SH3",
-    "COMPSCI 4AL3",
-    "COMPSCI 4NL3",
-    "DATASCI 2G03",
-    "ENGLISH 3CP3",
-    "MATH 1B03",
-    "MUSIC 1AA3",
-    "STATS 2D03"
+    "Making Art and Understanding Images",
+    "Introduction to Astronomy and Astrophysics",
+    "Introduction to Software Design Using Web Programming",
+    "Algorithms and Software Design",
+    "Algorithms and Complexity",
+    "Introduction to Data Mining",
+    "Computer Graphics",
+    "Computer Networks and Security",
+    "Operating Systems",
+    "Applications of Machine Learning",
+    "Natural Language Processing",
+    "Scientific Computing",
+    "Writing Practices",
+    "Linear Algebra I",
+    "Introduction to the History Western of Music II",
+    "Introduction to Probability"
   ],
   ".elm": [
-    "COMPSCI 1XD3"
+    "Introduction to Software Design Using Web Programming"
   ],
   ".h": [
-    "COMPSCI 1XC3"
+    "Development Basics"
   ],
   ".hs": [
-    "COMPSCI 1JC3",
-    "COMPSCI 3MI3"
+    "Introduction to Computational Thinking",
+    "Principles of Programming Languages"
   ],
   ".ipynb": [
-    "COMPSCI 1DM3",
-    "COMPSCI 1MD3",
-    "COMPSCI 4AL3",
-    "COMPSCI 4CR3",
-    "COMPSCI 4NL3",
-    "MUSIC 1AA3"
+    "Discrete Mathematics for Computer Science",
+    "Introduction to Programming",
+    "Applications of Machine Learning",
+    "Applied Cryptography",
+    "Natural Language Processing",
+    "Introduction to the History Western of Music II"
   ],
   ".java": [
-    "COMPSCI 2C03",
-    "COMPSCI 2ME3",
-    "COMPSCI 2SD3",
-    "COMPSCI 3AC3"
+    "Data Structures and Algorithms",
+    "Introduction to Software Development",
+    "Concurrent Systems",
+    "Algorithms and Complexity"
   ],
   ".kra": [
-    "ART 1TI3"
+    "Making Art and Understanding Technology & Images"
   ],
   ".md": [
-    "ART 1TI3",
-    "ART 1UI3",
-    "COMPSCI 1JC3",
-    "COMPSCI 3MI3",
-    "COMPSCI 4AL3",
-    "COMPSCI 4CR3",
-    "COMPSCI 4NL3",
-    "COMPSCI 4O03",
-    "ENGLISH 3CP3",
-    "MUSIC 1AA3"
+    "Making Art and Understanding Technology & Images",
+    "Making Art and Understanding Images",
+    "Introduction to Computational Thinking",
+    "Principles of Programming Languages",
+    "Applications of Machine Learning",
+    "Applied Cryptography",
+    "Natural Language Processing",
+    "Linear Optimization",
+    "Writing Practices",
+    "Introduction to the History Western of Music II"
   ],
   ".pptx": [
-    "COMPSCI 1XD3",
-    "COMPSCI 3SH3"
+    "Introduction to Software Design Using Web Programming",
+    "Operating Systems"
   ],
   ".py": [
-    "COMPSCI 2AC3",
-    "COMPSCI 2XC3",
-    "COMPSCI 3DM3",
-    "COMPSCI 4AL3",
-    "COMPSCI 4CR3",
-    "COMPSCI 4NL3",
-    "COMPSCI 4O03"
+    "Automata and Computability",
+    "Algorithms and Software Design",
+    "Introduction to Data Mining",
+    "Applications of Machine Learning",
+    "Applied Cryptography",
+    "Natural Language Processing",
+    "Linear Optimization"
   ],
   ".tex": [
-    "ASTRON 1F03",
-    "COMPSCI 1JC3",
-    "COMPSCI 1XC3",
-    "COMPSCI 2AC3",
-    "COMPSCI 2C03",
-    "COMPSCI 2DB3",
-    "COMPSCI 2GA3",
-    "COMPSCI 2LC3",
-    "COMPSCI 2ME3",
-    "COMPSCI 2SD3",
-    "COMPSCI 2XC3",
-    "COMPSCI 3AC3",
-    "COMPSCI 3DM3",
-    "COMPSCI 3GC3",
-    "COMPSCI 3TB3",
-    "COMPSCI 4AL3",
-    "COMPSCI 4CR3",
-    "COMPSCI 4NL3",
-    "COMPSCI 4O03",
-    "MATH 1B03",
-    "PHYSICS 1A03",
-    "STATS 2DA3"
+    "Introduction to Astronomy and Astrophysics",
+    "Introduction to Computational Thinking",
+    "Development Basics",
+    "Automata and Computability",
+    "Data Structures and Algorithms",
+    "Databases",
+    "Computer Architecture",
+    "Logical Reasoning for Computer Science",
+    "Introduction to Software Development",
+    "Concurrent Systems",
+    "Algorithms and Software Design",
+    "Algorithms and Complexity",
+    "Introduction to Data Mining",
+    "Computer Graphics",
+    "Syntax-Based Tools and Compilers",
+    "Applications of Machine Learning",
+    "Applied Cryptography",
+    "Natural Language Processing",
+    "Linear Optimization",
+    "Linear Algebra I",
+    "Introductory Physics",
+    "An Introduction to Data Science Methods"
   ],
   ".txt": [
-    "ART 1UI3",
-    "COMPSCI 1MD3",
-    "COMPSCI 1XC3",
-    "COMPSCI 2DB3",
-    "COMPSCI 2SD3",
-    "COMPSCI 3MI3",
-    "COMPSCI 4NL3",
-    "DATASCI 2G03"
+    "Making Art and Understanding Images",
+    "Introduction to Programming",
+    "Development Basics",
+    "Databases",
+    "Concurrent Systems",
+    "Principles of Programming Languages",
+    "Natural Language Processing",
+    "Scientific Computing"
   ],
   ".xlsx": [
-    "ASTRON 1F03",
-    "COMPSCI 2XC3",
-    "PHYSICS 1A03"
+    "Introduction to Astronomy and Astrophysics",
+    "Algorithms and Software Design",
+    "Introductory Physics"
   ]
 }

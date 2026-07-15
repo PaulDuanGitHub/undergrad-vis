@@ -30,7 +30,7 @@ export default function Act1Narrative() {
         An undergraduate degree isn't just awarded; it is built, block by block, in the quiet moments of focus and the chaotic hours of deadlines. <b>Have you ever wondered what the actual architecture of your time looks like?</b> Here is five years of my academic life, translated into data, geometry, and color.
       </p>
 
-      <h2 className="text-2xl mb-4">Act 1: The Cubes</h2>
+      <h2 className="text-2xl mb-4 font-semibold">Act 1: The Cubes</h2>
       {SUBSTEPS.map((s) => (
         <div
           key={s.step}

@@ -22,7 +22,7 @@ const SUBSTEPS = [
 export default function Act3Narrative() {
   return (
     <div className="flex flex-col items-start w-full">
-      <h2 className="text-2xl mb-4">Act 3: The Bubbles</h2>
+      <h2 className="text-2xl mb-4 font-semibold">Act 3: The Bubbles</h2>
       {SUBSTEPS.map((s) => (
         <div
           key={s.step}

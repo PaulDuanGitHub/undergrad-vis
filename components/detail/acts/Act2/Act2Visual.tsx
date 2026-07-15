@@ -8,7 +8,8 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import term_extensions from "@/data/term_extensions.json";
 import ext_courses from "@/data/ext_courses.json";
-import { extension, extensionBackgroundSchema, extensionForegroundSchema, groupedExtensions } from "@/constants/extension";
+import { extension, groupedExtensions } from "@/constants/extension";
+import { useThemeVariable } from "@/hooks/useThemeVariable";
 
 // --- Types ---
 export interface StreamData {
@@ -24,8 +25,6 @@ interface Act2VisualProps {
     height?: number;
 }
 
-const COLORS = ["#fcd34d", "#fbbf24", "#f59e0b", "#d97706", "#b45309", "#78350f", "#451a03", "#fef3c7"];
-
 const extToCoursesMapping = ext_courses as Record<string, string[]>;
 const data = term_extensions['data'];
 const keys = term_extensions['keys'];
@@ -37,6 +36,21 @@ export default function Act2Visual({ step, isActive, width = 850, height = 550 }
 
     const [hoveredKey, setHoveredKey] = useState<string | null>(null);
 
+    // --- 主题色 ---
+    const brand50 = useThemeVariable('--color-brand-50') || '#FEF6F5';
+    const brand100 = useThemeVariable('--color-brand-100') || '#FDECE9';
+    const brand200 = useThemeVariable('--color-brand-200') || '#FBD5CD';
+    const brand300 = useThemeVariable('--color-brand-300') || '#F7B4A7';
+    const brand400 = useThemeVariable('--color-brand-400') || '#F08B79';
+    const brand500 = useThemeVariable('--color-brand-500') || '#E7604A';
+    const brand600 = useThemeVariable('--color-brand-600') || '#D4442E';
+    const brand700 = useThemeVariable('--color-brand-700') || '#B23321';
+    const surface = useThemeVariable('--color-surface') || '#FFFFFF';
+    const textPrimary = useThemeVariable('--color-text-primary') || '#292524';
+    const textSecondary = useThemeVariable('--color-text-secondary') || '#78716C';
+
+    const themeColorsKey = [brand50, brand100, brand200, brand300, brand400, brand500, brand600, brand700].join(',');
+
     // ==========================================
     // 1. D3 双重空间数学引擎 (仅负责计算，不负责动画)
     // ==========================================
@@ -46,7 +60,8 @@ export default function Act2Visual({ step, isActive, width = 850, height = 550 }
         keys.forEach(k => counts[k] = 0);
         data.forEach(d => keys.forEach(k => counts[k] += Number(d[k]) || 0));
         const sortedKeys = [...keys].sort((a, b) => counts[b] - counts[a]);
-        const colorScale = scaleOrdinal<string>().domain(sortedKeys).range(COLORS);
+        const themeColors = themeColorsKey.split(',');
+        const colorScale = scaleOrdinal<string>().domain(sortedKeys).range(themeColors);
 
         const maxVal = Math.max(...Object.values(counts));
         const barXScale = scaleLinear().domain([0, maxVal]).range([0, width - 150]);
@@ -77,7 +92,7 @@ export default function Act2Visual({ step, isActive, width = 850, height = 550 }
         });
 
         return { pathsData, streamXScale, counts };
-    }, [width, height]);
+    }, [width, height, themeColorsKey]);
 
     // ==========================================
     // 1.5 平行集 (Parallel Sets) 数学引擎
@@ -113,6 +128,44 @@ export default function Act2Visual({ step, isActive, width = 850, height = 550 }
         const cpX = (x1 + x2) / 2;
         return `M ${x1} ${y1} C ${cpX} ${y1}, ${cpX} ${y2}, ${x2} ${y2}`;
     };
+
+    // --- 反向映射：course → extensions (用于双向高亮) ---
+    const courseToExtsMapping = useMemo(() => {
+        const mapping: Record<string, string[]> = {};
+        for (const [ext, courses] of Object.entries(extToCoursesMapping)) {
+            for (const course of courses) {
+                if (!mapping[course]) mapping[course] = [];
+                mapping[course].push(ext);
+            }
+        }
+        return mapping;
+    }, []);
+
+    // --- 根据 hoveredKey 计算应高亮的 extensions 和 courses ---
+    const { highlightedExts, highlightedCourses } = useMemo(() => {
+        const empty = { highlightedExts: new Set<string>(), highlightedCourses: new Set<string>() };
+        if (!hoveredKey) return empty;
+
+        const exts = new Set<string>();
+        const courses = new Set<string>();
+
+        // 悬停的是 extension（左侧节点）
+        if (extToCoursesMapping[hoveredKey]) {
+            exts.add(hoveredKey);
+            (extToCoursesMapping[hoveredKey] || []).forEach(c => courses.add(c));
+            return { highlightedExts: exts, highlightedCourses: courses };
+        }
+
+        // 悬停的是 course（右侧节点）
+        const linkedExts = courseToExtsMapping[hoveredKey];
+        if (linkedExts) {
+            courses.add(hoveredKey);
+            linkedExts.forEach(e => exts.add(e));
+            return { highlightedExts: exts, highlightedCourses: courses };
+        }
+
+        return empty;
+    }, [hoveredKey, courseToExtsMapping]);
 
     // ==========================================
     // 2. GSAP 高阶状态机引擎
@@ -151,6 +204,14 @@ export default function Act2Visual({ step, isActive, width = 850, height = 550 }
         };
 
         // --- 动态过渡函数 (Timelines) ---
+        const transition0To0 = () => {
+            gsap.set(".layer-glossary", { opacity: 1, pointerEvents: "auto", zIndex: 10 });
+            gsap.set(".desc-text", { opacity: 1 });
+            const tl = gsap.timeline();
+            tl.fromTo(".badge-container", { x: -30, opacity: 0 }, { x: 0, opacity: 1, duration: 0.3, stagger: 0.02 })
+              .to(".desc-container", { width: "100%", paddingLeft: 16, paddingRight: 16, duration: 0.6, ease: "power2.out" })
+        };
+
         const transition0To1 = () => {
             gsap.set(".layer-parallel", { opacity: 1, pointerEvents: "auto", zIndex: 10 });
             const tl = gsap.timeline();
@@ -165,6 +226,7 @@ export default function Act2Visual({ step, isActive, width = 850, height = 550 }
 
         const transition1To0 = () => {
             gsap.set(".layer-glossary", { opacity: 1, pointerEvents: "auto", zIndex: 10 });
+            gsap.set(".desc-text", { opacity: 1 });
             const tl = gsap.timeline();
             tl.to(".parallel-clip-rect", { attr: { width: 0 }, duration: 0.6, ease: "power2.inOut" })
               .to(".parallel-right-node", { opacity: 0, x: 20, duration: 0.3 }, "<")
@@ -172,7 +234,6 @@ export default function Act2Visual({ step, isActive, width = 850, height = 550 }
               .set(".layer-parallel", { opacity: 0, pointerEvents: "none", zIndex: 0 })
               .fromTo(".badge-container", { x: -30, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, stagger: 0.02 })
               .to(".desc-container", { width: "100%", paddingLeft: 16, paddingRight: 16, duration: 0.6, ease: "power2.out" })
-              .to(".desc-text", { opacity: 1, duration: 0.4 }, "-=0.2");
         };
 
         const transition1To2 = () => {
@@ -227,9 +288,16 @@ export default function Act2Visual({ step, isActive, width = 850, height = 550 }
 
         // 首次激活 或 step 未变化：gsap.set 瞬间就位（无动画）
         if (justActivated || !isTransitioning) {
-            setGlossaryState(step === 0);
-            setParallelState(step === 1);
-            setBarStreamState(step === 2 ? "bar" : step === 3 ? "stream" : "hidden");
+            if (step === 0) {
+                transition0To0();
+                setParallelState(false);
+                setBarStreamState("hidden");
+            }
+            if (step === 3) {
+                setGlossaryState(false);
+                setParallelState(false);
+                setBarStreamState("stream");
+            }
         }
 
         // step 变化时的过渡动画
@@ -270,24 +338,18 @@ export default function Act2Visual({ step, isActive, width = 850, height = 550 }
                             <div key={groupIndex} className="flex flex-col gap-2.5">
                                 {group.map((ext) => {
                                     const extData = extension[ext as keyof typeof extension];
-                                    const bg = extensionBackgroundSchema[ext as keyof typeof extensionBackgroundSchema];
-                                    const fg = extensionForegroundSchema[ext as keyof typeof extensionForegroundSchema];
 
-                                    if (!extData || !bg || !fg) return null;
+                                    if (!extData) return null;
 
                                     const isHovered = hoveredKey === ext;
-                                    const mutedBg = { secondary: "#E5E7EB", tertiary: "#F3F4F6" };
-                                    const mutedFg = { secondary: "#4B5563", tertiary: "#6B7280" };
-                                    const currentBg = isHovered ? bg : mutedBg;
-                                    const currentFg = isHovered ? fg : mutedFg;
 
                                     return (
                                         <div key={ext} onMouseEnter={() => setHoveredKey(ext)} className="flex flex-row overflow-hidden cursor-default">
-                                            <div className="badge-container w-20 text-xs shrink-0 flex items-center justify-center font-bold tracking-tight select-none transition-colors duration-300" style={{ backgroundColor: currentBg.secondary, color: currentFg.secondary }}>
+                                            <div className="badge-container w-20 text-xs shrink-0 flex items-center justify-center font-bold tracking-tight select-none transition-colors duration-300" style={{ backgroundColor: isHovered ? brand500 : "#CBD5E1", color: isHovered ? surface : "#64748B" }}>
                                                 {ext}
                                             </div>
-                                            <div className="desc-container flex-none flex items-center overflow-hidden transition-colors duration-300" style={{ backgroundColor: currentBg.tertiary, color: currentFg.tertiary }}>
-                                                <p className="desc-text text-xs font-normal leading-relaxed transition-opacity duration-300 min-w-200" style={{ opacity: isHovered ? 1 : 0.7 }}>
+                                            <div className="desc-container flex-none flex items-center overflow-hidden transition-colors duration-200" style={{ backgroundColor: isHovered ? brand50 : "#F1F5F9", color: isHovered ? textPrimary : "#94A3B8" }}>
+                                                <p className="desc-text text-xs font-normal leading-relaxed transition-opacity duration-200 min-w-200" style={{ opacity: isHovered ? 1 : 0.7 }}>
                                                     {extData.description}
                                                 </p>
                                             </div>
@@ -305,26 +367,27 @@ export default function Act2Visual({ step, isActive, width = 850, height = 550 }
                 <svg width={width} height={height} className="overflow-visible mt-6">
                     <defs>
                         <clipPath id="parallel-clip">
-                            <rect className="parallel-clip-rect" x="140" y="-50" width="0" height={height + 100} />
+                            <rect className="parallel-clip-rect" x="0" y="-50" width="0" height={height + 100} />
                         </clipPath>
                     </defs>
                     <g clipPath="url(#parallel-clip)">
                         {parallelLinks.map((link, idx) => {
-                            const extBg = extensionBackgroundSchema[link.ext as keyof typeof extensionBackgroundSchema];
-                            const isHovered = hoveredKey === link.ext || hoveredKey === link.course;
+                            const isLinkHighlighted = highlightedExts.has(link.ext) && highlightedCourses.has(link.course);
                             const anyHovered = hoveredKey !== null;
-                            const strokeColor = isHovered && extBg ? extBg.tertiary : "#E5E7EB";
-                            const strokeOpacity = !anyHovered ? 0.4 : (isHovered ? 0.9 : 0.05);
+                            const strokeColor = isLinkHighlighted ? brand300 : "#CBD5E1";
+                            const strokeOpacity = !anyHovered ? 0.3 : (isLinkHighlighted ? 0.9 : 0.05);
 
                             return (
                                 <path
                                     key={`${link.ext}-${link.course}-${idx}`}
-                                    d={drawCurve(140, link.y1, width - 140, link.y2)}
+                                    d={drawCurve(15, link.y1-4, width - 300 - 15, link.y2-4)}
                                     fill="none"
                                     stroke={strokeColor}
-                                    strokeWidth={isHovered ? 8 : 4}
+                                    strokeWidth={isLinkHighlighted ? 8 : 5}
                                     opacity={strokeOpacity}
-                                    className="transition-opacity duration-300"
+                                    className="transition-all duration-200 cursor-crosshair"
+                                    onMouseEnter={() => setHoveredKey(link.ext)}
+                                    onMouseLeave={() => setHoveredKey(null)}
                                 />
                             );
                         })}
@@ -332,16 +395,17 @@ export default function Act2Visual({ step, isActive, width = 850, height = 550 }
                     <g>
                         {leftNodes.map((ext, i) => {
                             const y = 30 + i * ((height - 60) / Math.max(1, leftNodes.length - 1));
-                            const isHovered = hoveredKey === ext;
-                            const opacity = hoveredKey === null ? 0.8 : (isHovered ? 1 : 0.2);
-                            const fg = extensionForegroundSchema[ext as keyof typeof extensionForegroundSchema];
+                            const isExtHighlighted = highlightedExts.has(ext);
+                            const anyHovered = hoveredKey !== null;
+                            const opacity = !anyHovered ? 0.8 : (isExtHighlighted ? 1 : 0.2);
 
                             return (
                                 /* 外层管 GSAP 动画，内层管 React Hover，彻底解耦 */
-                                <g key={ext} transform={`translate(140, ${y})`} className="parallel-left-node cursor-crosshair" onMouseEnter={() => setHoveredKey(ext)} onMouseLeave={() => setHoveredKey(null)}>
+                                <g key={ext} transform={`translate(200, ${y})`} className="parallel-left-node cursor-crosshair" onMouseEnter={() => setHoveredKey(ext)} onMouseLeave={() => setHoveredKey(null)}>
                                     <g style={{ opacity }} className="transition-opacity duration-300">
-                                        <text textAnchor="end" alignmentBaseline="middle" className="font-serif text-xs font-bold" fill={isHovered && fg ? fg.secondary : "#4B5563"}>{ext}</text>
-                                        <circle cx={10} cy={0} r={3} fill={isHovered ? "#d97706" : "#E5E7EB"} />
+                                        <text textAnchor="end" alignmentBaseline="middle" className="font-serif text-xs font-bold" fill={isExtHighlighted ? brand600 : "#64748B"}>{ext}</text>
+                                        {/* <circle cx={10} cy={0} r={3} fill={isExtHighlighted ? brand600 : "#CBD5E1"} /> */}
+                                        <rect x={5} y={-8} width={6} height={8} fill={isExtHighlighted ? brand600 : "#CBD5E1"} />
                                     </g>
                                 </g>
                             );
@@ -350,14 +414,16 @@ export default function Act2Visual({ step, isActive, width = 850, height = 550 }
                     <g>
                         {rightNodes.map((course, i) => {
                             const y = 30 + i * ((height - 60) / Math.max(1, rightNodes.length - 1));
-                            const isHovered = hoveredKey === course;
-                            const opacity = hoveredKey === null ? 0.8 : (isHovered ? 1 : 0.2);
+                            const isCourseHighlighted = highlightedCourses.has(course);
+                            const anyHovered = hoveredKey !== null;
+                            const opacity = !anyHovered ? 0.8 : (isCourseHighlighted ? 1 : 0.2);
 
                             return (
-                                <g key={course} transform={`translate(${width - 140}, ${y})`} className="cursor-crosshair" onMouseEnter={() => setHoveredKey(course)} onMouseLeave={() => setHoveredKey(null)}>
+                                <g key={course} transform={`translate(${width - 300}, ${y})`} className="cursor-crosshair" onMouseEnter={() => setHoveredKey(course)} onMouseLeave={() => setHoveredKey(null)}>
                                     <g style={{ opacity }} className="parallel-right-node transition-opacity duration-300">
-                                        <circle cx={-10} cy={0} r={3} fill={isHovered ? "#d97706" : "#E5E7EB"} />
-                                        <text textAnchor="start" alignmentBaseline="middle" className="font-serif text-[10px] tracking-wide" fill={isHovered ? "#d97706" : "#4B5563"}>{course}</text>
+                                        {/* <circle cx={-10} cy={0} r={3} fill={isCourseHighlighted ? brand600 : "#CBD5E1"} /> */}
+                                        <rect x={-8} y={-8} width={6} height={8} fill={isCourseHighlighted ? brand600 : "#CBD5E1"} />
+                                        <text textAnchor="start" alignmentBaseline="middle" className="font-serif text-[10px] tracking-wide" fill={isCourseHighlighted ? brand600 : "#64748B"}>{course}</text>
                                     </g>
                                 </g>
                             );
@@ -368,7 +434,7 @@ export default function Act2Visual({ step, isActive, width = 850, height = 550 }
 
             {/* Layer 2 & 3: Bar Chart & Streamgraph */}
             <div className="layer-bar-stream absolute inset-0 flex flex-col items-center justify-center">
-                <div className="absolute top-0 h-10 flex items-center justify-center font-serif text-amber-950 text-xl tracking-widest z-10 pointer-events-none transition-opacity duration-300">
+                <div className="absolute top-0 h-10 flex items-center justify-center font-serif text-slate-900 text-xl tracking-widest z-10 pointer-events-none transition-opacity duration-300">
                     {hoveredKey ? `${hoveredKey} files` : " "}
                 </div>
                 <svg width={width} height={height} className="overflow-visible mt-6">
@@ -395,15 +461,15 @@ export default function Act2Visual({ step, isActive, width = 850, height = 550 }
                                     />
                                     <g transform={`translate(${barW + 15}, ${barY + barH / 2})`}>
                                         <g className="bar-label">
-                                            <text className="font-serif fill-amber-950 text-sm font-bold" alignmentBaseline="middle">{key}</text>
-                                            <text className="font-serif fill-amber-900/50 text-xs" x={50} alignmentBaseline="middle">{counts[key]} files</text>
+                                            <text className="font-serif fill-slate-900 text-sm font-bold" alignmentBaseline="middle">{key}</text>
+                                            <text className="font-serif fill-slate-500 text-xs" x={50} alignmentBaseline="middle">{counts[key]} files</text>
                                         </g>
                                     </g>
                                 </g>
                             );
                         })}
                     </g>
-                    <g className="font-serif text-[10px] fill-amber-900/40 uppercase tracking-widest">
+                    <g className="font-serif text-[10px] fill-slate-400 uppercase tracking-widest">
                         {data.map((d) => (
                             <text key={d.term_index} x={streamXScale(d.term_index)} y={height + 20} textAnchor="middle" className="stream-label">
                                 {d.term}

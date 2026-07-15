@@ -21,7 +21,7 @@ const ACTS = [
   { id: 3, narrative: <Act3Narrative /> },
 ] as const;
 
-const isDev = process.env.NODE_ENV === 'development';
+const isDev = false;
 
 interface DetailViewProps {
   scrollRef: RefObject<HTMLDivElement | null>;
@@ -148,17 +148,17 @@ export default function DetailView({ scrollRef, isDetailVisible }: DetailViewPro
           : "duration-200 opacity-0 pointer-events-none"
       }`}
     >
-      <div ref={contentRef} className="flex relative bg-[#FAF8F5] text-amber-950 h-fit">
+      <div ref={contentRef} className="flex relative bg-surface text-text-primary h-fit">
 
         {/* ===== Left: scrollable narrative text ===== */}
         <div className="w-[30%] flex flex-col items-center pt-40 px-12 select-text">
           <div className="w-full flex flex-col items-center">
-            <h2 className="">My 2021 - 2026</h2>
+            <h2 className="mb-2">My 2021 - 2026</h2>
             <h1 className="text-5xl mb-8">Productivity</h1>
             <h2 className="text-center italic mb-8">
                 A visualization of over 600 workfiles created during my undergraduate.
             </h2>
-            <p className='text-amber-950/50'>By <a href="https://www.xianzhaoduan.com" target="_blank" rel="noreferrer" className="underline hover:text-amber-700 transition-colors">Paul Duan</a></p>
+            <p className='text-text-secondary'>By <a href="https://www.xianzhaoduan.com" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">Paul Duan</a></p>
           </div>
           {ACTS.map((act) => (
             <div
