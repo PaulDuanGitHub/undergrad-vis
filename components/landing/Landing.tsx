@@ -52,13 +52,6 @@ export default function Landing() {
         wheelLockRef.current = true;
         openDetail();
         setTimeout(() => (wheelLockRef.current = false), 800);
-      } else if (isDetailOpen && leftScrollRef.current) {
-        const { scrollTop } = leftScrollRef.current;
-        if (scrollTop <= 0 && e.deltaY < 0) {
-          wheelLockRef.current = true;
-          closeDetail();
-          setTimeout(() => (wheelLockRef.current = false), 800);
-        }
       }
     };
     window.addEventListener("wheel", handleWheel, { passive: false });
@@ -91,6 +84,7 @@ export default function Landing() {
       <DetailView
         scrollRef={leftScrollRef}
         isDetailVisible={isDetailVisible}
+        onExit={closeDetail}
       />
 
       <div className={`absolute inset-0 w-screen h-screen z-0 ${isLoaded ? "cursor-pointer" : "cursor-wait"}`} onClick={toggleView}>

@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
-import * as THREE from "three";
+import { useEffect, useRef } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
+import * as THREE from 'three';
 import {
   INTRO_CAMERA_POSITION,
   INITIAL_CAMERA_POSITION,
@@ -12,7 +12,7 @@ import {
   PARALLAX_AMOUNT,
   easeInOut,
   easeOutQuart,
-} from "@/constants/camera";
+} from '@/constants/camera';
 
 interface CameraControllerProps {
   isDetailOpen: boolean;
@@ -21,7 +21,12 @@ interface CameraControllerProps {
   onIntroDone: () => void;
 }
 
-export default function CameraController({ isDetailOpen, isLoaded, isIntroDone, onIntroDone }: CameraControllerProps) {
+export default function CameraController({
+  isDetailOpen,
+  isLoaded,
+  isIntroDone,
+  onIntroDone,
+}: CameraControllerProps) {
   const { camera } = useThree();
   const introProgress = useRef(0);
 
@@ -44,7 +49,9 @@ export default function CameraController({ isDetailOpen, isLoaded, isIntroDone, 
     const anim = animRef.current;
     anim.startPos.copy(currentBasePos.current);
     anim.startTarget.copy(currentBaseTarget.current);
-    anim.endPos.copy(isDetailOpen ? FOCUS_CAMERA_POSITION : INITIAL_CAMERA_POSITION);
+    anim.endPos.copy(
+      isDetailOpen ? FOCUS_CAMERA_POSITION : INITIAL_CAMERA_POSITION
+    );
     anim.endTarget.copy(isDetailOpen ? FOCUS_TARGET : INITIAL_TARGET);
     anim.progress = 0;
     anim.active = true;
@@ -63,7 +70,11 @@ export default function CameraController({ isDetailOpen, isLoaded, isIntroDone, 
       introProgress.current += delta / INTRO_DURATION;
       const p = Math.min(introProgress.current, 1);
       const eased = easeOutQuart(p);
-      currentBasePos.current.lerpVectors(INTRO_CAMERA_POSITION, INITIAL_CAMERA_POSITION, eased);
+      currentBasePos.current.lerpVectors(
+        INTRO_CAMERA_POSITION,
+        INITIAL_CAMERA_POSITION,
+        eased
+      );
       camera.position.copy(currentBasePos.current);
       camera.lookAt(INITIAL_TARGET);
       smoothedCameraPos.current.copy(currentBasePos.current);
@@ -82,22 +93,27 @@ export default function CameraController({ isDetailOpen, isLoaded, isIntroDone, 
       const progress = Math.min(anim.progress, 1);
       const eased = easeInOut(progress);
       currentBasePos.current.lerpVectors(anim.startPos, anim.endPos, eased);
-      currentBaseTarget.current.lerpVectors(anim.startTarget, anim.endTarget, eased);
+      currentBaseTarget.current.lerpVectors(
+        anim.startTarget,
+        anim.endTarget,
+        eased
+      );
       if (progress >= 1) anim.active = false;
     }
 
     smoothedTarget.current.lerp(currentBaseTarget.current, 0.1);
 
     // Compute parallax-adjusted target (shared across all lookAt calls this frame)
-    let pX = 0, pY = 0;
+    let pX = 0,
+      pY = 0;
     let effectiveTarget: THREE.Vector3 = smoothedTarget.current;
 
     if (!isDetailOpen) {
       pX = state.pointer.x * PARALLAX_AMOUNT;
       pY = state.pointer.y * PARALLAX_AMOUNT;
-      effectiveTarget = smoothedTarget.current.clone().add(
-        new THREE.Vector3(pX * 0.05, pY * 0.05, 0)
-      );
+      effectiveTarget = smoothedTarget.current
+        .clone()
+        .add(new THREE.Vector3(pX * 0.05, pY * 0.05, 0));
     }
 
     camera.position.copy(currentBasePos.current);

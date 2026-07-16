@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import React, { useMemo, useState } from "react";
-import { scaleLinear } from "d3-scale";
-import { max } from "d3-array";
-import { useThemeVariable } from "@/hooks/useThemeVariable";
+import React, { useMemo, useState } from 'react';
+import { scaleLinear } from 'd3-scale';
+import { max } from 'd3-array';
+import { useThemeVariable } from '@/hooks/useThemeVariable';
 
 interface PunchcardData {
-  day_of_week: number;  // 0 (Mon) - 6 (Sun)
+  day_of_week: number; // 0 (Mon) - 6 (Sun)
   hour: number; // 0 - 23
   count: number;
 }
@@ -17,43 +17,46 @@ interface PunchcardProps {
   height?: number;
 }
 
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-export default function PunchcardHeatmap({ data, width = 800, height = 300 }: PunchcardProps) {
+export default function PunchcardHeatmap({
+  data,
+  width = 800,
+  height = 300,
+}: PunchcardProps) {
   const [hoveredData, setHoveredData] = useState<PunchcardData | null>(null);
 
-  const COLOR_BRAND = useThemeVariable("--color-brand");
+  const COLOR_BRAND = useThemeVariable('--color-brand');
 
   const padding = { top: 30, right: 20, bottom: 40, left: 50 };
   const innerWidth = width - padding.left - padding.right;
   const innerHeight = height - padding.top - padding.bottom;
 
   const { maxCount, radiusScale } = useMemo(() => {
-    const maxVal = max(data, d => d.count) || 1;
-    // 映射圆圈半径：没有版本时半径为0，最多时半径为 15（5x 增幅让大小对比更剧烈）
-    const radiusScale = scaleLinear().domain([0, maxVal]).range([0, 15]);
+    const maxVal = max(data, (d) => d.count) || 1;
+    const radiusScale = scaleLinear().domain([0, maxVal]).range([0, 16]);
     return { maxCount: maxVal, radiusScale };
   }, [data]);
 
-  // 计算格子大小
   const cellWidth = innerWidth / 24;
   const cellHeight = innerHeight / 7;
 
   return (
     <div className="relative w-full flex flex-col items-center">
-      
-      {/* 悬浮提示器 */}
       <div className="h-6 mb-2 font-serif text-slate-900 text-sm tracking-widest">
-        {hoveredData && hoveredData.count > 0 
-          ? <div><span className='text-brand' >{`${hoveredData.count}`}</span> {` files modified at ${hoveredData.hour}:00 on ${DAYS[hoveredData.day_of_week]}`}</div>
-          : " "
-        }
+        {hoveredData && hoveredData.count > 0 ? (
+          <div>
+            <span className="text-brand">{`${hoveredData.count}`}</span>{' '}
+            {` files modified at ${hoveredData.hour}:00 on ${DAYS[hoveredData.day_of_week]}`}
+          </div>
+        ) : (
+          ' '
+        )}
       </div>
 
       <svg width={width} height={height}>
         <g transform={`translate(${padding.left}, ${padding.top})`}>
-          
-          {/* Y 轴 (星期) */}
+          {/* Y Axis */}
           {DAYS.map((day, i) => (
             <text
               key={day}
@@ -67,7 +70,7 @@ export default function PunchcardHeatmap({ data, width = 800, height = 300 }: Pu
             </text>
           ))}
 
-          {/* X 轴 (小时) */}
+          {/* X Axis (Hours) */}
           {[0, 6, 12, 18, 23].map((hour) => (
             <text
               key={hour}
@@ -80,17 +83,24 @@ export default function PunchcardHeatmap({ data, width = 800, height = 300 }: Pu
             </text>
           ))}
 
-          {/* 背景网格线 (极简风) */}
+          {/* Background Grid Lines */}
           {DAYS.map((_, i) => (
-            <line key={`hline-${i}`} x1={0} y1={i * cellHeight + cellHeight / 2} x2={innerWidth} y2={i * cellHeight + cellHeight / 2} className="stroke-slate-200 stroke-[0.5px]" />
+            <line
+              key={`hline-${i}`}
+              x1={0}
+              y1={i * cellHeight + cellHeight / 2}
+              x2={innerWidth}
+              y2={i * cellHeight + cellHeight / 2}
+              className="stroke-slate-200 stroke-[0.5px]"
+            />
           ))}
 
-          {/* 渲染数据点 (Punchcard 洞眼) */}
+          {/* Render Data Points (Punchcard Holes) */}
           {data.map((d, i) => {
             const cx = d.hour * cellWidth + cellWidth / 2;
             const cy = d.day_of_week * cellHeight + cellHeight / 2;
             const r = radiusScale(d.count);
-            // 给圈圈上色：大的深，小的浅
+
             const opacity = 0.2 + (d.count / maxCount) * 0.8;
 
             return (
@@ -107,7 +117,6 @@ export default function PunchcardHeatmap({ data, width = 800, height = 300 }: Pu
               />
             );
           })}
-
         </g>
       </svg>
     </div>

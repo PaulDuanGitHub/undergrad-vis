@@ -1,8 +1,9 @@
 'use client';
-import React, { useRef, useState, RefObject } from 'react';
+import React, { useRef, useState, RefObject, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
+import { useThemeVariable } from "@/hooks/useThemeVariable";
 
 import Act1Narrative from '@/components/detail/acts/Act1/Act1Narrative';
 import Act1Visual from '@/components/detail/acts/Act1/Act1Visual';
@@ -14,7 +15,6 @@ import Act3Visual from '@/components/detail/acts/Act3/Act3Visual';
 gsap.registerPlugin(ScrollTrigger);
 
 // ── Constants ──
-
 const ACTS = [
   { id: 1, narrative: <Act1Narrative /> },
   { id: 2, narrative: <Act2Narrative /> },
@@ -26,128 +26,142 @@ const isDev = false;
 interface DetailViewProps {
   scrollRef: RefObject<HTMLDivElement | null>;
   isDetailVisible: boolean;
+  onExit: () => void;
 }
 
 // ── Shared helpers ──
-
-/**
- * Animate the act transition: dim all texts/ hide all charts,
- * then highlight the active text and show the corresponding chart.
- * GSAP 3's default `overwrite: "auto"` handles fast-scroll conflicts.
- */
-function animateActTransition(
-  texts: HTMLElement[],
-  charts: HTMLElement[],
-  activeIndex: number,
-  direction: 'forward' | 'backward',
-) {
+function animateActTransition(texts: HTMLElement[], charts: HTMLElement[], activeIndex: number, direction: 'forward' | 'backward') {
   const chartSlideY = direction === 'forward' ? -20 : 20;
-
-  // Dim all texts, highlight current
   gsap.to(texts, { opacity: 0.2, duration: 0.5 });
   gsap.to(texts[activeIndex], { opacity: 1, duration: 0.5 });
-
-  // Hide all charts with a directional slide
   gsap.set(charts, { pointerEvents: 'none' });
   gsap.to(charts, { opacity: 0, y: chartSlideY, duration: 0.5 });
-
-  // Reveal the active chart
   gsap.set(charts[activeIndex], { pointerEvents: 'auto' });
-  gsap.to(charts[activeIndex], {
-    opacity: 1,
-    y: 0,
-    duration: 0.8,
-    ease: 'power2.out',
-  });
+  gsap.to(charts[activeIndex], { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' });
 }
 
-/**
- * Generic factory for substep ScrollTriggers.
- * Each element matching `cssSelector` reads its step index from `data-${datasetKey}`
- * and calls `onStepChange(step)` when it enters the viewport center.
- */
-function createSubstepTriggers(
-  cssSelector: string,
-  datasetKey: string,
-  scroller: HTMLElement,
-  onStepChange: (step: number) => void,
-) {
+function createSubstepTriggers(cssSelector: string, datasetKey: string, scroller: HTMLElement, onStepChange: (step: number) => void) {
   const elements = gsap.utils.toArray<HTMLElement>(cssSelector);
   elements.forEach((el) => {
     const step = parseInt(el.dataset[datasetKey] || '0', 10);
     ScrollTrigger.create({
       id: `substep-${datasetKey}-${step}`,
-      trigger: el,
-      scroller,
-      start: 'center center',
-      end: 'center center',
-      markers: isDev,
-      onEnter: () => onStepChange(step),
-      onEnterBack: () => onStepChange(step),
+      trigger: el, scroller, start: 'center center', end: 'center center', markers: isDev,
+      onEnter: () => onStepChange(step), onEnterBack: () => onStepChange(step),
     });
   });
 }
 
 // ── Component ──
-
-export default function DetailView({ scrollRef, isDetailVisible }: DetailViewProps) {
+export default function DetailView({ scrollRef, isDetailVisible, onExit }: DetailViewProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const rightChartRef = useRef<HTMLDivElement>(null);
+
+  const colorBrand = useThemeVariable('--color-brand');
+
   const [act1Step, setAct1Step] = useState(0);
   const [act2Step, setAct2Step] = useState(0);
   const [act3Step, setAct3Step] = useState(0);
   const [activeAct, setActiveAct] = useState(1);
 
-  useGSAP(
-    () => {
-      const scroller = scrollRef.current;
-      if (!scroller) return;
+  // === 阻尼回弹退出的状态与逻辑 ===
+  const [pullProgress, setPullProgress] = useState(0);
+  const PULL_THRESHOLD = 800; // 需要滚动多少“距离”才能触发退出
 
-      // Scope DOM queries to the scroller to avoid cross-component leaks
-      const texts = gsap.utils.toArray<HTMLElement>('.narrative-text', scroller);
-      const charts = gsap.utils.toArray<HTMLElement>('.chart-layer', scroller);
-
-      // Initial state: only first chart visible, all texts dimmed
-      gsap.set(charts.slice(1), { opacity: 0, y: 20, pointerEvents: 'none' });
-      gsap.set(texts, { opacity: 0.2 });
-
-      // ── Act-level triggers ──
-      texts.forEach((text, i) => {
-        ScrollTrigger.create({
-          id: `act-${i + 1}`,
-          trigger: text,
-          scroller,
-          markers: isDev,
-          start: 'top center',
-          end: 'bottom center',
-          onEnter: () => {
-            setActiveAct(i + 1);
-            animateActTransition(texts, charts, i, 'forward');
-          },
-          onEnterBack: () => {
-            setActiveAct(i + 1);
-            animateActTransition(texts, charts, i, 'backward');
-          },
-        });
+  const handleWheel = (e: React.WheelEvent) => {
+    if (!scrollRef.current) return;
+    
+    // 只有当页面在最顶部，且用户继续向上滚动（e.deltaY < 0）时才计算进度
+    if (scrollRef.current.scrollTop <= 0 && e.deltaY < 0) {
+      setPullProgress((prev) => {
+        const next = prev - e.deltaY; // deltaY 是负数，减去它等于增加进度
+        if (next >= PULL_THRESHOLD) {
+          onExit(); // 触发退出
+          return 0; // 重置进度
+        }
+        return next;
       });
+    } else {
+      // 只要稍微往下滚，或者离开了顶部，就迅速清空进度
+      setPullProgress(0);
+    }
+  };
 
-      // ── Substep triggers (one factory call per act) ──
-      createSubstepTriggers('.act1-substep', 'act1Step', scroller, setAct1Step);
-      createSubstepTriggers('.act2-substep', 'act2Step', scroller, setAct2Step);
-      createSubstepTriggers('.act3-substep', 'act3Step', scroller, setAct3Step);
-    },
-    { scope: scrollRef },
-  );
+  // 释放滚轮时，进度条像弹簧一样自动归零
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (pullProgress > 0 && pullProgress < PULL_THRESHOLD) {
+      timeout = setTimeout(() => {
+        setPullProgress(0);
+      }, 1000); // 1s 没动作就归零
+    }
+    return () => clearTimeout(timeout);
+  }, [pullProgress]);
+
+  // 计算 SVG 圆环动画参数
+  const radius = 16;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (Math.min(pullProgress / PULL_THRESHOLD, 1) * circumference);
+
+  useGSAP(() => {
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+
+    const texts = gsap.utils.toArray<HTMLElement>('.narrative-text', scroller);
+    const charts = gsap.utils.toArray<HTMLElement>('.chart-layer', scroller);
+
+    gsap.set(charts.slice(1), { opacity: 0, y: 20, pointerEvents: 'none' });
+    gsap.set(texts, { opacity: 0.2 });
+
+    texts.forEach((text, i) => {
+      ScrollTrigger.create({
+        id: `act-${i + 1}`, trigger: text, scroller, markers: isDev, start: 'top center', end: 'bottom center',
+        onEnter: () => { setActiveAct(i + 1); animateActTransition(texts, charts, i, 'forward'); },
+        onEnterBack: () => { setActiveAct(i + 1); animateActTransition(texts, charts, i, 'backward'); },
+      });
+    });
+
+    createSubstepTriggers('.act1-substep', 'act1Step', scroller, setAct1Step);
+    createSubstepTriggers('.act2-substep', 'act2Step', scroller, setAct2Step);
+    createSubstepTriggers('.act3-substep', 'act3Step', scroller, setAct3Step);
+
+  }, { scope: scrollRef });
 
   return (
     <div
       ref={scrollRef}
+      onWheel={handleWheel}
       className={`absolute inset-0 overflow-y-auto transition-opacity ease-out ${
         isDetailVisible
           ? "duration-1000 opacity-100 pointer-events-auto z-10"
           : "duration-200 opacity-0 pointer-events-none"
       }`}
     >
+      {/* ==========================================
+          Top Pull-to-Exit Indicator 
+          ========================================== */}
+      <div 
+        className="fixed top-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center pointer-events-none transition-all duration-300"
+        style={{ 
+          opacity: pullProgress > 0 ? 1 : 0, 
+          transform: `translate(-50%, ${Math.min(pullProgress / 10, 20)}px)` // 稍微向下移动的物理阻尼感
+        }}
+      >
+        <svg width="40" height="40" className="transform -rotate-90">
+          {/* 灰色底环 */}
+          <circle cx="20" cy="20" r={radius} stroke="#e5e7eb" strokeWidth="3" fill="transparent" />
+          {/* 进度圆环 */}
+          <circle 
+            cx="20" cy="20" r={radius} 
+            stroke={colorBrand} strokeWidth="3" fill="transparent" 
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            className="transition-all duration-150 ease-out"
+          />
+        </svg>
+      </div>
+
       <div ref={contentRef} className="flex relative bg-surface text-text-primary h-fit">
 
         {/* ===== Left: scrollable narrative text ===== */}
@@ -161,10 +175,7 @@ export default function DetailView({ scrollRef, isDetailVisible }: DetailViewPro
             <p className='text-text-secondary'>By <a href="https://www.xianzhaoduan.com" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">Paul Duan</a></p>
           </div>
           {ACTS.map((act) => (
-            <div
-              key={`act-${act.id}-narrative`}
-              className={`narrative-text flex flex-col`}
-            >
+            <div key={`act-${act.id}-narrative`} className="narrative-text flex flex-col">
               {act.narrative}
             </div>
           ))}
@@ -173,20 +184,60 @@ export default function DetailView({ scrollRef, isDetailVisible }: DetailViewPro
         {/* ===== Right: pinned chart layers ===== */}
         <div className="w-[70%] h-screen sticky top-0 flex items-center justify-center p-8">
           <div ref={rightChartRef} className="relative w-full h-full flex items-center justify-center">
-            <div className="chart-layer absolute inset-0 flex items-center justify-center">
-              <Act1Visual step={act1Step} />
+            <div className="chart-layer absolute inset-0 flex items-center justify-center"><Act1Visual step={act1Step} /></div>
+            <div className="chart-layer absolute inset-0 flex items-center justify-center"><Act2Visual isActive={activeAct === 2} step={act2Step} /></div>
+            <div className="chart-layer absolute inset-0 flex items-center justify-center"><Act3Visual isActive={activeAct === 3} step={act3Step} /></div>
+          </div>
+        </div>
+      </div>
+
+      {/* ==========================================
+          Footer Section (Methodology & Colophon)
+          ========================================== */}
+      <div className="w-full bg-surface flex flex-col font-serif select-text">
+        <hr className="border-t border-brand/10 w-[80%] mx-auto" />
+        <div className="max-w-4xl mx-auto py-24 px-8 flex flex-col gap-16">
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            {/* Methodology */}
+            <div>
+              <h3 className="text-sm tracking-widest text-text-secondary uppercase mb-6">Data Methodology</h3>
+              <p className="text-sm leading-relaxed text-text-primary/80 mb-4">
+                The dataset was sourced organically from my personal OneDrive version history spanning Fall 2021 to Winter 2026. Automated scripts were used to filter out system files, node_modules, and cache directories.
+              </p>
+              <p className="text-sm leading-relaxed text-text-primary/80">
+                A single "commit" or "version" represents an autosave snapshot triggered by meaningful file modifications. While minor sync discrepancies exist, they preserve the true macroscopic rhythm of my academic journey.
+              </p>
             </div>
-            <div className="chart-layer absolute inset-0 flex items-center justify-center">
-              <Act2Visual 
-                isActive={activeAct === 2}
-                step={act2Step} />
-            </div>
-            <div className="chart-layer absolute inset-0 flex items-center justify-center">
-              <Act3Visual 
-                isActive={activeAct === 3}
-                step={act3Step} />
+
+            {/* Colophon & Tech Stack */}
+            <div>
+              <h3 className="text-sm tracking-widest text-text-secondary uppercase mb-6">Colophon</h3>
+              <p className="text-sm leading-relaxed text-text-primary/80 mb-4">
+                Designed and developed with <strong>React</strong> and <strong>Next.js</strong>. 
+                The 3D environment is rendered using <strong>Three.js</strong> and <strong>React Three Fiber</strong>.
+              </p>
+              <p className="text-sm leading-relaxed text-text-primary/80">
+                Data processing and vector visualizations were mathematically generated via <strong>D3.js</strong>, while complex state transitions and morphing animations were strictly orchestrated by <strong>GSAP</strong>. Typography is set in Roboto Serif and Geist.
+              </p>
             </div>
           </div>
+
+          <hr className="border-t border-brand/10" />
+
+          {/* Action Area */}
+          <div className="flex flex-col items-center justify-center text-center">
+            <button 
+              onClick={onExit}
+              className="px-8 py-3 border border-brand text-brand rounded hover:bg-brand hover:text-surface transition-colors duration-300 tracking-widest text-sm uppercase"
+            >
+              Return to Desk
+            </button>
+            <p className="mt-8 text-xs text-text-secondary">
+              © {new Date().getFullYear()} Paul Duan. All rights reserved.
+            </p>
+          </div>
+          
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 const SUBSTEPS = [
   {
@@ -7,11 +7,11 @@ const SUBSTEPS = [
   },
   {
     step: 1,
-    text: "Lines begin to weave between file types and the courses that demanded them. .java belongs to algorithms and data structures; .blend to 3D art; .elm to functional front-end design. Each thread is a requirement, a project, a grade.",
+    text: 'Lines begin to weave between file types and the courses that demanded them. .java belongs to algorithms and data structures; .blend to 3D art; .elm to functional front-end design. Each thread is a requirement, a project, a grade.',
   },
   {
     step: 2,
-    text: "Now the strips stretch into bars, ranked by sheer volume. .tex leads at 122 files — the backbone of every proof, every report, every thesis draft. .md and .docx follow close behind. The silhouette of my education, measured in file counts.",
+    text: 'Now the strips stretch into bars, ranked by sheer volume. .tex leads at 122 files — the backbone of every proof, every report, every thesis draft. .md and .docx follow close behind. The silhouette of my education, measured in file counts.',
   },
   {
     step: 3,
@@ -29,9 +29,7 @@ export default function Act2Narrative() {
           data-act2-step={s.step}
           className="act2-substep flex flex-col justify-center py-100"
         >
-          <p className="text-base">
-            {s.text}
-          </p>
+          <p className="text-base">{s.text}</p>
         </div>
       ))}
     </div>

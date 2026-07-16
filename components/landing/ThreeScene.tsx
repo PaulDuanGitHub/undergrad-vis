@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo } from "react";
-import { useFrame } from "@react-three/fiber";
-import { useGLTF, useTexture } from "@react-three/drei";
-import * as THREE from "three";
+import React, { useEffect, useMemo } from 'react';
+import { useFrame } from '@react-three/fiber';
+import { useGLTF, useTexture } from '@react-three/drei';
+import * as THREE from 'three';
 
 interface ThreeSceneProps {
   isDetailOpen: boolean;
@@ -13,7 +13,7 @@ const SHADOW_OFFSET_Y = -0.48;
 const SHADOW_OFFSET_Z = 0.12;
 const SHADOW_SIZE = 3;
 const SHADOW_OPACITY = 0.85;
-const SHADOW_TEXTURE_PATH = "/model/floor_bake.png";
+const SHADOW_TEXTURE_PATH = '/model/floor_bake.png';
 
 function Floor() {
   const shadowMap = useTexture(SHADOW_TEXTURE_PATH);
@@ -23,16 +23,33 @@ function Floor() {
   }, [shadowMap]);
 
   return (
-    <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[SHADOW_OFFSET_X, SHADOW_OFFSET_Y, SHADOW_OFFSET_Z]}>
+    <mesh
+      receiveShadow
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[SHADOW_OFFSET_X, SHADOW_OFFSET_Y, SHADOW_OFFSET_Z]}
+    >
       <planeGeometry args={[SHADOW_SIZE, SHADOW_SIZE]} />
-      <meshBasicMaterial map={shadowMap} transparent opacity={SHADOW_OPACITY} depthWrite={false} />
+      <meshBasicMaterial
+        map={shadowMap}
+        transparent
+        opacity={SHADOW_OPACITY}
+        depthWrite={false}
+      />
     </mesh>
   );
 }
 
-export default function ThreeScene({ isDetailOpen, onPaperCovered }: ThreeSceneProps) {
-  const { scene, animations } = useGLTF("/model/desk_web_3_baked_animation.glb");
-  const mixer = useMemo(() => (animations.length ? new THREE.AnimationMixer(scene) : null), [scene, animations]);
+export default function ThreeScene({
+  isDetailOpen,
+  onPaperCovered,
+}: ThreeSceneProps) {
+  const { scene, animations } = useGLTF(
+    '/model/desk_web_3_baked_animation.glb'
+  );
+  const mixer = useMemo(
+    () => (animations.length ? new THREE.AnimationMixer(scene) : null),
+    [scene, animations]
+  );
 
   useEffect(() => {
     scene.traverse((child) => {
@@ -60,7 +77,7 @@ export default function ThreeScene({ isDetailOpen, onPaperCovered }: ThreeSceneP
       if (isDetailOpen) onPaperCovered(true);
     };
 
-    mixer.addEventListener("finished", onFinished);
+    mixer.addEventListener('finished', onFinished);
     action.setLoop(THREE.LoopOnce, 1);
     action.clampWhenFinished = true;
 
@@ -77,7 +94,7 @@ export default function ThreeScene({ isDetailOpen, onPaperCovered }: ThreeSceneP
       }
     }
     return () => {
-      mixer.removeEventListener("finished", onFinished);
+      mixer.removeEventListener('finished', onFinished);
     };
   }, [isDetailOpen, mixer, animations, onPaperCovered]);
 

@@ -1,9 +1,9 @@
-﻿"use client";
+﻿'use client';
 
 const SUBSTEPS = [
   {
     step: 0,
-    text: "Freshman year, Fall 2021. Each track is an assignment, each bubble a burst of file saves. Notice how the bubbles cluster at the right edge — the deadline. Almost every commit happened in the final 24 hours. The classic pattern of a beginner: all panic, no pacing.",
+    text: 'Freshman year, Fall 2021. Each track is an assignment, each bubble a burst of file saves. Notice how the bubbles cluster at the right edge — the deadline. Almost every commit happened in the final 24 hours. The classic pattern of a beginner: all panic, no pacing.',
   },
   {
     step: 1,
@@ -15,7 +15,7 @@ const SUBSTEPS = [
   },
   {
     step: 3,
-    text: "When exactly does the work happen? This heatmap maps 43,000 file edits across days of the week and hours of the day. Sunday evenings burn brightest — 8pm, the undisputed peak of productivity. Even weekends are not spared: a full third of all edits happen on Saturday and Sunday. The architecture of my time, laid bare.",
+    text: 'When exactly does the work happen? This heatmap maps 43,000 file edits across days of the week and hours of the day. Sunday evenings burn brightest — 8pm, the undisputed peak of productivity. Even weekends are not spared: a full third of all edits happen on Saturday and Sunday. The architecture of my time, laid bare.',
   },
 ];
 
@@ -29,9 +29,7 @@ export default function Act3Narrative() {
           data-act3-step={s.step}
           className="act3-substep flex flex-col justify-center py-100"
         >
-          <p className="text-base">
-            {s.text}
-          </p>
+          <p className="text-base">{s.text}</p>
         </div>
       ))}
     </div>
