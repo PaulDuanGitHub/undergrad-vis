@@ -263,7 +263,7 @@ export function CubesScene({ data, emptyDaysData, step }: CubesSceneProps) {
     [data, emptyDaysData]
   );
 
-  const { camera } = useThree();
+  const { camera, size } = useThree();
 
   const handlePointerEnter = useCallback((e: any) => {
     e.stopPropagation();
@@ -279,16 +279,26 @@ export function CubesScene({ data, emptyDaysData, step }: CubesSceneProps) {
     setHoveredIdx(-1);
   }, []);
 
-  const getTargetCameraPos = () => {
-    return step === 4 ? new THREE.Vector3(0.01, 120, 1) : new THREE.Vector3(-60, 80, 60);
-  };
+  // 设计基准：931px canvas 宽度下，当前阵型恰好不裁剪的 zoom 值
+  const BASE_CANVAS_WIDTH = 931;
 
-  const getTargetCameraZoom = () => { // Step 4 包含 4 行，需要把镜头拉远 (zoom 越小视距越广)
-    switch (step) {
+  const getBaseZoom = (s: number) => {
+    switch (s) {
       case 0: return 14;
       case 4: return 9;
       default: return 11;
     }
+  };
+
+  const getTargetCameraPos = () => {
+    return step === 4 ? new THREE.Vector3(0.01, 120, 1) : new THREE.Vector3(-60, 80, 60);
+  };
+
+  const getTargetCameraZoom = () => {
+    const base = getBaseZoom(step);
+    // 窄屏等比缩小 zoom 以保持世界空间可见范围不变；宽屏保持设计值（不放大）
+    const scale = Math.min(1, size.width / BASE_CANVAS_WIDTH);
+    return base * scale;
   };
 
   // Frame Loop Engine
@@ -416,16 +426,18 @@ return (
             className="pointer-events-none transition-opacity duration-700" 
             style={{ opacity: step >= 1 ? 1 : 0 }}
           >
-            {/* absolute right-0 让文本框紧紧贴在 3D 锚点的左侧向左延伸，绝对不会盖住右侧方块 */}
-            <div className="absolute pr-4 right-0 text-right flex flex-col items-end w-max -translate-y-4" style={{ top: (step === 4) ? '-80px' : '80px' }}>
-              <span className="text-6xl font-light text-slate-900 mb-1">{label.term}</span>
-              <div className="flex flex-col items-end gap-1 overflow-hidden transition-all duration-700" style={{ maxHeight: (step === 2 || step === 3) ? '250px' : '0px', opacity: (step === 2 || step === 3) ? 1 : 0 }}>
-                {label.courses.map((course: string, cIdx: number) => (
-                  <div key={course} className="flex items-center gap-2 text-sm text-slate-600">
-                    <span className="text-4xl">{course}</span>
-                    <span className="w-6 h-6 rounded-full" style={{ backgroundColor: `#${COURSE_COLORS[cIdx % COURSE_COLORS.length].getHexString()}` }} />
-                  </div>
-                ))}
+            {/* 3x Supersampling: render at triple resolution then CSS-scale down for sharper CSS3D */}
+            <div style={{ transform: 'scale(0.333)', transformOrigin: 'center center' }}>
+              <div className="absolute pr-12 right-0 text-right flex flex-col items-end w-max -translate-y-12" style={{ top: (step === 4) ? '-240px' : '240px' }}>
+                <span className="font-light text-slate-900 mb-3" style={{ fontSize: '11.25rem', lineHeight: '1' }}>{label.term}</span>
+                <div className="flex flex-col items-end gap-3 overflow-hidden transition-all duration-700" style={{ maxHeight: (step === 2 || step === 3) ? '750px' : '0px', opacity: (step === 2 || step === 3) ? 1 : 0 }}>
+                  {label.courses.map((course: string, cIdx: number) => (
+                    <div key={course} className="flex items-center gap-6" style={{ fontSize: '2.625rem', color: '#475569' }}>
+                      <span style={{ fontSize: '6.75rem', lineHeight: '1' }}>{course}</span>
+                      <span className="rounded-full" style={{ width: '72px', height: '72px', backgroundColor: `#${COURSE_COLORS[cIdx % COURSE_COLORS.length].getHexString()}` }} />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </Html>

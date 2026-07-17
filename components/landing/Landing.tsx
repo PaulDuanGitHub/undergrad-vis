@@ -31,6 +31,7 @@ export default function Landing() {
     setTimeout(() => setIsDetailOpen(false), 150);
   };
 
+  // const openDetail = () => {};
   const openDetail = () => setIsDetailOpen(true);
 
   const toggleView = () => {
@@ -71,12 +72,12 @@ export default function Landing() {
           isDetailOpen ? "opacity-0 -translate-y-12" : "opacity-100 translate-y-0"
         }`}
       >
-        <div className="mt-10 text-text-secondary text-sm tracking-wider">My 2021 - 2026</div>
-        <h1 className="my-6 text-6xl text-text-primary tracking-tight">Productivity</h1>
-        <div className="italic text-center px-4 text-text-secondary">
+        <div className="mt-6 sm:mt-10 text-text-secondary text-xs sm:text-sm tracking-wider">My 2021 - 2026</div>
+        <h1 className="my-4 sm:my-6 text-4xl sm:text-5xl md:text-6xl text-text-primary tracking-tight">Productivity</h1>
+        <div className="italic text-center px-4 text-text-secondary text-sm sm:text-base">
           A <span className="font-bold">visualization</span> of over 600 workfiles created during my undergraduate.
         </div>
-        <div className="mt-6 pointer-events-auto">
+        <div className="mt-4 sm:mt-6 pointer-events-auto">
           By <a href="https://www.xianzhaoduan.com" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">Paul Duan</a>
         </div>
       </div>

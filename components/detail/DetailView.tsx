@@ -21,7 +21,7 @@ const ACTS = [
   { id: 3, narrative: <Act3Narrative /> },
 ] as const;
 
-const isDev = false;
+const isDev = true;
 
 interface DetailViewProps {
   scrollRef: RefObject<HTMLDivElement | null>;

@@ -32,6 +32,7 @@ export default function Act2Narrative() {
           <p className="text-base">{s.text}</p>
         </div>
       ))}
+      <div className="h-[50vh]"></div>
     </div>
   );
 }

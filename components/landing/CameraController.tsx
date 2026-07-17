@@ -3,7 +3,6 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import {
   INTRO_CAMERA_POSITION,
-  INITIAL_CAMERA_POSITION,
   INITIAL_TARGET,
   FOCUS_CAMERA_POSITION,
   FOCUS_TARGET,
@@ -12,6 +11,7 @@ import {
   PARALLAX_AMOUNT,
   easeInOut,
   easeOutQuart,
+  getInitialCamera,
 } from '@/constants/camera';
 
 interface CameraControllerProps {
@@ -27,35 +27,39 @@ export default function CameraController({
   isIntroDone,
   onIntroDone,
 }: CameraControllerProps) {
-  const { camera } = useThree();
+  const { camera, size } = useThree();
   const introProgress = useRef(0);
+
+  // Resolve responsive initial camera based on current viewport width
+  const responsive = getInitialCamera(size.width);
 
   const animRef = useRef({
     active: false,
     progress: 1,
     startPos: new THREE.Vector3(),
-    endPos: INITIAL_CAMERA_POSITION.clone(),
+    endPos: responsive.position.clone(),
     startTarget: new THREE.Vector3(),
-    endTarget: INITIAL_TARGET.clone(),
+    endTarget: responsive.target.clone(),
   });
 
   const currentBasePos = useRef(INTRO_CAMERA_POSITION.clone());
-  const currentBaseTarget = useRef(INITIAL_TARGET.clone());
+  const currentBaseTarget = useRef(responsive.target.clone());
   const smoothedCameraPos = useRef(INTRO_CAMERA_POSITION.clone());
-  const smoothedTarget = useRef(INITIAL_TARGET.clone());
+  const smoothedTarget = useRef(responsive.target.clone());
 
   useEffect(() => {
     if (!isIntroDone) return;
+    const init = getInitialCamera(size.width);
     const anim = animRef.current;
     anim.startPos.copy(currentBasePos.current);
     anim.startTarget.copy(currentBaseTarget.current);
     anim.endPos.copy(
-      isDetailOpen ? FOCUS_CAMERA_POSITION : INITIAL_CAMERA_POSITION
+      isDetailOpen ? FOCUS_CAMERA_POSITION : init.position
     );
-    anim.endTarget.copy(isDetailOpen ? FOCUS_TARGET : INITIAL_TARGET);
+    anim.endTarget.copy(isDetailOpen ? FOCUS_TARGET : init.target);
     anim.progress = 0;
     anim.active = true;
-  }, [isDetailOpen, isIntroDone]);
+  }, [isDetailOpen, isIntroDone, size.width]);
 
   useFrame((state, delta) => {
     // Phase 0: loading — camera stays at intro position
@@ -65,21 +69,22 @@ export default function CameraController({
       return;
     }
 
-    // Phase 1: intro animation — lerp from intro position to initial position
+    // Phase 1: intro animation — lerp from intro position to responsive initial position
     if (!isIntroDone) {
+      const init = getInitialCamera(size.width);
       introProgress.current += delta / INTRO_DURATION;
       const p = Math.min(introProgress.current, 1);
       const eased = easeOutQuart(p);
       currentBasePos.current.lerpVectors(
         INTRO_CAMERA_POSITION,
-        INITIAL_CAMERA_POSITION,
+        init.position,
         eased
       );
       camera.position.copy(currentBasePos.current);
-      camera.lookAt(INITIAL_TARGET);
+      camera.lookAt(init.target);
       smoothedCameraPos.current.copy(currentBasePos.current);
-      smoothedTarget.current.copy(INITIAL_TARGET);
-      currentBaseTarget.current.copy(INITIAL_TARGET);
+      smoothedTarget.current.copy(init.target);
+      currentBaseTarget.current.copy(init.target);
       if (p >= 1) {
         onIntroDone();
       }

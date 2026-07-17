@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   stack,
   stackOffsetWiggle,
@@ -12,6 +12,7 @@ import { scaleLinear, scaleBand, scaleOrdinal } from 'd3-scale';
 import { min, max } from 'd3-array';
 import gsap from 'gsap';
 import { useGSAPStateMachine } from '@/hooks/useGSAPStateMachine';
+import { useContainerWidth } from '@/hooks/useContainerWidth';
 import term_extensions from '@/data/term_extensions.json';
 import ext_courses from '@/data/ext_courses.json';
 import { extension, groupedExtensions } from '@/constants/extension';
@@ -27,9 +28,9 @@ export interface StreamData {
 interface Act2VisualProps {
   step: number;
   isActive: boolean;
-  width?: number;
-  height?: number;
 }
+
+const ASPECT_RATIO = 550 / 850; // height / width
 
 const extToCoursesMapping = ext_courses as Record<string, string[]>;
 const data = term_extensions['data'];
@@ -38,10 +39,9 @@ const keys = term_extensions['keys'];
 export default function Act2Visual({
   step,
   isActive,
-  width = 850,
-  height = 550,
 }: Act2VisualProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const { ref: svgRef, width: svgWidth } = useContainerWidth<HTMLDivElement>(850);
+  const svgHeight = Math.round(svgWidth * ASPECT_RATIO);
 
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
 
@@ -85,10 +85,10 @@ export default function Act2Visual({
     const maxVal = Math.max(...Object.values(counts));
     const barXScale = scaleLinear()
       .domain([0, maxVal])
-      .range([0, width - 150]);
+      .range([0, svgWidth - 150]);
     const barYScale = scaleBand()
       .domain(sortedKeys)
-      .range([50, height - 50])
+      .range([50, svgHeight - 50])
       .padding(0.3);
 
     const stackGenerator = stack<StreamData>()
@@ -98,13 +98,13 @@ export default function Act2Visual({
     const series = stackGenerator(data);
     const streamXScale = scaleLinear()
       .domain([0, N - 1])
-      .range([0, width]);
+      .range([0, svgWidth]);
 
     const yMin = min(series, (layer) => min(layer, (d) => d[0])) || 0;
     const yMax = max(series, (layer) => max(layer, (d) => d[1])) || 0;
     const streamYScale = scaleLinear()
       .domain([yMin * 1.2, yMax * 1.2])
-      .range([height, 0]);
+      .range([svgHeight, 0]);
 
     const streamArea = area<any>()
       .x((d, i) => streamXScale(i))
@@ -136,39 +136,75 @@ export default function Act2Visual({
     });
 
     return { pathsData, streamXScale, counts };
-  }, [width, height, themeColorsKey]);
+  }, [svgWidth, svgHeight, themeColorsKey]);
 
   // ==========================================
-  // 1.5 平行集 (Parallel Sets) 数学引擎
+  // 1.5 平行集 (Parallel Sets) — 统一布局引擎
+  // 所有坐标、间距在此计算，渲染层零魔数
   // ==========================================
-  const { leftNodes, rightNodes, parallelLinks } = useMemo(() => {
+  const PS = useMemo(() => {
+    // ── 布局常量（唯一需要调整的地方）──
+    const PAD_Y = 30;                // 节点列上/下留白
+    const INNER_H = svgHeight - PAD_Y * 2;
+
+    const LEFT_X = 0;              // 左列节点 <g> 的 translate X
+    const RIGHT_X = svgWidth - 300;  // 右列节点 <g> 的 translate X
+
+    const LINK_START_X = 15;         // 贝塞尔曲线起点 X
+    const LINK_END_X = RIGHT_X - 15; // 贝塞尔曲线终点 X
+
+    const INDICATOR_W = 6;           // 颜色标记矩形宽
+    const INDICATOR_H = 8;           // 颜色标记矩形高
+    const INDICATOR_GAP = 5;         // 文字与标记间距
+
+    const CLIP_OVERFLOW = 100;       // clip rect 超出 SVG 的高度（GSAP 动画用）
+
+    // ── 节点列表 ──
     const leftNodes = keys;
-    const allCourses = Array.from(
+    const rightNodes = Array.from(
       new Set(Object.values(extToCoursesMapping).flat())
     ).sort();
-    const rightNodes = allCourses;
 
-    const yPad = 30;
-    const innerH = height - yPad * 2;
-    const leftSpacing = innerH / Math.max(1, leftNodes.length - 1);
-    const rightSpacing = innerH / Math.max(1, rightNodes.length - 1);
+    // ── 单例安全 Y 轴分布 ──
+    const leftY = (i: number) =>
+      leftNodes.length <= 1
+        ? svgHeight / 2
+        : PAD_Y + i * (INNER_H / (leftNodes.length - 1));
 
+    const rightY = (i: number) =>
+      rightNodes.length <= 1
+        ? svgHeight / 2
+        : PAD_Y + i * (INNER_H / (rightNodes.length - 1));
+
+    // ── 节点数据 ──
+    const leftNodeData = leftNodes.map((ext, i) => ({ ext, y: leftY(i) }));
+    const rightNodeData = rightNodes.map((course, i) => ({ course, y: rightY(i) }));
+
+    // ── 连线数据 ──
     const links: { ext: string; course: string; y1: number; y2: number }[] = [];
-
     leftNodes.forEach((ext, lIdx) => {
       const courses = extToCoursesMapping[ext] || [];
-      const y1 = yPad + lIdx * leftSpacing;
+      const y1 = leftY(lIdx);
       courses.forEach((course) => {
         const rIdx = rightNodes.indexOf(course);
-        if (rIdx !== -1) {
-          const y2 = yPad + rIdx * rightSpacing;
-          links.push({ ext, course, y1, y2 });
-        }
+        if (rIdx !== -1) links.push({ ext, course, y1, y2: rightY(rIdx) });
       });
     });
 
-    return { leftNodes, rightNodes, parallelLinks: links };
-  }, [height]);
+    return {
+      leftNodeData,
+      rightNodeData,
+      links,
+      LEFT_X,
+      RIGHT_X,
+      LINK_START_X,
+      LINK_END_X,
+      INDICATOR_W,
+      INDICATOR_H,
+      INDICATOR_GAP,
+      CLIP_OVERFLOW,
+    };
+  }, [svgWidth, svgHeight]);
 
   const drawCurve = (x1: number, y1: number, x2: number, y2: number) => {
     const cpX = (x1 + x2) / 2;
@@ -249,7 +285,7 @@ export default function Act2Visual({
       pointerEvents: active ? 'auto' : 'none',
       zIndex: active ? 10 : 0,
     });
-    gsap.set('.parallel-clip-rect', { attr: { width: active ? width : 0 } });
+    gsap.set('.parallel-clip-rect', { attr: { width: active ? svgWidth : 0 } });
     gsap.set('.parallel-left-node, .parallel-right-node', {
       x: 0,
       opacity: active ? 1 : 0,
@@ -277,7 +313,7 @@ export default function Act2Visual({
       },
     });
     gsap.set('.path-clip-rect', {
-      attr: { width: mode === 'bar' ? (i, el) => el.dataset.w : width },
+      attr: { width: mode === 'bar' ? (i, el) => el.dataset.w : svgWidth },
     });
     gsap.set('.bar-label', {
       opacity: mode === 'bar' ? 1 : 0,
@@ -352,7 +388,7 @@ export default function Act2Visual({
       .fromTo(
         '.parallel-clip-rect',
         { attr: { width: 0 } },
-        { attr: { width: width }, duration: 1.2, ease: 'power2.inOut' },
+        { attr: { width: svgWidth }, duration: 1.2, ease: 'power2.inOut' },
         '-=0.2'
       )
       .fromTo(
@@ -477,7 +513,7 @@ export default function Act2Visual({
       .fromTo(
         '.parallel-clip-rect',
         { attr: { width: 0 } },
-        { attr: { width }, duration: 1.2, ease: 'power2.inOut' },
+        { attr: { width: svgWidth }, duration: 1.2, ease: 'power2.inOut' },
         '-=0.2'
       )
       .fromTo(
@@ -490,7 +526,7 @@ export default function Act2Visual({
 
   const morphTo = (type: 'bar' | 'stream') => {
     killAll();
-    gsap.set('.path-clip-rect', { attr: { width: width } }); // 确保形变时遮罩全开
+    gsap.set('.path-clip-rect', { attr: { width: svgWidth } }); // 确保形变时遮罩全开
     const tl = gsap.timeline();
 
     tl.to('.morph-path', {
@@ -567,7 +603,7 @@ export default function Act2Visual({
   // ==========================================
   return (
     <div
-      ref={containerRef}
+      ref={svgRef}
       className="relative w-full h-150 flex flex-col items-center justify-center"
     >
       {/* Layer 0: Glossary */}
@@ -626,20 +662,20 @@ export default function Act2Visual({
 
       {/* Layer 1: Parallel Sets */}
       <div className="layer-parallel absolute inset-0 flex items-center justify-center">
-        <svg width={width} height={height} className="overflow-visible mt-6">
+        <svg width={svgWidth} height={svgHeight} className="overflow-visible mt-6">
           <defs>
             <clipPath id="parallel-clip">
               <rect
                 className="parallel-clip-rect"
                 x="0"
-                y="-50"
+                y={-PS.CLIP_OVERFLOW / 2}
                 width="0"
-                height={height + 100}
+                height={svgHeight + PS.CLIP_OVERFLOW}
               />
             </clipPath>
           </defs>
           <g clipPath="url(#parallel-clip)">
-            {parallelLinks.map((link, idx) => {
+            {PS.links.map((link, idx) => {
               const isLinkHighlighted =
                 highlightedExts.has(link.ext) &&
                 highlightedCourses.has(link.course);
@@ -654,7 +690,7 @@ export default function Act2Visual({
               return (
                 <path
                   key={`${link.ext}-${link.course}-${idx}`}
-                  d={drawCurve(15, link.y1 - 4, width - 300 - 15, link.y2 - 4)}
+                  d={drawCurve(PS.LINK_START_X, link.y1, PS.LINK_END_X, link.y2)}
                   fill="none"
                   stroke={strokeColor}
                   strokeWidth={isLinkHighlighted ? 8 : 5}
@@ -666,40 +702,39 @@ export default function Act2Visual({
               );
             })}
           </g>
+
+          {/* ── Left nodes (extensions) ── */}
           <g>
-            {leftNodes.map((ext, i) => {
-              const y =
-                30 + i * ((height - 60) / Math.max(1, leftNodes.length - 1));
+            {PS.leftNodeData.map(({ ext, y }) => {
               const isExtHighlighted = highlightedExts.has(ext);
               const anyHovered = hoveredKey !== null;
               const opacity = !anyHovered ? 0.8 : isExtHighlighted ? 1 : 0.2;
 
               return (
-                /* 外层管 GSAP 动画，内层管 React Hover，彻底解耦 */
                 <g
                   key={ext}
-                  transform={`translate(200, ${y})`}
-                  className="parallel-left-node cursor-crosshair"
+                  transform={`translate(${PS.LEFT_X}, ${y})`}
+                  className="cursor-crosshair"
                   onMouseEnter={() => setHoveredKey(ext)}
                   onMouseLeave={() => setHoveredKey(null)}
                 >
                   <g
                     style={{ opacity }}
-                    className="transition-opacity duration-300"
+                    className="parallel-left-node transition-opacity duration-300"
                   >
                     <text
                       textAnchor="end"
-                      alignmentBaseline="middle"
+                      dominantBaseline="central"
                       className="font-serif text-xs font-bold"
                       fill={isExtHighlighted ? brand600 : '#64748B'}
                     >
                       {ext}
                     </text>
                     <rect
-                      x={5}
-                      y={-8}
-                      width={6}
-                      height={8}
+                      x={PS.INDICATOR_GAP}
+                      y={-PS.INDICATOR_H / 2}
+                      width={PS.INDICATOR_W}
+                      height={PS.INDICATOR_H}
                       fill={isExtHighlighted ? brand600 : '#CBD5E1'}
                     />
                   </g>
@@ -707,10 +742,10 @@ export default function Act2Visual({
               );
             })}
           </g>
+
+          {/* ── Right nodes (courses) ── */}
           <g>
-            {rightNodes.map((course, i) => {
-              const y =
-                30 + i * ((height - 60) / Math.max(1, rightNodes.length - 1));
+            {PS.rightNodeData.map(({ course, y }) => {
               const isCourseHighlighted = highlightedCourses.has(course);
               const anyHovered = hoveredKey !== null;
               const opacity = !anyHovered ? 0.8 : isCourseHighlighted ? 1 : 0.2;
@@ -718,7 +753,7 @@ export default function Act2Visual({
               return (
                 <g
                   key={course}
-                  transform={`translate(${width - 300}, ${y})`}
+                  transform={`translate(${PS.RIGHT_X}, ${y})`}
                   className="cursor-crosshair"
                   onMouseEnter={() => setHoveredKey(course)}
                   onMouseLeave={() => setHoveredKey(null)}
@@ -728,15 +763,15 @@ export default function Act2Visual({
                     className="parallel-right-node transition-opacity duration-300"
                   >
                     <rect
-                      x={-8}
-                      y={-8}
-                      width={6}
-                      height={8}
+                      x={-(PS.INDICATOR_GAP + PS.INDICATOR_W)}
+                      y={-PS.INDICATOR_H / 2}
+                      width={PS.INDICATOR_W}
+                      height={PS.INDICATOR_H}
                       fill={isCourseHighlighted ? brand600 : '#CBD5E1'}
                     />
                     <text
                       textAnchor="start"
-                      alignmentBaseline="middle"
+                      dominantBaseline="central"
                       className="font-serif text-[10px] tracking-wide"
                       fill={isCourseHighlighted ? brand600 : '#64748B'}
                     >
@@ -755,7 +790,7 @@ export default function Act2Visual({
         <div className="absolute top-0 h-10 flex items-center justify-center font-serif text-slate-900 text-xl tracking-widest z-10 pointer-events-none transition-opacity duration-300">
           {hoveredKey ? `${hoveredKey} files` : ' '}
         </div>
-        <svg width={width} height={height} className="overflow-visible mt-6">
+        <svg width={svgWidth} height={svgHeight} className="overflow-visible mt-6">
           <defs>
             {pathsData.map((d) => (
               <clipPath id={d.clipId} key={d.clipId}>
@@ -764,7 +799,7 @@ export default function Act2Visual({
                   x="-10"
                   y="-100"
                   width="0"
-                  height={height + 200}
+                  height={svgHeight + 200}
                   data-w={d.barW + 20}
                 />
               </clipPath>
@@ -827,7 +862,7 @@ export default function Act2Visual({
               <text
                 key={d.term_index}
                 x={streamXScale(d.term_index)}
-                y={height + 20}
+                y={svgHeight + 20}
                 textAnchor="middle"
                 className="stream-label"
               >

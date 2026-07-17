@@ -14,16 +14,16 @@ interface PunchcardData {
 interface PunchcardProps {
   data: PunchcardData[];
   width?: number;
-  height?: number;
 }
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const ASPECT_RATIO = 300 / 800; // height / width
 
 export default function PunchcardHeatmap({
   data,
   width = 800,
-  height = 300,
 }: PunchcardProps) {
+  const height = Math.round(width * ASPECT_RATIO);
   const [hoveredData, setHoveredData] = useState<PunchcardData | null>(null);
 
   const COLOR_BRAND = useThemeVariable('--color-brand');
@@ -43,7 +43,7 @@ export default function PunchcardHeatmap({
 
   return (
     <div className="relative w-full flex flex-col items-center">
-      <div className="h-6 mb-2 font-serif text-slate-900 text-sm tracking-widest">
+      <div className="h-6 mb-2 font-serif text-slate-900 text-xs sm:text-sm tracking-widest">
         {hoveredData && hoveredData.count > 0 ? (
           <div>
             <span className="text-brand">{`${hoveredData.count}`}</span>{' '}
@@ -64,7 +64,7 @@ export default function PunchcardHeatmap({
               y={i * cellHeight + cellHeight / 2}
               alignmentBaseline="middle"
               textAnchor="end"
-              className="fill-slate-400 font-serif text-[10px] uppercase tracking-widest"
+              className="fill-slate-400 font-serif text-[8px] sm:text-[10px] uppercase tracking-widest"
             >
               {day}
             </text>
@@ -77,7 +77,7 @@ export default function PunchcardHeatmap({
               x={hour * cellWidth + cellWidth / 2}
               y={innerHeight + 25}
               textAnchor="middle"
-              className="fill-slate-400 font-serif text-[10px] tracking-widest"
+              className="fill-slate-400 font-serif text-[8px] sm:text-[10px] tracking-widest"
             >
               {hour}:00
             </text>

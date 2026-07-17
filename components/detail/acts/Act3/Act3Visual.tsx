@@ -1,8 +1,9 @@
 "use client";
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { scaleLinear } from "d3-scale";
 import gsap from "gsap";
 import { useGSAPStateMachine } from "@/hooks/useGSAPStateMachine";
+import { useContainerWidth } from "@/hooks/useContainerWidth";
 import heavy_assignments_commits from "@/data/heavy_assignment_commits.json";
 import PunchcardHeatmap from "@/components/detail/acts/Act3/PunchcardHeatmap";
 import day_hour_counts from "@/data/day_hour_counts.json";
@@ -13,17 +14,18 @@ interface Act3VisualProps {
   isActive: boolean;
 }
 
+const ASPECT_RATIO = 650 / 900; // height / width
+const W_TRACK_RATIO = 600 / 900; // track width ratio
+
 export default function Act3Visual({ step, isActive }: Act3VisualProps) {
-  const containerRef = useRef<SVGSVGElement>(null);
+  const { ref: svgRef, width: svgWidth } = useContainerWidth<HTMLDivElement>(900);
+  const svgHeight = Math.round(svgWidth * ASPECT_RATIO);
 
   const COLOR_GRAY = useThemeVariable("--color-brand-light");
   const COLOR_BRAND = useThemeVariable("--color-brand");
 
   const [hoveredTrack, setHoveredTrack] = useState<string | null>(null);
   const [hoveredDay, setHoveredDay] = useState<number | null>(null);
-
-  const SVG_WIDTH = 900;
-  const SVG_HEIGHT = 650;
 
   // ==========================================
   // Data-Driven Math Engine
@@ -41,7 +43,7 @@ export default function Act3Visual({ step, isActive }: Act3VisualProps) {
     const maxSen = Math.max(...senData.flatMap(d => d.commits.map(c => c[0])), 1);
     const maxAll = Math.max(...allData.flatMap(d => d.commits.map(c => c[0])), 1);
 
-    const W_TRACK = 600;
+    const W_TRACK = Math.round(svgWidth * W_TRACK_RATIO);
 
     const scaleFresh = scaleLinear().domain([maxFresh, 0]).range([0, W_TRACK]);
     const scaleSen = scaleLinear().domain([maxSen, 0]).range([0, W_TRACK]);
@@ -50,12 +52,12 @@ export default function Act3Visual({ step, isActive }: Act3VisualProps) {
     const ROW_H_FOCUS = 30;
     const ROW_H_GRID = 9;
 
-    const freshStartY = (SVG_HEIGHT - freshData.length * ROW_H_FOCUS) / 2;
-    const senStartY = (SVG_HEIGHT - senData.length * ROW_H_FOCUS) / 2;
+    const freshStartY = (svgHeight - freshData.length * ROW_H_FOCUS) / 2;
+    const senStartY = (svgHeight - senData.length * ROW_H_FOCUS) / 2;
 
-    const allStartY = (SVG_HEIGHT - allData.length * ROW_H_GRID) / 2;
+    const allStartY = (svgHeight - allData.length * ROW_H_GRID) / 2;
 
-    const TRACK_X = (SVG_WIDTH - W_TRACK) / 2;
+    const TRACK_X = (svgWidth - W_TRACK) / 2;
 
     const pData = allData.map((d, i) => {
       const isF = isFreshman(d.term);
@@ -111,7 +113,7 @@ export default function Act3Visual({ step, isActive }: Act3VisualProps) {
     };
 
     return { processedData: pData, axes };
-  }, []);
+  }, [svgWidth, svgHeight]);
 
   // ==========================================
   // GSAP Animation State Machine
@@ -231,8 +233,11 @@ export default function Act3Visual({ step, isActive }: Act3VisualProps) {
   };
 
   return (
-    <div className="w-full flex items-center justify-center">
-      <svg ref={containerRef} width={SVG_WIDTH} height={SVG_HEIGHT} className="overflow-visible">
+    <div
+      ref={svgRef}
+      className="w-full flex items-center justify-center"
+    >
+      <svg width={svgWidth} height={svgHeight} className="overflow-visible">
         <g>
           {processedData.map((d) => {
             const isHoveredTrack = hoveredTrack === d.id;
@@ -288,7 +293,7 @@ export default function Act3Visual({ step, isActive }: Act3VisualProps) {
       </svg>
 
       <div className="punchcard-container w-full h-full flex items-center justify-center absolute top-0 left-0 opacity-0">
-        <PunchcardHeatmap data={day_hour_counts} />
+        <PunchcardHeatmap data={day_hour_counts} width={svgWidth} />
       </div>
     </div>
   );
