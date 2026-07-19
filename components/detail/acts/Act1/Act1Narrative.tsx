@@ -26,7 +26,7 @@ const SUBSTEPS = [
 export default function Act1Narrative() {
   return (
     <div className="flex flex-col items-start w-full">
-      <p className="text-base mt-20 mb-100">
+      <p className="text-sm lg:text-base mt-20 mb-100">
         An undergraduate degree isn't just awarded; it is built, block by block,
         in the quiet moments of focus and the chaotic hours of deadlines.{' '}
         <b>
@@ -44,7 +44,7 @@ export default function Act1Narrative() {
           data-act1-step={s.step}
           className="act1-substep flex flex-col justify-center py-100"
         >
-          <p className="text-base">{s.text}</p>
+          <p className="text-sm lg:text-base">{s.text}</p>
         </div>
       ))}
 

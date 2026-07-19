@@ -29,7 +29,7 @@ export default function Act2Narrative() {
           data-act2-step={s.step}
           className="act2-substep flex flex-col justify-center py-100"
         >
-          <p className="text-base">{s.text}</p>
+          <p className="text-sm lg:text-base">{s.text}</p>
         </div>
       ))}
       <div className="h-[50vh]"></div>

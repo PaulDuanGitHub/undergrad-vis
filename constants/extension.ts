@@ -3,12 +3,12 @@ export const extension = {
   '.blend': {
     type: 'Blender Workfile',
     description:
-      'The engine for 3D modeling, rigging, and rendering. Where geometric concepts meet visual art.',
+      'The engine for 3D modeling and rendering. Where geometric concepts meet visual art.',
   },
   '.kra': {
     type: 'Krita Workfile',
     description:
-      'Digital painting and raster graphics. Used for storyboarding and 2D asset creation.',
+      'Used for digital painting and 2D illustration.',
   },
 
   // --- Core Programming & Systems ---
@@ -20,7 +20,7 @@ export const extension = {
   '.h': {
     type: 'C/C++ Header',
     description:
-      'The blueprints of C/C++ projects, defining structures and interfaces before the actual logic.',
+      'The blueprints of C/C++, defining structures and interfaces before the actual logic.',
   },
   '.c': {
     type: 'C Source',
@@ -30,53 +30,53 @@ export const extension = {
   '.cpp': {
     type: 'C++ Source',
     description:
-      'Object-oriented systems programming. Building complex, performance-critical architectures.',
+      'Object-oriented systems programming. Building complex, performance-critical software.',
   },
   '.elm': {
     type: 'Elm Source',
     description:
-      'Functional frontend language. Used to build reliable, no-runtime-exception web interfaces.',
+      'Functional frontend language. Used to build no-runtime-exception web frontend.',
   },
   '.java': {
     type: 'Java Source',
     description:
-      'Strict, class-based object-oriented architecture. The standard for enterprise-level coursework.',
+      'Object-oriented architecture. The standard for enterprise-level coursework.',
   },
 
   // --- Data Science & AI ---
   '.ipynb': {
     type: 'Jupyter Notebook',
     description:
-      'Interactive data science environment. Blending live Python execution, math, and data visualization.',
+      'Interactive data science environment. Blending live Python and markdown.',
   },
   '.py': {
     type: 'Python Source',
     description:
-      'High-level, highly readable scripting. The go-to tool for algorithms, automation, and machine learning.',
+      'Highly readable scripting. The go-to tool for algorithms, automation, and ML.',
   },
 
   // --- Academic Writing & Documentation ---
   '.tex': {
     type: 'LaTeX Source',
     description:
-      'The gold standard for academic writing. Code-driven typesetting for mathematical proofs and thesis formatting.',
+      'Code-driven typesetting for mathematical proofs and thesis formatting.',
   },
   '.md': {
     type: 'Markdown Document',
     description:
-      'Lightweight, plain-text formatting. Essential for repository documentation, READMEs, and quick notes.',
+      'Lightweight, plain-text formatting. Good for documentation, READMEs, and quick notes.',
   },
   '.txt': {
     type: 'Plain Text',
     description:
-      'Raw, unformatted sequences of characters. Often used for raw data inputs or scratchpad thoughts.',
+      'Raw, unformatted sequences of characters.',
   },
 
   // --- Office & General Productivity ---
   '.docx': {
     type: 'Word Document',
     description:
-      'Standard word processing. Primarily used for general electives and non-technical essay submissions.',
+      'Standard word processing.',
   },
   '.pptx': {
     type: 'PowerPoint Presentation',

@@ -17,13 +17,13 @@ const LERP_SPEED = 5;
 
 // --- Step 1-3 的阵型配置 (4列 x 2行) ---
 const GROUP_SPACING_X = 27; 
-const GROUP_SPACING_Z = 25; 
+const GROUP_SPACING_Z = 20; 
 
 // --- Step 4 的阵型配置 (2列 x 4行，给日历流出更多横向空间) ---
 const HEATMAP_SPACING_X = 45; 
 const HEATMAP_SPACING_Z = 15; 
 
-const COURSE_COLORS = ["#7C2A1F", "#F7B4A7", "#D4442E", "#FBD5CD", "#942E20"].map(c => new THREE.Color(c));
+const COURSE_COLORS = ["#7C2A1F", "#f7b538", "#db7c26", "#d8572a", "#c32f27"].map(c => new THREE.Color(c));
 const COLOR_GRAY = new THREE.Color("#94A3B8");
 const COLOR_BRAND = new THREE.Color("#D4442E");
 
@@ -429,11 +429,11 @@ return (
             {/* 3x Supersampling: render at triple resolution then CSS-scale down for sharper CSS3D */}
             <div style={{ transform: 'scale(0.333)', transformOrigin: 'center center' }}>
               <div className="absolute pr-12 right-0 text-right flex flex-col items-end w-max -translate-y-12" style={{ top: (step === 4) ? '-240px' : '240px' }}>
-                <span className="font-light text-slate-900 mb-3" style={{ fontSize: '11.25rem', lineHeight: '1' }}>{label.term}</span>
-                <div className="flex flex-col items-end gap-3 overflow-hidden transition-all duration-700" style={{ maxHeight: (step === 2 || step === 3) ? '750px' : '0px', opacity: (step === 2 || step === 3) ? 1 : 0 }}>
+                <span className="font-light text-slate-900 mb-3" style={{ fontSize: '13rem', lineHeight: '1' }}>{label.term}</span>
+                <div className="flex flex-col items-end gap-8 overflow-hidden transition-all duration-700" style={{ maxHeight: (step === 2 || step === 3) ? '900px' : '0px', opacity: (step === 2 || step === 3) ? 1 : 0 }}>
                   {label.courses.map((course: string, cIdx: number) => (
                     <div key={course} className="flex items-center gap-6" style={{ fontSize: '2.625rem', color: '#475569' }}>
-                      <span style={{ fontSize: '6.75rem', lineHeight: '1' }}>{course}</span>
+                      <span style={{ fontSize: '9rem', lineHeight: '1' }}>{course}</span>
                       <span className="rounded-full" style={{ width: '72px', height: '72px', backgroundColor: `#${COURSE_COLORS[cIdx % COURSE_COLORS.length].getHexString()}` }} />
                     </div>
                   ))}

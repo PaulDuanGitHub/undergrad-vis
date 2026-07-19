@@ -50,3 +50,33 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ── Touch Screen Optimizations ── */
+html {
+  /* Prevent double-tap zoom on all elements */
+  touch-action: manipulation;
+  /* Prevent pull-to-refresh and overscroll rubber-band on mobile */
+  overscroll-behavior: none;
+}
+
+/* Prevent accidental zoom on input/button taps (iOS) */
+input, button, select, textarea {
+  touch-action: manipulation;
+}
+
+/* Canvas / interactive areas: fully disable browser gestures */
+canvas, [data-touch-lock] {
+  touch-action: none;
+}
+
+/* Prevent text selection on interactive UI elements */
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Smooth momentum scrolling for scrollable panels on iOS */
+.overscroll-contain {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}

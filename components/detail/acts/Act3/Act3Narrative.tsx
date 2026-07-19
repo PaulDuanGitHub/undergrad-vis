@@ -29,7 +29,7 @@ export default function Act3Narrative() {
           data-act3-step={s.step}
           className="act3-substep flex flex-col justify-center py-100"
         >
-          <p className="text-base">{s.text}</p>
+          <p className="text-sm lg:text-base">{s.text}</p>
         </div>
       ))}
     </div>

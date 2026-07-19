@@ -14,23 +14,44 @@ interface PunchcardData {
 interface PunchcardProps {
   data: PunchcardData[];
   width?: number;
+  flip?: boolean;
 }
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const ASPECT_RATIO = 300 / 800; // height / width
+const HOURS = 24;
+const DAYS_COUNT = 7;
+const HOUR_TICKS = [0, 6, 12, 18, 23];
+
+const ASPECT_LANDSCAPE = 300 / 800;
+const FLIPPED_CELL_W = 30;
+const FLIPPED_CELL_H = 20;
 
 export default function PunchcardHeatmap({
   data,
   width = 800,
+  flip = false,
 }: PunchcardProps) {
-  const height = Math.round(width * ASPECT_RATIO);
+  const flipped = flip;
   const [hoveredData, setHoveredData] = useState<PunchcardData | null>(null);
-
   const COLOR_BRAND = useThemeVariable('--color-brand');
 
-  const padding = { top: 30, right: 20, bottom: 40, left: 50 };
-  const innerWidth = width - padding.left - padding.right;
-  const innerHeight = height - padding.top - padding.bottom;
+  const pad = flipped
+    ? { top: 10, right: 15, bottom: 35, left: 45 }
+    : { top: 30, right: 20, bottom: 40, left: 50 };
+
+  const cols = flipped ? DAYS_COUNT : HOURS;
+  const rows = flipped ? HOURS : DAYS_COUNT;
+
+  const cellW = flipped ? FLIPPED_CELL_W : (width - pad.left - pad.right) / cols;
+  const cellH = flipped
+    ? FLIPPED_CELL_H
+    : (width * ASPECT_LANDSCAPE - pad.top - pad.bottom) / rows;
+
+  const innerW = cellW * cols;
+  const innerH = cellH * rows;
+
+  const svgW = flipped ? innerW + pad.left + pad.right : width;
+  const svgH = Math.round(innerH + pad.top + pad.bottom);
 
   const { maxCount, radiusScale } = useMemo(() => {
     const maxVal = max(data, (d) => d.count) || 1;
@@ -38,69 +59,81 @@ export default function PunchcardHeatmap({
     return { maxCount: maxVal, radiusScale };
   }, [data]);
 
-  const cellWidth = innerWidth / 24;
-  const cellHeight = innerHeight / 7;
+  const xLabels = flipped
+    ? DAYS.map((day, i) => ({ label: day, pos: i }))
+    : HOUR_TICKS.map((h) => ({ label: `${h}:00`, pos: h }));
+
+  const yLabels = flipped
+    ? HOUR_TICKS.map((h) => ({ label: `${h}:00`, pos: h }))
+    : DAYS.map((day, i) => ({ label: day, pos: i }));
+
+  const getCX = (d: PunchcardData) =>
+    (flipped ? d.day_of_week : d.hour) * cellW + cellW / 2;
+  const getCY = (d: PunchcardData) =>
+    (flipped ? d.hour : d.day_of_week) * cellH + cellH / 2;
+
+  const gridLines = Array.from({ length: rows }, (_, i) => i);
 
   return (
-    <div className="relative w-full flex flex-col items-center">
+    <div className="relative w-full flex flex-col items-center" onTouchEnd={() => setHoveredData(null)}>
       <div className="h-6 mb-2 font-serif text-slate-900 text-xs sm:text-sm tracking-widest">
         {hoveredData && hoveredData.count > 0 ? (
           <div>
             <span className="text-brand">{`${hoveredData.count}`}</span>{' '}
-            {` files modified at ${hoveredData.hour}:00 on ${DAYS[hoveredData.day_of_week]}`}
+            {` files at ${hoveredData.hour}:00 on ${DAYS[hoveredData.day_of_week]}`}
           </div>
         ) : (
           ' '
         )}
       </div>
 
-      <svg width={width} height={height}>
-        <g transform={`translate(${padding.left}, ${padding.top})`}>
-          {/* Y Axis */}
-          {DAYS.map((day, i) => (
+      <svg width={svgW} height={svgH}>
+        <g transform={`translate(${pad.left}, ${pad.top})`}>
+          {yLabels.map(({ label, pos }) => (
             <text
-              key={day}
-              x={-15}
-              y={i * cellHeight + cellHeight / 2}
-              alignmentBaseline="middle"
+              key={label}
+              x={-8}
+              y={pos * cellH + cellH / 2}
+              dominantBaseline="central"
               textAnchor="end"
-              className="fill-slate-400 font-serif text-[8px] sm:text-[10px] uppercase tracking-widest"
-            >
-              {day}
-            </text>
-          ))}
-
-          {/* X Axis (Hours) */}
-          {[0, 6, 12, 18, 23].map((hour) => (
-            <text
-              key={hour}
-              x={hour * cellWidth + cellWidth / 2}
-              y={innerHeight + 25}
-              textAnchor="middle"
               className="fill-slate-400 font-serif text-[8px] sm:text-[10px] tracking-widest"
             >
-              {hour}:00
+              {label}
             </text>
           ))}
 
-          {/* Background Grid Lines */}
-          {DAYS.map((_, i) => (
+          {xLabels.map(({ label, pos }) => (
+            <text
+              key={label}
+              x={pos * cellW + cellW / 2}
+              y={innerH + 20}
+              textAnchor={flipped ? 'end' : 'middle'}
+              transform={
+                flipped
+                  ? `rotate(-45, ${pos * cellW + cellW / 2}, ${innerH + 20})`
+                  : undefined
+              }
+              className="fill-slate-400 font-serif text-[8px] sm:text-[10px] tracking-widest"
+            >
+              {label}
+            </text>
+          ))}
+
+          {gridLines.map((i) => (
             <line
-              key={`hline-${i}`}
+              key={`grid-${i}`}
               x1={0}
-              y1={i * cellHeight + cellHeight / 2}
-              x2={innerWidth}
-              y2={i * cellHeight + cellHeight / 2}
+              y1={i * cellH + cellH / 2}
+              x2={innerW}
+              y2={i * cellH + cellH / 2}
               className="stroke-slate-200 stroke-[0.5px]"
             />
           ))}
 
-          {/* Render Data Points (Punchcard Holes) */}
-          {data.map((d, i) => {
-            const cx = d.hour * cellWidth + cellWidth / 2;
-            const cy = d.day_of_week * cellHeight + cellHeight / 2;
+          {data.map((d) => {
+            const cx = getCX(d);
+            const cy = getCY(d);
             const r = radiusScale(d.count);
-
             const opacity = 0.2 + (d.count / maxCount) * 0.8;
 
             return (
@@ -114,6 +147,7 @@ export default function PunchcardHeatmap({
                 className="transition-all duration-300 hover:fill-brand-700"
                 onMouseEnter={() => setHoveredData(d)}
                 onMouseLeave={() => setHoveredData(null)}
+                onTouchStart={() => setHoveredData(d)}
               />
             );
           })}

@@ -11,6 +11,7 @@ import Act2Narrative from '@/components/detail/acts/Act2/Act2Narrative';
 import Act2Visual from '@/components/detail/acts/Act2/Act2Visual';
 import Act3Narrative from '@/components/detail/acts/Act3/Act3Narrative';
 import Act3Visual from '@/components/detail/acts/Act3/Act3Visual';
+import DetailViewMd from '@/components/detail/DetailViewMd';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -64,9 +65,20 @@ export default function DetailView({ scrollRef, isDetailVisible, onExit }: Detai
   const [act3Step, setAct3Step] = useState(0);
   const [activeAct, setActiveAct] = useState(1);
 
+  // ── Breakpoint detection ──
+  const [isMdDown, setIsMdDown] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1023px)');
+    const update = () => setIsMdDown(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
   // === 阻尼回弹退出的状态与逻辑 ===
   const [pullProgress, setPullProgress] = useState(0);
-  const PULL_THRESHOLD = 800; // 需要滚动多少“距离”才能触发退出
+  const PULL_THRESHOLD = 800; // 需要滚动多少"距离"才能触发退出
+  const touchPullStartRef = useRef(0);
 
   const handleWheel = (e: React.WheelEvent) => {
     if (!scrollRef.current) return;
@@ -98,6 +110,31 @@ export default function DetailView({ scrollRef, isDetailVisible, onExit }: Detai
     return () => clearTimeout(timeout);
   }, [pullProgress]);
 
+  // ── Touch pull-to-exit (for touchscreen laptops / desktop touch) ──
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!scrollRef.current) return;
+    const dy = e.touches[0].clientY - touchPullStartRef.current;
+    // Only activate when at the very top and pulling down (dy > 0)
+    if (scrollRef.current.scrollTop <= 0 && dy > 0) {
+      setPullProgress(dy);
+      if (dy >= PULL_THRESHOLD) {
+        onExit();
+        setPullProgress(0);
+      }
+    } else {
+      setPullProgress(0);
+    }
+  };
+
+  const handleTouchStartPull = (e: React.TouchEvent) => {
+    touchPullStartRef.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEndPull = () => {
+    setPullProgress(0);
+    touchPullStartRef.current = 0;
+  };
+
   // 计算 SVG 圆环动画参数
   const radius = 16;
   const circumference = 2 * Math.PI * radius;
@@ -127,11 +164,19 @@ export default function DetailView({ scrollRef, isDetailVisible, onExit }: Detai
 
   }, { scope: scrollRef });
 
+  // ── sm / md: use DetailViewMd ──
+  if (isMdDown) {
+    return <DetailViewMd isDetailVisible={isDetailVisible} onExit={onExit} />;
+  }
+
   return (
     <div
       ref={scrollRef}
       onWheel={handleWheel}
-      className={`absolute inset-0 overflow-y-auto transition-opacity ease-out ${
+      onTouchStart={handleTouchStartPull}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEndPull}
+      className={`absolute inset-0 overflow-y-auto overscroll-contain transition-opacity ease-out ${
         isDetailVisible
           ? "duration-1000 opacity-100 pointer-events-auto z-10"
           : "duration-200 opacity-0 pointer-events-none"
@@ -165,14 +210,14 @@ export default function DetailView({ scrollRef, isDetailVisible, onExit }: Detai
       <div ref={contentRef} className="flex relative bg-surface text-text-primary h-fit">
 
         {/* ===== Left: scrollable narrative text ===== */}
-        <div className="w-[30%] flex flex-col items-center pt-40 px-12 select-text">
+        <div className="w-[35%] flex flex-col items-center pt-40 px-8 select-text">
           <div className="w-full flex flex-col items-center">
             <h2 className="mb-2">My 2021 - 2026</h2>
-            <h1 className="text-5xl mb-8">Productivity</h1>
-            <h2 className="text-center italic mb-8">
+            <h1 className="text-4xl lg:text-5xl mb-8">Productivity</h1>
+            <h2 className="text-center italic mb-8 text-sm lg:text-base">
                 A visualization of over 600 workfiles created during my undergraduate.
             </h2>
-            <p className='text-text-secondary'>By <a href="https://www.xianzhaoduan.com" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">Paul Duan</a></p>
+            <p className='text-text-secondary text-sm'>By <a href="https://www.xianzhaoduan.com" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">Paul Duan</a></p>
           </div>
           {ACTS.map((act) => (
             <div key={`act-${act.id}-narrative`} className="narrative-text flex flex-col">
@@ -182,7 +227,7 @@ export default function DetailView({ scrollRef, isDetailVisible, onExit }: Detai
         </div>
 
         {/* ===== Right: pinned chart layers ===== */}
-        <div className="w-[70%] h-screen sticky top-0 flex items-center justify-center p-8">
+        <div className="w-[65%] h-screen sticky top-0 flex items-center justify-center p-8">
           <div ref={rightChartRef} className="relative w-full h-full flex items-center justify-center">
             <div className="chart-layer absolute inset-0 flex items-center justify-center"><Act1Visual step={act1Step} /></div>
             <div className="chart-layer absolute inset-0 flex items-center justify-center"><Act2Visual isActive={activeAct === 2} step={act2Step} /></div>

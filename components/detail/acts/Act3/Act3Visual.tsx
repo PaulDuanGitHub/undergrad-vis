@@ -3,7 +3,7 @@ import React, { useMemo, useState } from "react";
 import { scaleLinear } from "d3-scale";
 import gsap from "gsap";
 import { useGSAPStateMachine } from "@/hooks/useGSAPStateMachine";
-import { useContainerWidth } from "@/hooks/useContainerWidth";
+import { useContainerDim } from "@/hooks/useContainerDim";
 import heavy_assignments_commits from "@/data/heavy_assignment_commits.json";
 import PunchcardHeatmap from "@/components/detail/acts/Act3/PunchcardHeatmap";
 import day_hour_counts from "@/data/day_hour_counts.json";
@@ -12,14 +12,18 @@ import { useThemeVariable } from "@/hooks/useThemeVariable";
 interface Act3VisualProps {
   step: number;
   isActive: boolean;
+  compact?: boolean;
 }
 
 const ASPECT_RATIO = 650 / 900; // height / width
 const W_TRACK_RATIO = 600 / 900; // track width ratio
 
-export default function Act3Visual({ step, isActive }: Act3VisualProps) {
-  const { ref: svgRef, width: svgWidth } = useContainerWidth<HTMLDivElement>(900);
-  const svgHeight = Math.round(svgWidth * ASPECT_RATIO);
+export default function Act3Visual({ step, isActive, compact = false }: Act3VisualProps) {
+  const { ref: svgRef, width: svgWidth, height: containerHeight } = useContainerDim<HTMLDivElement>(900);
+  const svgHeight = Math.min(
+    Math.round(svgWidth * ASPECT_RATIO),
+    containerHeight || Infinity,
+  );
 
   const COLOR_GRAY = useThemeVariable("--color-brand-light");
   const COLOR_BRAND = useThemeVariable("--color-brand");
@@ -50,7 +54,7 @@ export default function Act3Visual({ step, isActive }: Act3VisualProps) {
     const scaleAll = scaleLinear().domain([maxAll, 0]).range([0, W_TRACK]);
 
     const ROW_H_FOCUS = 30;
-    const ROW_H_GRID = 9;
+    const ROW_H_GRID = compact ? 7 : 9;
 
     const freshStartY = (svgHeight - freshData.length * ROW_H_FOCUS) / 2;
     const senStartY = (svgHeight - senData.length * ROW_H_FOCUS) / 2;
@@ -102,7 +106,8 @@ export default function Act3Visual({ step, isActive }: Act3VisualProps) {
 
     const generateTicks = (maxD: number) => {
       const ticks = [];
-      for (let i = 0; i <= Math.ceil(maxD); i += 0.5) { if (i <= maxD) ticks.push(i); }
+      const step = compact ? 1 : 0.5;
+      for (let i = 0; i <= Math.ceil(maxD); i += step) { if (i <= maxD) ticks.push(i); }
       return ticks;
     };
 
@@ -113,7 +118,7 @@ export default function Act3Visual({ step, isActive }: Act3VisualProps) {
     };
 
     return { processedData: pData, axes };
-  }, [svgWidth, svgHeight]);
+  }, [svgWidth, svgHeight, compact]);
 
   // ==========================================
   // GSAP Animation State Machine
@@ -224,6 +229,7 @@ export default function Act3Visual({ step, isActive }: Act3VisualProps) {
                 className="cursor-pointer"
                 onMouseEnter={() => setHoveredDay(t)}
                 onMouseLeave={() => setHoveredDay(null)}
+                onTouchStart={() => setHoveredDay(t)}
               />
             </g>
           );
@@ -236,6 +242,7 @@ export default function Act3Visual({ step, isActive }: Act3VisualProps) {
     <div
       ref={svgRef}
       className="w-full flex items-center justify-center"
+      onTouchEnd={() => { setHoveredTrack(null); setHoveredDay(null); }}
     >
       <svg width={svgWidth} height={svgHeight} className="overflow-visible">
         <g>
@@ -251,6 +258,7 @@ export default function Act3Visual({ step, isActive }: Act3VisualProps) {
                 data-x2={d.t2.x} data-y2={d.t2.y} data-op2={d.t2.op}
                 onMouseEnter={() => setHoveredTrack(d.id)}
                 onMouseLeave={() => setHoveredTrack(null)}
+                onTouchStart={() => setHoveredTrack(d.id)}
               >
                 <line
                   className="track-line"
@@ -293,7 +301,7 @@ export default function Act3Visual({ step, isActive }: Act3VisualProps) {
       </svg>
 
       <div className="punchcard-container w-full h-full flex items-center justify-center absolute top-0 left-0 opacity-0">
-        <PunchcardHeatmap data={day_hour_counts} width={svgWidth} />
+        <PunchcardHeatmap data={day_hour_counts} width={svgWidth} flip={compact} />
       </div>
     </div>
   );

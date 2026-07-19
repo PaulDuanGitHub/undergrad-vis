@@ -1,123 +1,123 @@
 {
   ".blend": [
-    "Making Art and Understanding Technology & Images"
+    "Art & Tech"
   ],
   ".c": [
-    "Development Basics",
-    "Computer Architecture",
-    "Operating Systems"
+    "Dev Basics",
+    "Comp Arch",
+    "OS"
   ],
   ".cpp": [
-    "Computer Graphics",
-    "Scientific Computing"
+    "Graphics",
+    "Sci Computing"
   ],
   ".docx": [
-    "Making Art and Understanding Images",
-    "Introduction to Astronomy and Astrophysics",
-    "Introduction to Software Design Using Web Programming",
-    "Algorithms and Software Design",
-    "Algorithms and Complexity",
-    "Introduction to Data Mining",
-    "Computer Graphics",
-    "Computer Networks and Security",
-    "Operating Systems",
-    "Applications of Machine Learning",
-    "Natural Language Processing",
-    "Scientific Computing",
-    "Writing Practices",
+    "Art & Images",
+    "Intro Astronomy",
+    "Web Dev",
+    "Algo Design",
+    "Algo Complexity",
+    "Intro Data Mining",
+    "Graphics",
+    "Networks",
+    "OS",
+    "ML",
+    "NLP",
+    "Sci Computing",
+    "Writing",
     "Linear Algebra I",
-    "Introduction to the History Western of Music II",
-    "Introduction to Probability"
+    "Intro Music History II",
+    "Intro Probability"
   ],
   ".elm": [
-    "Introduction to Software Design Using Web Programming"
+    "Web Dev"
   ],
   ".h": [
-    "Development Basics"
+    "Dev Basics"
   ],
   ".hs": [
-    "Introduction to Computational Thinking",
-    "Principles of Programming Languages"
+    "Intro Comp Thinking",
+    "Prog Languages"
   ],
   ".ipynb": [
-    "Discrete Mathematics for Computer Science",
-    "Introduction to Programming",
-    "Applications of Machine Learning",
-    "Applied Cryptography",
-    "Natural Language Processing",
-    "Introduction to the History Western of Music II"
+    "Discrete Math",
+    "Intro Programming",
+    "ML",
+    "Cryptography",
+    "NLP",
+    "Intro Music History II"
   ],
   ".java": [
-    "Data Structures and Algorithms",
-    "Introduction to Software Development",
-    "Concurrent Systems",
-    "Algorithms and Complexity"
+    "DSA",
+    "Intro Software Dev",
+    "Concurrent Sys",
+    "Algo Complexity"
   ],
   ".kra": [
-    "Making Art and Understanding Technology & Images"
+    "Art & Tech"
   ],
   ".md": [
-    "Making Art and Understanding Technology & Images",
-    "Making Art and Understanding Images",
-    "Introduction to Computational Thinking",
-    "Principles of Programming Languages",
-    "Applications of Machine Learning",
-    "Applied Cryptography",
-    "Natural Language Processing",
-    "Linear Optimization",
-    "Writing Practices",
-    "Introduction to the History Western of Music II"
+    "Art & Tech",
+    "Art & Images",
+    "Intro Comp Thinking",
+    "Prog Languages",
+    "ML",
+    "Cryptography",
+    "NLP",
+    "Linear Opt",
+    "Writing",
+    "Intro Music History II"
   ],
   ".pptx": [
-    "Introduction to Software Design Using Web Programming",
-    "Operating Systems"
+    "Web Dev",
+    "OS"
   ],
   ".py": [
-    "Automata and Computability",
-    "Algorithms and Software Design",
-    "Introduction to Data Mining",
-    "Applications of Machine Learning",
-    "Applied Cryptography",
-    "Natural Language Processing",
-    "Linear Optimization"
+    "Automata",
+    "Algo Design",
+    "Intro Data Mining",
+    "ML",
+    "Cryptography",
+    "NLP",
+    "Linear Opt"
   ],
   ".tex": [
-    "Introduction to Astronomy and Astrophysics",
-    "Introduction to Computational Thinking",
-    "Development Basics",
-    "Automata and Computability",
-    "Data Structures and Algorithms",
+    "Intro Astronomy",
+    "Intro Comp Thinking",
+    "Dev Basics",
+    "Automata",
+    "DSA",
     "Databases",
-    "Computer Architecture",
-    "Logical Reasoning for Computer Science",
-    "Introduction to Software Development",
-    "Concurrent Systems",
-    "Algorithms and Software Design",
-    "Algorithms and Complexity",
-    "Introduction to Data Mining",
-    "Computer Graphics",
-    "Syntax-Based Tools and Compilers",
-    "Applications of Machine Learning",
-    "Applied Cryptography",
-    "Natural Language Processing",
-    "Linear Optimization",
+    "Comp Arch",
+    "Logic",
+    "Intro Software Dev",
+    "Concurrent Sys",
+    "Algo Design",
+    "Algo Complexity",
+    "Intro Data Mining",
+    "Graphics",
+    "Compilers",
+    "ML",
+    "Cryptography",
+    "NLP",
+    "Linear Opt",
     "Linear Algebra I",
-    "Introductory Physics",
-    "An Introduction to Data Science Methods"
+    "Intro Physics",
+    "Intro Data Science"
   ],
   ".txt": [
-    "Making Art and Understanding Images",
-    "Introduction to Programming",
-    "Development Basics",
+    "Art & Images",
+    "Intro Programming",
+    "Dev Basics",
     "Databases",
-    "Concurrent Systems",
-    "Principles of Programming Languages",
-    "Natural Language Processing",
-    "Scientific Computing"
+    "Concurrent Sys",
+    "Prog Languages",
+    "NLP",
+    "Sci Computing"
   ],
   ".xlsx": [
-    "Introduction to Astronomy and Astrophysics",
-    "Algorithms and Software Design",
-    "Introductory Physics"
+    "Intro Astronomy",
+    "Algo Design",
+    "Intro Physics"
   ]
 }

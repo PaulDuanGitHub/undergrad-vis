@@ -12,7 +12,7 @@ import { scaleLinear, scaleBand, scaleOrdinal } from 'd3-scale';
 import { min, max } from 'd3-array';
 import gsap from 'gsap';
 import { useGSAPStateMachine } from '@/hooks/useGSAPStateMachine';
-import { useContainerWidth } from '@/hooks/useContainerWidth';
+import { useContainerDim } from '@/hooks/useContainerDim';
 import term_extensions from '@/data/term_extensions.json';
 import ext_courses from '@/data/ext_courses.json';
 import { extension, groupedExtensions } from '@/constants/extension';
@@ -28,6 +28,7 @@ export interface StreamData {
 interface Act2VisualProps {
   step: number;
   isActive: boolean;
+  compact?: boolean;
 }
 
 const ASPECT_RATIO = 550 / 850; // height / width
@@ -39,9 +40,13 @@ const keys = term_extensions['keys'];
 export default function Act2Visual({
   step,
   isActive,
+  compact = false,
 }: Act2VisualProps) {
-  const { ref: svgRef, width: svgWidth } = useContainerWidth<HTMLDivElement>(850);
-  const svgHeight = Math.round(svgWidth * ASPECT_RATIO);
+  const { ref: svgRef, width: svgWidth, height: containerHeight } = useContainerDim<HTMLDivElement>(850);
+  const svgHeight = Math.min(
+    Math.round(svgWidth * ASPECT_RATIO),
+    containerHeight || Infinity,
+  );
 
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
 
@@ -58,26 +63,24 @@ export default function Act2Visual({
   const textPrimary = useThemeVariable('--color-text-primary') || '#292524';
 
   const themeColorsKey = [
-    brand50,
-    brand100,
-    brand200,
     brand300,
-    brand400,
     brand500,
     brand600,
     brand700,
-  ].join(',');
+  ];
+
+  console.log(themeColorsKey);
 
   // ==========================================
   // 1. D3 双重空间数学引擎 (仅负责计算，不负责动画)
   // ==========================================
-  const { pathsData, streamXScale, counts } = useMemo(() => {
+  const { pathsData, streamXScale, counts, legendItems } = useMemo(() => {
     const N = data.length;
     const counts: Record<string, number> = {};
     keys.forEach((k) => (counts[k] = 0));
     data.forEach((d) => keys.forEach((k) => (counts[k] += Number(d[k]) || 0)));
     const sortedKeys = [...keys].sort((a, b) => counts[b] - counts[a]);
-    const themeColors = themeColorsKey.split(',');
+    const themeColors = themeColorsKey;
     const colorScale = scaleOrdinal<string>()
       .domain(sortedKeys)
       .range(themeColors);
@@ -98,7 +101,7 @@ export default function Act2Visual({
     const series = stackGenerator(data);
     const streamXScale = scaleLinear()
       .domain([0, N - 1])
-      .range([0, svgWidth]);
+      .range([35, svgWidth - 35]);
 
     const yMin = min(series, (layer) => min(layer, (d) => d[0])) || 0;
     const yMax = max(series, (layer) => max(layer, (d) => d[1])) || 0;
@@ -118,7 +121,7 @@ export default function Act2Visual({
       const barY = barYScale(key)!;
       const barH = barYScale.bandwidth();
       const barArea = area<any>()
-        .x((d, i) => (i / (N - 1)) * barW)
+        .x((d, i) => 10 + (i / (N - 1)) * barW)
         .y0(barY + barH)
         .y1(barY)
         .curve(curveBasis);
@@ -135,7 +138,17 @@ export default function Act2Visual({
       };
     });
 
-    return { pathsData, streamXScale, counts };
+    // ── Legend items (2 rows × 8 cols) ──
+    const COLS = 8;
+    const legendItems = sortedKeys.map((key, i) => ({
+      key,
+      color: colorScale(key),
+      count: counts[key],
+      row: Math.floor(i / COLS),
+      col: i % COLS,
+    }));
+
+    return { pathsData, streamXScale, counts, legendItems };
   }, [svgWidth, svgHeight, themeColorsKey]);
 
   // ==========================================
@@ -144,17 +157,17 @@ export default function Act2Visual({
   // ==========================================
   const PS = useMemo(() => {
     // ── 布局常量（唯一需要调整的地方）──
-    const PAD_Y = 30;                // 节点列上/下留白
+    const PAD_Y = compact ? 20 : 30;                // 节点列上/下留白
     const INNER_H = svgHeight - PAD_Y * 2;
 
-    const LEFT_X = 0;              // 左列节点 <g> 的 translate X
-    const RIGHT_X = svgWidth - 300;  // 右列节点 <g> 的 translate X
+    const LEFT_X = 50;              // 左列节点 <g> 的 translate X
+    const RIGHT_X = svgWidth - 120;  // 右列节点 <g> 的 translate X
 
-    const LINK_START_X = 15;         // 贝塞尔曲线起点 X
+    const LINK_START_X = 65;         // 贝塞尔曲线起点 X
     const LINK_END_X = RIGHT_X - 15; // 贝塞尔曲线终点 X
 
-    const INDICATOR_W = 6;           // 颜色标记矩形宽
-    const INDICATOR_H = 8;           // 颜色标记矩形高
+    const INDICATOR_W = compact ? 3 : 6;           // 颜色标记矩形宽
+    const INDICATOR_H = compact ? 4 : 8;           // 颜色标记矩形高
     const INDICATOR_GAP = 5;         // 文字与标记间距
 
     const CLIP_OVERFLOW = 100;       // clip rect 超出 SVG 的高度（GSAP 动画用）
@@ -259,7 +272,7 @@ export default function Act2Visual({
   /** 杀死所有动画元素上的未完成 tween，防止快速滑动重叠 */
   const killAll = () => {
     gsap.killTweensOf(
-      '.layer-glossary, .layer-parallel, .layer-bar-stream, .badge-container, .desc-container, .desc-text, .parallel-clip-rect, .parallel-left-node, .parallel-right-node, .morph-path, .path-clip-rect, .bar-label, .stream-label'
+      '.layer-glossary, .layer-parallel, .layer-bar-stream, .badge-container, .desc-container, .desc-text, .parallel-clip-rect, .parallel-left-node, .parallel-right-node, .morph-path, .path-clip-rect, .bar-label, .stream-label, .legend-item, .stream-guide'
     );
   };
 
@@ -272,9 +285,9 @@ export default function Act2Visual({
     });
     gsap.set('.badge-container', { x: 0, opacity: active ? 1 : 0 });
     gsap.set('.desc-container', {
-      width: active ? '100%' : 0,
-      paddingLeft: active ? 16 : 0,
-      paddingRight: active ? 16 : 0,
+      width: active ? '83%' : 0,
+      paddingLeft: active ? 8 : 0,
+      paddingRight: active ? 8 : 0,
     });
     gsap.set('.desc-text', { opacity: active ? 1 : 0 });
   };
@@ -304,6 +317,7 @@ export default function Act2Visual({
       gsap.set('.path-clip-rect', { attr: { width: 0 } });
       gsap.set('.bar-label', { opacity: 0, x: -10 });
       gsap.set('.stream-label', { opacity: 0, y: 10 });
+      gsap.set('.legend-item', { opacity: 0, y: -10 });
       return;
     }
 
@@ -323,6 +337,10 @@ export default function Act2Visual({
       opacity: mode === 'stream' ? 1 : 0,
       y: mode === 'stream' ? 0 : 10,
     });
+    gsap.set('.legend-item', {
+      opacity: mode === 'stream' ? 1 : 0,
+      y: mode === 'stream' ? 0 : -10,
+    });
   };
 
   // --- 动态过渡函数 (Timelines) ---
@@ -340,9 +358,9 @@ export default function Act2Visual({
       { x: -30, opacity: 0 },
       { x: 0, opacity: 1, duration: 0.3, stagger: 0.02 }
     ).to('.desc-container', {
-      width: '100%',
-      paddingLeft: 16,
-      paddingRight: 16,
+      width: '83%',
+      paddingLeft: 8,
+      paddingRight: 8,
       duration: 0.6,
       ease: 'power2.out',
     });
@@ -350,6 +368,7 @@ export default function Act2Visual({
 
   const transition0To1 = () => {
     killAll();
+    setBarStreamState('hidden'); // 确保 bar-stream 层已隐藏
     gsap.set('.layer-parallel', {
       opacity: 1,
       pointerEvents: 'auto',
@@ -360,13 +379,13 @@ export default function Act2Visual({
       width: 0,
       paddingLeft: 0,
       paddingRight: 0,
-      duration: 0.5,
+      duration: 0.25,
       ease: 'power2.in',
     })
-      .to('.desc-text', { opacity: 0, duration: 0.3 }, '<')
+      .to('.desc-text', { opacity: 0, duration: 0.1 }, '<')
       .to(
         '.badge-container',
-        { x: -30, opacity: 0, duration: 0.4, stagger: 0.01 },
+        { opacity: 0, duration: 0.4, stagger: 0.01 },
         '-=0.2'
       )
       .set('.layer-glossary', {
@@ -376,31 +395,32 @@ export default function Act2Visual({
       })
       .fromTo(
         '.parallel-left-node',
-        { x: -30, opacity: 0 },
+        { opacity: 0 },
         {
-          x: 0,
           opacity: 1,
-          duration: 0.6,
+          duration: 0.4,
           stagger: 0.02,
           ease: 'power2.out',
-        }
+        },
+        "-=0.2"
       )
       .fromTo(
         '.parallel-clip-rect',
         { attr: { width: 0 } },
-        { attr: { width: svgWidth }, duration: 1.2, ease: 'power2.inOut' },
-        '-=0.2'
+        { attr: { width: svgWidth }, duration: 0.8, ease: 'power2.inOut' },
+        "<"
       )
       .fromTo(
         '.parallel-right-node',
-        { opacity: 0, x: 20 },
-        { opacity: 1, x: 0, duration: 0.6, stagger: 0.02 },
-        '-=0.6'
+        { opacity: 0 },
+        { opacity: 1, duration: 0.4, stagger: 0.01 },
+        "<",
       );
   };
 
   const transition1To0 = () => {
     killAll();
+    setBarStreamState('hidden');
     gsap.set('.layer-glossary', {
       opacity: 1,
       pointerEvents: 'auto',
@@ -413,11 +433,11 @@ export default function Act2Visual({
       duration: 0.6,
       ease: 'power2.inOut',
     })
-      .to('.parallel-right-node', { opacity: 0, x: 20, duration: 0.3 }, '<')
+      .to('.parallel-right-node', { opacity: 0, duration: 0.3 }, 0)
       .to(
         '.parallel-left-node',
-        { x: -30, opacity: 0, duration: 0.4 },
-        '-=0.2'
+        { opacity: 0, duration: 0.4 },
+        0
       )
       .set('.layer-parallel', {
         opacity: 0,
@@ -430,9 +450,9 @@ export default function Act2Visual({
         { x: 0, opacity: 1, duration: 0.4, stagger: 0.02 }
       )
       .to('.desc-container', {
-        width: '100%',
-        paddingLeft: 16,
-        paddingRight: 16,
+        width: '83%',
+        paddingLeft: 8,
+        paddingRight: 8,
         duration: 0.6,
         ease: 'power2.out',
       });
@@ -440,6 +460,7 @@ export default function Act2Visual({
 
   const transition1To2 = () => {
     killAll();
+    setGlossaryState(false); // 确保 glossary 层已隐藏（0→1 被中断时遗留）
     gsap.set('.layer-bar-stream', {
       opacity: 1,
       pointerEvents: 'auto',
@@ -456,7 +477,7 @@ export default function Act2Visual({
       .to(
         '.parallel-left-node, .parallel-right-node',
         { opacity: 0, duration: 0.4 },
-        '-=0.4'
+        0
       )
       .set('.layer-parallel', {
         opacity: 0,
@@ -483,22 +504,23 @@ export default function Act2Visual({
 
   const transition2To1 = () => {
     killAll();
+    setGlossaryState(false); // 确保 glossary 层已隐藏
     gsap.set('.layer-parallel', {
       opacity: 1,
       pointerEvents: 'auto',
       zIndex: 10,
     });
     const tl = gsap.timeline();
-    tl.to('.bar-label', { opacity: 0, x: -20, duration: 0.3 })
+    tl.to('.bar-label', { overwrite: true, opacity: 0, duration: 0.3 })
       .to(
         '.path-clip-rect',
         {
           attr: { width: 0 },
-          duration: 0.6,
+          duration: 0.4,
           ease: 'power2.in',
           stagger: 0.02,
         },
-        '-=0.2'
+        0
       )
       .set('.layer-bar-stream', {
         opacity: 0,
@@ -507,48 +529,75 @@ export default function Act2Visual({
       })
       .fromTo(
         '.parallel-left-node',
-        { opacity: 0, x: -20 },
-        { opacity: 1, x: 0, duration: 0.4, stagger: 0.02 }
+        { opacity: 0 },
+        {
+          opacity: 1,
+          duration: 0.4,
+          stagger: 0.02,
+          ease: 'power2.out',
+        },
+        "-=0.1"
       )
       .fromTo(
         '.parallel-clip-rect',
         { attr: { width: 0 } },
-        { attr: { width: svgWidth }, duration: 1.2, ease: 'power2.inOut' },
-        '-=0.2'
+        { attr: { width: svgWidth }, duration: 0.8, ease: 'power2.inOut' },
+        "<"
       )
       .fromTo(
         '.parallel-right-node',
-        { opacity: 0, x: 20 },
-        { opacity: 1, x: 0, duration: 0.6, stagger: 0.02 },
-        '-=0.6'
+        { opacity: 0 },
+        { opacity: 1, duration: 0.3, stagger: 0.01 },
+        "<"
       );
   };
 
   const morphTo = (type: 'bar' | 'stream') => {
-    killAll();
-    gsap.set('.path-clip-rect', { attr: { width: svgWidth } }); // 确保形变时遮罩全开
+    setGlossaryState(false);
+    setParallelState(false);
+
     const tl = gsap.timeline();
 
+    tl.to(
+      '.path-clip-rect',
+      {
+        overwrite: true,
+        attr: { width: type === 'bar' ? (i, el) => el.dataset.w : svgWidth },
+        duration: 1.2,
+        ease: 'power3.inOut',
+      },
+      0
+    );
+
     tl.to('.morph-path', {
+      overwrite: true,
       attr: {
         d: (i, el) => (type === 'bar' ? el.dataset.dbar : el.dataset.dstream),
       },
       duration: 1.2,
       ease: 'power3.inOut',
-    });
+    }, 0);
 
     if (type === 'bar') {
-      tl.to('.stream-label', { opacity: 0, y: 10, duration: 0.3 }, 0).to(
-        '.bar-label',
-        { opacity: 1, x: 0, duration: 0.6, stagger: 0.05 },
-        0.4
-      );
+      tl.to('.stream-label', { overwrite:true, opacity: 0, y: 10, duration: 0.3 }, 0)
+        .to('.legend-item', { overwrite:true, opacity: 0, y: -10, duration: 0.3, stagger: 0.02 }, 0)
+        .to(
+          '.bar-label',
+          { overwrite:true, opacity: 1, x: 0, duration: 0.6, stagger: 0.05 },
+          0.4
+        );
     } else {
-      tl.to('.bar-label', { opacity: 0, x: -20, duration: 0.3 }, 0).to(
-        '.stream-label',
-        { opacity: 1, y: 0, duration: 0.6, stagger: 0.05 },
-        0.6
-      );
+      tl.to('.bar-label', { overwrite:true, opacity: 0, x: -20, duration: 0.3 }, 0)
+        .to(
+          '.legend-item',
+          { overwrite:true, opacity: 1, y: 0, duration: 0.6, stagger: 0.03 },
+          0.4
+        )
+        .to(
+          '.stream-label',
+          { overwrite:true, opacity: 1, y: 0, duration: 0.6, stagger: 0.05 },
+          0.6
+        );
     }
   };
 
@@ -604,13 +653,14 @@ export default function Act2Visual({
   return (
     <div
       ref={svgRef}
-      className="relative w-full h-150 flex flex-col items-center justify-center"
+      className="relative w-full h-full flex flex-col items-center justify-center"
     >
       {/* Layer 0: Glossary */}
       <div className="layer-glossary absolute inset-0 flex items-center justify-center">
         <div
           className="w-[90%] max-w-4xl mx-auto"
           onMouseLeave={() => setHoveredKey(null)}
+          onTouchEnd={() => setHoveredKey(null)}
         >
           <div className="flex flex-col gap-6">
             {groupedExtensions.map((group, groupIndex) => (
@@ -626,6 +676,7 @@ export default function Act2Visual({
                     <div
                       key={ext}
                       onMouseEnter={() => setHoveredKey(ext)}
+                      onTouchStart={() => setHoveredKey(ext)}
                       className="flex flex-row overflow-hidden cursor-default"
                     >
                       <div
@@ -645,7 +696,7 @@ export default function Act2Visual({
                         }}
                       >
                         <p
-                          className="desc-text text-xs font-normal leading-relaxed transition-opacity duration-200 min-w-200"
+                          className={`desc-text font-normal leading-relaxed transition-opacity duration-200 text-ellipsis whitespace-nowrap overflow-hidden ${compact ? 'text-[10px]' : 'text-xs'}`}
                           style={{ opacity: isHovered ? 1 : 0.7 }}
                         >
                           {extData.description}
@@ -693,11 +744,12 @@ export default function Act2Visual({
                   d={drawCurve(PS.LINK_START_X, link.y1, PS.LINK_END_X, link.y2)}
                   fill="none"
                   stroke={strokeColor}
-                  strokeWidth={isLinkHighlighted ? 8 : 5}
+                  strokeWidth={isLinkHighlighted ? PS.INDICATOR_H : PS.INDICATOR_H * 0.5}
                   opacity={strokeOpacity}
                   className="transition-all duration-200 cursor-crosshair"
                   onMouseEnter={() => setHoveredKey(link.ext)}
                   onMouseLeave={() => setHoveredKey(null)}
+                  onTouchStart={() => setHoveredKey(link.ext)}
                 />
               );
             })}
@@ -717,6 +769,7 @@ export default function Act2Visual({
                   className="cursor-crosshair"
                   onMouseEnter={() => setHoveredKey(ext)}
                   onMouseLeave={() => setHoveredKey(null)}
+                  onTouchStart={() => setHoveredKey(ext)}
                 >
                   <g
                     style={{ opacity }}
@@ -725,7 +778,7 @@ export default function Act2Visual({
                     <text
                       textAnchor="end"
                       dominantBaseline="central"
-                      className="font-serif text-xs font-bold"
+                      className={`font-serif text-xs ${compact ? '' : 'font-bold'}`}
                       fill={isExtHighlighted ? brand600 : '#64748B'}
                     >
                       {ext}
@@ -757,6 +810,7 @@ export default function Act2Visual({
                   className="cursor-crosshair"
                   onMouseEnter={() => setHoveredKey(course)}
                   onMouseLeave={() => setHoveredKey(null)}
+                  onTouchStart={() => setHoveredKey(course)}
                 >
                   <g
                     style={{ opacity }}
@@ -772,7 +826,7 @@ export default function Act2Visual({
                     <text
                       textAnchor="start"
                       dominantBaseline="central"
-                      className="font-serif text-[10px] tracking-wide"
+                      className={`font-serif tracking-wide ${compact ? 'text-[8px]' : 'text-[10px]'}`}
                       fill={isCourseHighlighted ? brand600 : '#64748B'}
                     >
                       {course}
@@ -787,8 +841,44 @@ export default function Act2Visual({
 
       {/* Layer 2 & 3: Bar Chart & Streamgraph */}
       <div className="layer-bar-stream absolute inset-0 flex flex-col items-center justify-center">
-        <div className="absolute top-0 h-10 flex items-center justify-center font-serif text-slate-900 text-xl tracking-widest z-10 pointer-events-none transition-opacity duration-300">
-          {hoveredKey ? `${hoveredKey} files` : ' '}
+        {/* ── 2×8 Legend (visible in stream mode) ── */}
+        <div
+          className="absolute top-0 left-0 right-0 z-10 grid gap-y-5 pt-20 px-[10%]"
+          style={{ gridTemplateColumns: 'repeat(8, 1fr)' }}
+        >
+          {legendItems.map((item) => {
+            const isHovered = hoveredKey === item.key;
+            const isFaded = hoveredKey !== null && hoveredKey !== item.key;
+            return (
+              <div
+                key={item.key}
+                className="legend-item flex items-center gap-1 cursor-crosshair select-none"
+                style={{ opacity: 0 }}
+                onMouseEnter={() => setHoveredKey(item.key)}
+                onMouseLeave={() => setHoveredKey(null)}
+                onTouchStart={() => setHoveredKey(item.key)}
+              >
+                <div
+                  className="rounded-xs shrink-0"
+                  style={{
+                    backgroundColor: isFaded ? '#CBD5E1' : item.color,
+                    width: compact ? 8 : 10,
+                    height: compact ? 8 : 10,
+                    transition: 'background-color 0.2s',
+                  }}
+                />
+                <span
+                  className={`font-serif ${compact ? 'text-[10px]' : 'text-xs'}`}
+                  style={{
+                    color: isHovered ? brand600 : isFaded ? '#CBD5E1' : '#1E293B',
+                    transition: 'color 0.2s',
+                  }}
+                >
+                  {item.key}
+                </span>
+              </div>
+            );
+          })}
         </div>
         <svg width={svgWidth} height={svgHeight} className="overflow-visible mt-6">
           <defs>
@@ -832,21 +922,23 @@ export default function Act2Visual({
                       opacity={isFaded ? 0.3 : 0.95}
                       onMouseEnter={() => setHoveredKey(key)}
                       onMouseLeave={() => setHoveredKey(null)}
+                      onTouchStart={() => setHoveredKey(key)}
                     />
                     <g
                       transform={`translate(${barW + 15}, ${barY + barH / 2})`}
                     >
                       <g className="bar-label">
                         <text
-                          className="font-serif fill-slate-900 text-sm font-bold"
-                          alignmentBaseline="middle"
+                          className={`font-serif fill-slate-900 ${compact ? 'text-xs' : 'text-xs'}`}
+                          dominantBaseline="central"
                         >
                           {key}
+
                         </text>
                         <text
-                          className="font-serif fill-slate-500 text-xs"
+                          className={`font-serif fill-slate-500 ${compact ? 'text-[10px]' : 'text-xs'}`}
                           x={50}
-                          alignmentBaseline="middle"
+                          dominantBaseline="central"
                         >
                           {counts[key]} files
                         </text>
@@ -857,7 +949,28 @@ export default function Act2Visual({
               }
             )}
           </g>
-          <g className="font-serif text-[10px] fill-slate-400 uppercase tracking-widest">
+          {/* ── Vertical guidelines (stream mode) ── */}
+          <g
+            className="stream-guide"
+            style={{
+              opacity: hoveredKey ? 1 : 0,
+              transition: 'opacity 0.3s',
+            }}
+          >
+            {data.map((d) => (
+              <line
+                key={d.term_index}
+                x1={streamXScale(d.term_index)}
+                x2={streamXScale(d.term_index)}
+                y1={80}
+                y2={svgHeight}
+                stroke="#CBD5E1"
+                strokeWidth={0.5}
+                strokeDasharray="3 3"
+              />
+            ))}
+          </g>
+          <g className={`font-serif fill-slate-400 uppercase tracking-widest ${compact ? 'text-[8px]' : 'text-[10px]'}`}>
             {data.map((d) => (
               <text
                 key={d.term_index}

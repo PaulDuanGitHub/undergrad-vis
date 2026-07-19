@@ -19,6 +19,10 @@ export default function Landing() {
   const leftScrollRef = useRef<HTMLDivElement>(null);
   const wheelLockRef = useRef(false);
 
+  // ── Touch swipe state ──
+  const touchStartRef = useRef({ x: 0, y: 0, time: 0 });
+  const SWIPE_THRESHOLD = 50; // min px to trigger swipe
+
   useEffect(() => {
     if (progress === 100) {
       const timer = setTimeout(() => setIsLoaded(true), 300);
@@ -45,6 +49,36 @@ export default function Landing() {
       leftScrollRef.current.scrollTo({ top: 0, behavior: "instant" });
     }
   }, [isDetailOpen]);
+
+  // ── Touch swipe: up → enter detail, down → exit detail ──
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+      time: Date.now(),
+    };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!isIntroDone || wheelLockRef.current) return;
+    const touch = e.changedTouches[0];
+    const deltaY = touchStartRef.current.y - touch.clientY;
+    const deltaX = touchStartRef.current.x - touch.clientX;
+    const elapsed = Date.now() - touchStartRef.current.time;
+
+    // Only trigger swipe if vertical movement dominates and it's a quick gesture (<500ms)
+    if (Math.abs(deltaY) > Math.abs(deltaX) && elapsed < 500 && Math.abs(deltaY) > SWIPE_THRESHOLD) {
+      wheelLockRef.current = true;
+      if (deltaY > 0) {
+        // Swipe up → enter detail
+        if (!isDetailOpen) openDetail();
+      } else {
+        // Swipe down → exit detail
+        if (isDetailOpen) closeDetail();
+      }
+      setTimeout(() => (wheelLockRef.current = false), 800);
+    }
+  };
 
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
@@ -88,7 +122,13 @@ export default function Landing() {
         onExit={closeDetail}
       />
 
-      <div className={`absolute inset-0 w-screen h-screen z-0 ${isLoaded ? "cursor-pointer" : "cursor-wait"}`} onClick={toggleView}>
+      <div
+        className={`absolute inset-0 w-screen h-screen z-0 ${isLoaded ? "cursor-pointer" : "cursor-wait"}`}
+        onClick={toggleView}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        data-touch-lock
+      >
         <Canvas
           shadows
           gl={{ toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.0, alpha: true, antialias: true }}
