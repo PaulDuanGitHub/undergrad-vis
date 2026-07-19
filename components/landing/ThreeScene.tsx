@@ -13,7 +13,7 @@ const SHADOW_OFFSET_Y = -0.48;
 const SHADOW_OFFSET_Z = 0.12;
 const SHADOW_SIZE = 3;
 const SHADOW_OPACITY = 0.85;
-const SHADOW_TEXTURE_PATH = '/model/floor_bake.png';
+const SHADOW_TEXTURE_PATH = './model/floor_bake.png';
 
 function Floor() {
   const shadowMap = useTexture(SHADOW_TEXTURE_PATH);
@@ -44,7 +44,7 @@ export default function ThreeScene({
   onPaperCovered,
 }: ThreeSceneProps) {
   const { scene, animations } = useGLTF(
-    '/model/desk_web_3_baked_animation.glb'
+    './model/desk_web_3_baked_animation.glb'
   );
   const mixer = useMemo(
     () => (animations.length ? new THREE.AnimationMixer(scene) : null),

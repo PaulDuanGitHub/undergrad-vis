@@ -145,4 +145,4 @@ export default function Landing() {
 }
 
 // Preload the 3D model
-useGLTF.preload("/model/desk_web_3_baked_animation.glb");
+useGLTF.preload("./model/desk_web_3_baked_animation.glb");
