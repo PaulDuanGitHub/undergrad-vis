@@ -6,11 +6,11 @@ interface StateMachineConfig {
   step: number;
   isActive: boolean;
 
-  // 声明：非激活状态时的兜底样式
+  /** Reset styles applied when the component is inactive */
   onInactive: () => void;
-  // 声明：各个 Step 的静态状态 (用于初始化或快速跳跃时的 fallback)
+  /** Static state setters for each step (used for initialization / fast jumps) */
   states: Record<number, () => void>;
-  // 声明：特定步骤之间的过渡动画 (Timeline)
+  /** Named transitions between specific steps (timeline-based animations) */
   transitions: Record<string, () => void>;
 }
 
@@ -24,7 +24,7 @@ export function useGSAPStateMachine({
   const prevStep = useRef(step);
 
   useGSAP(() => {
-    // 1. 如果未激活，执行重置逻辑
+    // If inactive, run the reset handler
     if (!isActive) {
       onInactive();
       return;
@@ -32,15 +32,15 @@ export function useGSAPStateMachine({
 
     const transitionKey = `${prevStep.current}->${step}`;
 
-    // A: 如果我们在 transitions 字典里声明了这个特定的过渡动画，则播放它
+    // If a named transition exists, play it
     if (transitions[transitionKey]) {
       transitions[transitionKey]();
     }
-    // B: 如果没有声明过渡动画（比如用户直接从 0 跳到 3），直接应用目标静态状态兜底
+    // Otherwise apply the target step's static state as a fallback (e.g. jumping from 0 to 3)
     else if (states[step]) {
       states[step]();
     }
 
     prevStep.current = step;
-  }, [step, isActive]); // 依赖项只有这两个
+  }, [step, isActive]);
 }

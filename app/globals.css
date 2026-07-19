@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --background: #F9F9F8; /* 极具质感的印刷白 */
-  --foreground: #1C1917; /* 石灰黑，比纯黑更柔和 */
-  --color-brand: #D4442E; /* 砖红色，极具数据张力 */
+  --background: #F9F9F8; /* warm off-white */
+  --foreground: #1C1917; /* soft charcoal */
+  --color-brand: #D4442E; /* brick red */
   --color-brand-dark: #B23321; 
   --color-brand-light: #F08B79;
   --color-surface: #FFFFFF;
@@ -18,7 +18,7 @@
   --color-brand-dark: var(--color-brand-dark);
   --color-brand-light: var(--color-brand-light);
   
-  /* Vermilion Red 渐变 */
+  /* Vermilion Red scale */
   --color-brand-50: #FEF6F5;
   --color-brand-100: #FDECE9;
   --color-brand-200: #FBD5CD;

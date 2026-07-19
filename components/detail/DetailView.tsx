@@ -75,37 +75,36 @@ export default function DetailView({ scrollRef, isDetailVisible, onExit }: Detai
     return () => mq.removeEventListener('change', update);
   }, []);
 
-  // === 阻尼回弹退出的状态与逻辑 ===
+  // ── Pull-to-exit state & logic ──
   const [pullProgress, setPullProgress] = useState(0);
-  const PULL_THRESHOLD = 800; // 需要滚动多少"距离"才能触发退出
+  const PULL_THRESHOLD = 800;
   const touchPullStartRef = useRef(0);
 
   const handleWheel = (e: React.WheelEvent) => {
     if (!scrollRef.current) return;
     
-    // 只有当页面在最顶部，且用户继续向上滚动（e.deltaY < 0）时才计算进度
+    // Only accumulate progress when at the very top and scrolling upward
     if (scrollRef.current.scrollTop <= 0 && e.deltaY < 0) {
       setPullProgress((prev) => {
-        const next = prev - e.deltaY; // deltaY 是负数，减去它等于增加进度
+        const next = prev - e.deltaY;
         if (next >= PULL_THRESHOLD) {
-          onExit(); // 触发退出
-          return 0; // 重置进度
+          onExit();
+          return 0;
         }
         return next;
       });
     } else {
-      // 只要稍微往下滚，或者离开了顶部，就迅速清空进度
       setPullProgress(0);
     }
   };
 
-  // 释放滚轮时，进度条像弹簧一样自动归零
+  // Spring-reset pull progress after inactivity
   useEffect(() => {
     let timeout: NodeJS.Timeout;
     if (pullProgress > 0 && pullProgress < PULL_THRESHOLD) {
       timeout = setTimeout(() => {
         setPullProgress(0);
-      }, 1000); // 1s 没动作就归零
+      }, 1000);
     }
     return () => clearTimeout(timeout);
   }, [pullProgress]);
@@ -135,7 +134,6 @@ export default function DetailView({ scrollRef, isDetailVisible, onExit }: Detai
     touchPullStartRef.current = 0;
   };
 
-  // 计算 SVG 圆环动画参数
   const radius = 16;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (Math.min(pullProgress / PULL_THRESHOLD, 1) * circumference);
@@ -182,20 +180,16 @@ export default function DetailView({ scrollRef, isDetailVisible, onExit }: Detai
           : "duration-200 opacity-0 pointer-events-none"
       }`}
     >
-      {/* ==========================================
-          Top Pull-to-Exit Indicator 
-          ========================================== */}
+      {/* Pull-to-Exit Indicator */}
       <div 
         className="fixed top-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center pointer-events-none transition-all duration-300"
         style={{ 
           opacity: pullProgress > 0 ? 1 : 0, 
-          transform: `translate(-50%, ${Math.min(pullProgress / 10, 20)}px)` // 稍微向下移动的物理阻尼感
+          transform: `translate(-50%, ${Math.min(pullProgress / 10, 20)}px)`
         }}
       >
         <svg width="40" height="40" className="transform -rotate-90">
-          {/* 灰色底环 */}
           <circle cx="20" cy="20" r={radius} stroke="#e5e7eb" strokeWidth="3" fill="transparent" />
-          {/* 进度圆环 */}
           <circle 
             cx="20" cy="20" r={radius} 
             stroke={colorBrand} strokeWidth="3" fill="transparent" 
@@ -209,7 +203,7 @@ export default function DetailView({ scrollRef, isDetailVisible, onExit }: Detai
 
       <div ref={contentRef} className="flex relative bg-surface text-text-primary h-fit">
 
-        {/* ===== Left: scrollable narrative text ===== */}
+        {/* Left: scrollable narrative text */}
         <div className="w-[35%] flex flex-col items-center pt-40 px-8 select-text">
           <div className="w-full flex flex-col items-center">
             <h2 className="mb-2">My 2021 - 2026</h2>
@@ -226,7 +220,7 @@ export default function DetailView({ scrollRef, isDetailVisible, onExit }: Detai
           ))}
         </div>
 
-        {/* ===== Right: pinned chart layers ===== */}
+        {/* Right: pinned chart layers */}
         <div className="w-[65%] h-screen sticky top-0 flex items-center justify-center p-8">
           <div ref={rightChartRef} className="relative w-full h-full flex items-center justify-center">
             <div className="chart-layer absolute inset-0 flex items-center justify-center"><Act1Visual step={act1Step} /></div>
@@ -236,9 +230,7 @@ export default function DetailView({ scrollRef, isDetailVisible, onExit }: Detai
         </div>
       </div>
 
-      {/* ==========================================
-          Footer Section (Methodology & Colophon)
-          ========================================== */}
+      {/* Footer: Methodology & Colophon */}
       <div className="w-full bg-surface flex flex-col font-serif select-text">
         <hr className="border-t border-brand/10 w-[80%] mx-auto" />
         <div className="max-w-4xl mx-auto py-24 px-8 flex flex-col gap-16">

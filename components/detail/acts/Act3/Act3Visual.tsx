@@ -31,9 +31,7 @@ export default function Act3Visual({ step, isActive, compact = false }: Act3Visu
   const [hoveredTrack, setHoveredTrack] = useState<string | null>(null);
   const [hoveredDay, setHoveredDay] = useState<number | null>(null);
 
-  // ==========================================
-  // Data-Driven Math Engine
-  // ==========================================
+  // ── Data computation ──
   const { processedData, axes } = useMemo(() => {
     const allData = heavy_assignments_commits;
 
@@ -106,7 +104,7 @@ export default function Act3Visual({ step, isActive, compact = false }: Act3Visu
 
     const generateTicks = (maxD: number) => {
       const ticks = [];
-      const step = compact ? 1 : 0.5;
+      const step = 0.5;
       for (let i = 0; i <= Math.ceil(maxD); i += step) { if (i <= maxD) ticks.push(i); }
       return ticks;
     };
@@ -120,9 +118,7 @@ export default function Act3Visual({ step, isActive, compact = false }: Act3Visu
     return { processedData: pData, axes };
   }, [svgWidth, svgHeight, compact]);
 
-  // ==========================================
-  // GSAP Animation State Machine
-  // ==========================================
+  // ── GSAP animation state machine ──
   const dur = 1.0;
   const ease = "power3.inOut";
 
@@ -185,7 +181,6 @@ export default function Act3Visual({ step, isActive, compact = false }: Act3Visu
       2: () => setTrackStep(2),
       3: () => {
         gsap.set(".track-group, .axis-group", { opacity: 0 });
-        console.log("进入 Punchcard Step 3");
         gsap.set(".punchcard-container", { opacity: 1, zIndex: 10 });
       },
     },
@@ -219,7 +214,7 @@ export default function Act3Visual({ step, isActive, compact = false }: Act3Visu
           return (
             <g key={t} transform={`translate(${cx}, 0)`}>
               <line y1={0} y2={isInteger ? 5 : 3} stroke={COLOR_BRAND} strokeOpacity={isInteger ? 0.8 : 0.4} />
-              {isInteger && (
+              {isInteger && (!compact || t % 2 === 0) && (
                 <text y={15} textAnchor="middle" className={`font-serif text-[12px] ${t === 0 ? 'fill-brand-700 font-bold' : 'fill-slate-500'}`}>
                   {t === 0 ? 'DL' : t}
                 </text>

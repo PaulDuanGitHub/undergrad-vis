@@ -7,19 +7,17 @@ import file_summary from "@/data/file_summary.json";
 import term_empty_days from "@/data/term_empty_days.json";
 import * as THREE from "three";
 
-// ==========================================
-// 1. Constants & Config
-// ==========================================
+// ── Constants ──
 const SPACING = 1.5;
 const MIN_HEIGHT = 0.5;
 const HOVER_SPEED = 8;
 const LERP_SPEED = 5;
 
-// --- Step 1-3 的阵型配置 (4列 x 2行) ---
+// Step 1-3 layout: 4 columns × 2 rows
 const GROUP_SPACING_X = 27; 
 const GROUP_SPACING_Z = 20; 
 
-// --- Step 4 的阵型配置 (2列 x 4行，给日历流出更多横向空间) ---
+// Step 4 layout: 2 columns × 4 rows, leaving horizontal room for the calendar heatmap
 const HEATMAP_SPACING_X = 45; 
 const HEATMAP_SPACING_Z = 15; 
 
@@ -32,9 +30,7 @@ const HEATMAP_LOW = new THREE.Color("#FBD5CD");
 const HEATMAP_MID = new THREE.Color("#D4442E");   
 const HEATMAP_HIGH = new THREE.Color("#7C2A1F");  
 
-// ==========================================
-// 2. Types
-// ==========================================
+// ── Types ──
 export type FileData = { 
   file_name: string;
   total_versions: number;
@@ -75,9 +71,7 @@ interface CubesSceneProps {
   step: number; 
 }
 
-// ==========================================
-// 3. Pure Helper Functions (Logic Extract)
-// ==========================================
+// ── Helpers ──
 
 const getOrdinalNum = (n: number) => n + (n > 0 ? ['th', 'st', 'nd', 'rd'][(n > 3 && n < 21) || n % 10 > 3 ? 0 : n % 10] : '');
 const formatDate = (date: Date) => {
@@ -124,29 +118,28 @@ function getSceneData(data: FileData[], emptyDaysData: CubesSceneProps['emptyDay
     '2021 Fall', '2022 Winter', '2022 Fall', '2023 Winter', '2023 Fall', '2024 Winter', '2025 Fall', '2026 Winter'
   ]
 
-  // 定义 1 + 3 + 3 + 1 的固定阵型字典 (Col, Row)
+  // 1+3+3+1 diamond layout: (col, row)
   const LAYOUT_1331 = [
-    { c: 1, r: 0 }, // 第0个 (Term 1): 顶层居中
-    { c: 0, r: 1 }, // 第1个 (Term 2): 第二层左
-    { c: 1, r: 1 }, // 第2个 (Term 3): 第二层中
-    { c: 2, r: 1 }, // 第3个 (Term 4): 第二层右
-    { c: 0, r: 2 }, // 第4个 (Term 5): 第三层左
-    { c: 1, r: 2 }, // 第5个 (Term 6): 第三层中
-    { c: 2, r: 2 }, // 第6个 (Term 7): 第三层右
-    { c: 1, r: 3 }, // 第7个 (Term 8): 底层居中
+    { c: 1, r: 0 },
+    { c: 0, r: 1 },
+    { c: 1, r: 1 },
+    { c: 2, r: 1 },
+    { c: 0, r: 2 },
+    { c: 1, r: 2 },
+    { c: 2, r: 2 },
+    { c: 1, r: 3 },
   ];
 
   const termBlocks = terms.map((term, index) => {
-    // 防御性编程：万一数据不是8个，超出部分默认堆在原点
     const layout = LAYOUT_1331[index] || { c: 0, r: 0 };
 
     return {
       term,
-      // Step 1-3: 1+3+3+1 菱形阵型
+      // Step 1-3: 1+3+3+1 diamond layout
       groupBaseX: layout.c * GROUP_SPACING_X,
       groupBaseZ: layout.r * GROUP_SPACING_Z,
       
-      // Step 4: 依然保持 2列 x 4行，为宽大的 15周热力图流出横向空间
+      // Step 4: 2 columns × 4 rows to leave horizontal room for the 15-week heatmap
       heatmapBaseX: (index % 2) * HEATMAP_SPACING_X,
       heatmapBaseZ: Math.floor(index / 2) * HEATMAP_SPACING_Z,
       
@@ -158,7 +151,7 @@ function getSceneData(data: FileData[], emptyDaysData: CubesSceneProps['emptyDay
   const GLOBAL_GRID_SIZE = Math.ceil(Math.sqrt(data.length));
 
   termBlocks.forEach(block => {
-    // 文字 Label 的坐标，保持 -1.5 偏移以左对齐
+    // Term label coordinates
     termLabels.push({ 
       term: block.term, courses: block.courses,
       gridLabelPos: new THREE.Vector3(0, 0, 0),
@@ -169,7 +162,7 @@ function getSceneData(data: FileData[], emptyDaysData: CubesSceneProps['emptyDay
 
     const localGridSize = Math.ceil(Math.sqrt(block.files.length));
 
-    // 1. 生成真实的文件方块
+    // Generate actual file cubes
     block.files.forEach(file => {
       const gridPos = new THREE.Vector3((file.globalIndex % GLOBAL_GRID_SIZE) * SPACING, 0, Math.floor(file.globalIndex / GLOBAL_GRID_SIZE) * SPACING);
       const groupPos = new THREE.Vector3(block.groupBaseX + (file.localIndex % localGridSize) * SPACING, 0, block.groupBaseZ + Math.floor(file.localIndex / localGridSize) * SPACING);
@@ -187,7 +180,7 @@ function getSceneData(data: FileData[], emptyDaysData: CubesSceneProps['emptyDay
       }));
     });
 
-    // 2. 生成幽灵空白方块
+    // Generate ghost/empty day cubes
     const emptyDays = emptyDaysData[block.term] || [];
     emptyDays.forEach(ghost => {
       const ghostPos = new THREE.Vector3(block.heatmapBaseX + ghost.relative_week * SPACING, 0, block.heatmapBaseZ + ghost.day_of_week * SPACING);
@@ -196,22 +189,20 @@ function getSceneData(data: FileData[], emptyDaysData: CubesSceneProps['emptyDay
 
       cubeData.push(createCubeTemplate({
         isEmptyCube: true, term: block.term, dateStr: formatDate(ghostDate),
-        groupPos: new THREE.Vector3(block.groupBaseX, 0, block.groupBaseZ), // 躲在各自群组基地
+        groupPos: new THREE.Vector3(block.groupBaseX, 0, block.groupBaseZ),
         heatmapPos: ghostPos, currentPos: ghostPos.clone(),
         currentColor: HEATMAP_EMPTY.clone(),
       }));
     });
   });
 
-  // ==========================================
-  // 重算 3 个阶段的全局居中偏移量
-  // ==========================================
+  // Compute global centering offsets for each of the 3 layout stages
   const gridOffset = new THREE.Vector3(-(GLOBAL_GRID_SIZE * SPACING) / 2, 0, -(GLOBAL_GRID_SIZE * SPACING) / 2);
   
-  // Group 阶段：最大 3 列 (索引0,1,2，中心在 1)，最大 4 行 (索引0,1,2,3，中心在 1.5)
+  // Group stage: max 3 cols (indices 0,1,2, center at 1), max 4 rows (indices 0..3, center at 1.5)
   const groupBlocksOffset = new THREE.Vector3(-(1 * GROUP_SPACING_X) - 8, 0, -(1.5 * GROUP_SPACING_Z));
   
-  // Heatmap 阶段：最大 2 列 (中心在 0.5)，最大 4 行 (中心在 1.5), 手动微调 X 轴偏移以适应更宽的热力图
+  // Heatmap stage: max 2 cols (center at 0.5), max 4 rows (center at 1.5), with manual X adjustment for the wider heatmap
   const heatmapBlocksOffset = new THREE.Vector3(-(0.5 * HEATMAP_SPACING_X) - 8, 0, -(1.5 * HEATMAP_SPACING_Z));
 
   return { cubeData, termLabels, gridOffset, groupBlocksOffset, heatmapBlocksOffset };
@@ -244,14 +235,12 @@ function getCubeTargets(cube: ProcessedCube, step: number, isHovered: boolean) {
   return { targetPos, targetColor, targetHeight, targetScaleY };
 }
 
-// ==========================================
-// 4. Main Component
-// ==========================================
+// ── 3D Scene Component ──
 export function CubesScene({ data, emptyDaysData, step }: CubesSceneProps) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const groupContainerRef = useRef<THREE.Group>(null);
   const tooltipGroupRef = useRef<THREE.Group>(null);
-  const labelGroupRefs = useRef<(THREE.Group | null)[]>([]); // 追踪每个 Label
+  const labelGroupRefs = useRef<(THREE.Group | null)[]>([]);
   
   const dummy = useMemo(() => new THREE.Object3D(), []);
   
@@ -279,7 +268,7 @@ export function CubesScene({ data, emptyDaysData, step }: CubesSceneProps) {
     setHoveredIdx(-1);
   }, []);
 
-  // 设计基准：931px canvas 宽度下，当前阵型恰好不裁剪的 zoom 值
+  // Design reference: at 931px canvas width, the current layout fits exactly without clipping
   const BASE_CANVAS_WIDTH = 931;
 
   const getBaseZoom = (s: number) => {
@@ -296,16 +285,14 @@ export function CubesScene({ data, emptyDaysData, step }: CubesSceneProps) {
 
   const getTargetCameraZoom = () => {
     const base = getBaseZoom(step);
-    // 窄屏等比缩小 zoom 以保持世界空间可见范围不变；宽屏保持设计值（不放大）
+    // On narrow screens, scale zoom down proportionally to maintain visible world-space area.
+    // On wide screens, keep the design value (don't scale up).
     const scale = Math.min(1, size.width / BASE_CANVAS_WIDTH);
     return base * scale;
   };
 
-  // Frame Loop Engine
+  // Frame Loop: lerp camera, cubes, labels, and tooltip
   useFrame((_, delta) => {
-    // ==========================================
-    // 核心改动点 2：相机缩放插值，自适应更高的大阵列
-    // ==========================================
     const orthoCam = camera as THREE.OrthographicCamera;
     const targetCamPos = getTargetCameraPos();
     const targetZoom = getTargetCameraZoom(); 
@@ -347,9 +334,7 @@ export function CubesScene({ data, emptyDaysData, step }: CubesSceneProps) {
     if (step === 4) targetOffset = heatmapBlocksOffset;
     groupContainerRef.current.position.lerp(targetOffset, delta * LERP_SPEED);
 
-    // ==========================================
-    // 核心改动点 3：Label 的跟随系统
-    // ==========================================
+    // Label position tracking
     for (let i = 0; i < termLabels.length; i++) {
       const labelData = termLabels[i];
       let targetLabelPos = labelData.groupLabelPos;
@@ -413,16 +398,14 @@ return (
         </Html>
       </group>
 
-      {/* --- Term Labels & Y-Axis --- */}
+      {/* Term Labels & Y-Axis */}
       {termLabels.map((label, idx) => (
         <group key={idx} ref={(el) => { labelGroupRefs.current[idx] = el; }}>
           
-          {/* ==============================
-              大标题与课程图例
-              ============================== */}
+          {/* Term heading & course legend */}
           <Html 
-            transform // 开启 CSS3D 模式
-            rotation={[-Math.PI / 2, 0, 0]} // 旋转 -90 度，完全贴平地面
+            transform
+            rotation={[-Math.PI / 2, 0, 0]}
             className="pointer-events-none transition-opacity duration-700" 
             style={{ opacity: step >= 1 ? 1 : 0 }}
           >
@@ -442,25 +425,22 @@ return (
             </div>
           </Html>
 
-          {/* ==============================
-              Y 轴星期标签 (Step 4 专属)
-              ============================== */}
-          {/* Monday: 绑定 Z 轴第 2 行 */}
+          {/* Y-axis: Day-of-week labels (Step 4 only) */}
+          {/* Monday */}
           <Html position={[0, 0, 1 * SPACING]} className="pointer-events-none transition-opacity duration-700" style={{ opacity: step === 4 ? 1 : 0 }}>
-            {/* -translate-y-1/2 让文字垂直完美居中对齐方块 */}
             <div className="absolute right-0 top-1/2 -translate-y-1/2 font-serif text-[10px] text-slate-400 uppercase tracking-widest">
               Mon
             </div>
           </Html>
 
-          {/* Wednesday: 绑定 Z 轴第 4 行 */}
+          {/* Wednesday */}
           <Html position={[0, 0, 3 * SPACING]} className="pointer-events-none transition-opacity duration-700" style={{ opacity: step === 4 ? 1 : 0 }}>
             <div className="absolute right-0 top-1/2 -translate-y-1/2 font-serif text-[10px] text-slate-400 uppercase tracking-widest">
               Wed
             </div>
           </Html>
 
-          {/* Friday: 绑定 Z 轴第 6 行 */}
+          {/* Friday */}
           <Html position={[0, 0, 5 * SPACING]} className="pointer-events-none transition-opacity duration-700" style={{ opacity: step === 4 ? 1 : 0 }}>
             <div className="absolute right-0 top-1/2 -translate-y-1/2 font-serif text-[10px] text-slate-400 uppercase tracking-widest">
               Fri
@@ -473,9 +453,7 @@ return (
   );
 }
 
-// ==========================================
-// 5. Entry Point
-// ==========================================
+// ── Entry Point ──
 export default function Act1Visual({ step }: { step: number }) {
   return (
     <div className="w-full h-full flex-col items-center justify-center overflow-visible">

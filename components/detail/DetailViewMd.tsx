@@ -194,9 +194,9 @@ export default function DetailViewMd({ isDetailVisible, onExit }: DetailViewMdPr
 
   return (
     <div
-      className={`fixed inset-0 z-10 flex flex-col bg-surface transition-opacity duration-1000 ${
+      className={`fixed inset-0 z-0 flex flex-col bg-surface transition-opacity duration-1000 ${
         isDetailVisible
-          ? 'opacity-100 pointer-events-auto'
+          ? 'opacity-100 pointer-events-auto z-10'
           : 'opacity-0 pointer-events-none'
       }`}
     >

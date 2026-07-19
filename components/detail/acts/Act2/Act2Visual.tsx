@@ -50,7 +50,7 @@ export default function Act2Visual({
 
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
 
-  // --- 主题色 ---
+  // ── Theme colors ──
   const brand50 = useThemeVariable('--color-brand-50') || '#FEF6F5';
   const brand100 = useThemeVariable('--color-brand-100') || '#FDECE9';
   const brand200 = useThemeVariable('--color-brand-200') || '#FBD5CD';
@@ -69,11 +69,7 @@ export default function Act2Visual({
     brand700,
   ];
 
-  console.log(themeColorsKey);
-
-  // ==========================================
-  // 1. D3 双重空间数学引擎 (仅负责计算，不负责动画)
-  // ==========================================
+  // ── D3 Math Engine (layout computation only; animation is handled by GSAP) ──
   const { pathsData, streamXScale, counts, legendItems } = useMemo(() => {
     const N = data.length;
     const counts: Record<string, number> = {};
@@ -151,34 +147,32 @@ export default function Act2Visual({
     return { pathsData, streamXScale, counts, legendItems };
   }, [svgWidth, svgHeight, themeColorsKey]);
 
-  // ==========================================
-  // 1.5 平行集 (Parallel Sets) — 统一布局引擎
-  // 所有坐标、间距在此计算，渲染层零魔数
-  // ==========================================
+  // ── Parallel Sets: unified layout engine ──
+  // All coordinates and spacing are computed here; the render layer has zero magic numbers.
   const PS = useMemo(() => {
-    // ── 布局常量（唯一需要调整的地方）──
-    const PAD_Y = compact ? 20 : 30;                // 节点列上/下留白
+    // Layout constants (the only place to adjust)
+    const PAD_Y = compact ? 20 : 30;
     const INNER_H = svgHeight - PAD_Y * 2;
 
-    const LEFT_X = 50;              // 左列节点 <g> 的 translate X
-    const RIGHT_X = svgWidth - 120;  // 右列节点 <g> 的 translate X
+    const LEFT_X = 50;
+    const RIGHT_X = svgWidth - 120;
 
-    const LINK_START_X = 65;         // 贝塞尔曲线起点 X
-    const LINK_END_X = RIGHT_X - 15; // 贝塞尔曲线终点 X
+    const LINK_START_X = 65;
+    const LINK_END_X = RIGHT_X - 15;
 
-    const INDICATOR_W = compact ? 3 : 6;           // 颜色标记矩形宽
-    const INDICATOR_H = compact ? 4 : 8;           // 颜色标记矩形高
-    const INDICATOR_GAP = 5;         // 文字与标记间距
+    const INDICATOR_W = compact ? 3 : 6;
+    const INDICATOR_H = compact ? 4 : 8;
+    const INDICATOR_GAP = 5;
 
-    const CLIP_OVERFLOW = 100;       // clip rect 超出 SVG 的高度（GSAP 动画用）
+    const CLIP_OVERFLOW = 100;
 
-    // ── 节点列表 ──
+    // Node lists
     const leftNodes = keys;
     const rightNodes = Array.from(
       new Set(Object.values(extToCoursesMapping).flat())
     ).sort();
 
-    // ── 单例安全 Y 轴分布 ──
+    // Safe Y distribution (handles single-element edge case)
     const leftY = (i: number) =>
       leftNodes.length <= 1
         ? svgHeight / 2
@@ -189,11 +183,11 @@ export default function Act2Visual({
         ? svgHeight / 2
         : PAD_Y + i * (INNER_H / (rightNodes.length - 1));
 
-    // ── 节点数据 ──
+    // Node data
     const leftNodeData = leftNodes.map((ext, i) => ({ ext, y: leftY(i) }));
     const rightNodeData = rightNodes.map((course, i) => ({ course, y: rightY(i) }));
 
-    // ── 连线数据 ──
+    // Link data
     const links: { ext: string; course: string; y1: number; y2: number }[] = [];
     leftNodes.forEach((ext, lIdx) => {
       const courses = extToCoursesMapping[ext] || [];
@@ -224,7 +218,7 @@ export default function Act2Visual({
     return `M ${x1} ${y1} C ${cpX} ${y1}, ${cpX} ${y2}, ${x2} ${y2}`;
   };
 
-  // --- 反向映射：course → extensions (用于双向高亮) ---
+  // Reverse mapping: course → extensions (for bidirectional highlight)
   const courseToExtsMapping = useMemo(() => {
     const mapping: Record<string, string[]> = {};
     for (const [ext, courses] of Object.entries(extToCoursesMapping)) {
@@ -236,7 +230,7 @@ export default function Act2Visual({
     return mapping;
   }, []);
 
-  // --- 根据 hoveredKey 计算应高亮的 extensions 和 courses ---
+  // Compute which extensions and courses should be highlighted based on hoveredKey
   const { highlightedExts, highlightedCourses } = useMemo(() => {
     const empty = {
       highlightedExts: new Set<string>(),
@@ -247,14 +241,14 @@ export default function Act2Visual({
     const exts = new Set<string>();
     const courses = new Set<string>();
 
-    // 悬停的是 extension（左侧节点）
+    // Hovering on an extension (left node)
     if (extToCoursesMapping[hoveredKey]) {
       exts.add(hoveredKey);
       (extToCoursesMapping[hoveredKey] || []).forEach((c) => courses.add(c));
       return { highlightedExts: exts, highlightedCourses: courses };
     }
 
-    // 悬停的是 course（右侧节点）
+    // Hovering on a course (right node)
     const linkedExts = courseToExtsMapping[hoveredKey];
     if (linkedExts) {
       courses.add(hoveredKey);
@@ -265,18 +259,16 @@ export default function Act2Visual({
     return empty;
   }, [hoveredKey, courseToExtsMapping]);
 
-  // ==========================================
-  // 2. GSAP 状态机动画 (基于 useGSAPStateMachine)
-  // ==========================================
+  // ── GSAP State Machine ──
 
-  /** 杀死所有动画元素上的未完成 tween，防止快速滑动重叠 */
+  /** Kill all in-flight tweens on animated elements to prevent overlap on fast scrubbing */
   const killAll = () => {
     gsap.killTweensOf(
       '.layer-glossary, .layer-parallel, .layer-bar-stream, .badge-container, .desc-container, .desc-text, .parallel-clip-rect, .parallel-left-node, .parallel-right-node, .morph-path, .path-clip-rect, .bar-label, .stream-label, .legend-item, .stream-guide'
     );
   };
 
-  // --- 静态状态设定函数 (Instant Setters) ---
+  // ── Static state setters (instant) ──
   const setGlossaryState = (active: boolean) => {
     gsap.set('.layer-glossary', {
       opacity: active ? 1 : 0,
@@ -343,7 +335,7 @@ export default function Act2Visual({
     });
   };
 
-  // --- 动态过渡函数 (Timelines) ---
+  // ── Dynamic transition functions (timelines) ──
   const transition0To0 = () => {
     killAll();
     gsap.set('.layer-glossary', {
@@ -368,7 +360,7 @@ export default function Act2Visual({
 
   const transition0To1 = () => {
     killAll();
-    setBarStreamState('hidden'); // 确保 bar-stream 层已隐藏
+    setBarStreamState('hidden');
     gsap.set('.layer-parallel', {
       opacity: 1,
       pointerEvents: 'auto',
@@ -460,7 +452,7 @@ export default function Act2Visual({
 
   const transition1To2 = () => {
     killAll();
-    setGlossaryState(false); // 确保 glossary 层已隐藏（0→1 被中断时遗留）
+    setGlossaryState(false);
     gsap.set('.layer-bar-stream', {
       opacity: 1,
       pointerEvents: 'auto',
@@ -504,7 +496,7 @@ export default function Act2Visual({
 
   const transition2To1 = () => {
     killAll();
-    setGlossaryState(false); // 确保 glossary 层已隐藏
+    setGlossaryState(false);
     gsap.set('.layer-parallel', {
       opacity: 1,
       pointerEvents: 'auto',
@@ -635,9 +627,9 @@ export default function Act2Visual({
     },
 
     transitions: {
-      // 首次激活 Step 0 时播放入场动画
+      // Entrance animation on first activation of Step 0
       '0->0': () => transition0To0(),
-      // 相邻步骤过渡
+      // Adjacent step transitions
       '0->1': () => transition0To1(),
       '1->0': () => transition1To0(),
       '1->2': () => transition1To2(),
@@ -647,9 +639,7 @@ export default function Act2Visual({
     },
   });
 
-  // ==========================================
-  // 3. 纯净渲染层
-  // ==========================================
+  // ── Render Layer ──
   return (
     <div
       ref={svgRef}
@@ -929,14 +919,14 @@ export default function Act2Visual({
                     >
                       <g className="bar-label">
                         <text
-                          className={`font-serif fill-slate-900 ${compact ? 'text-xs' : 'text-xs'}`}
+                          className={`font-serif fill-slate-900 ${compact ? 'text-[10px]' : 'text-xs'}`}
                           dominantBaseline="central"
                         >
                           {key}
 
                         </text>
                         <text
-                          className={`font-serif fill-slate-500 ${compact ? 'text-[10px]' : 'text-xs'}`}
+                          className={`font-serif fill-slate-500 ${compact ? 'text-[8px]' : 'text-xs'}`}
                           x={50}
                           dominantBaseline="central"
                         >
@@ -953,7 +943,7 @@ export default function Act2Visual({
           <g
             className="stream-guide"
             style={{
-              opacity: hoveredKey ? 1 : 0,
+              opacity: step === 3 && hoveredKey ? 1 : 0,
               transition: 'opacity 0.3s',
             }}
           >
@@ -971,17 +961,34 @@ export default function Act2Visual({
             ))}
           </g>
           <g className={`font-serif fill-slate-400 uppercase tracking-widest ${compact ? 'text-[8px]' : 'text-[10px]'}`}>
-            {data.map((d) => (
-              <text
-                key={d.term_index}
-                x={streamXScale(d.term_index)}
-                y={svgHeight + 20}
-                textAnchor="middle"
-                className="stream-label"
-              >
-                {d.term}
-              </text>
-            ))}
+            {data.map((d) => {
+              const parts = String(d.term).split(' ');
+              return (
+                <text
+                  key={d.term_index}
+                  x={streamXScale(d.term_index)}
+                  y={compact ? svgHeight + 12 : svgHeight + 20}
+                  textAnchor="middle"
+                  className="stream-label"
+                >
+                  {compact ? (
+                    <>
+                      <tspan x={streamXScale(d.term_index)} dy="0">
+                        {parts[0]}
+                      </tspan>
+                      <tspan
+                        x={streamXScale(d.term_index)}
+                        dy="1.2em"
+                      >
+                        {parts.slice(1).join(' ')}
+                      </tspan>
+                    </>
+                  ) : (
+                    d.term
+                  )}
+                </text>
+              );
+            })}
           </g>
         </svg>
       </div>

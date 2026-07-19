@@ -35,7 +35,6 @@ export default function Landing() {
     setTimeout(() => setIsDetailOpen(false), 150);
   };
 
-  // const openDetail = () => {};
   const openDetail = () => setIsDetailOpen(true);
 
   const toggleView = () => {
@@ -145,5 +144,5 @@ export default function Landing() {
   );
 }
 
-// 预加载模型
+// Preload the 3D model
 useGLTF.preload("/model/desk_web_3_baked_animation.glb");
