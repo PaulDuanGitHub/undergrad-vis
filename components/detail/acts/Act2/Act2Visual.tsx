@@ -34,8 +34,8 @@ interface Act2VisualProps {
 const ASPECT_RATIO = 550 / 850; // height / width
 
 const extToCoursesMapping = ext_courses as Record<string, string[]>;
-const data = term_extensions['data'];
-const keys = term_extensions['keys'];
+const data = term_extensions['data'] as StreamData[];
+const keys = term_extensions['keys'] as string[];
 
 export default function Act2Visual({
   step,
