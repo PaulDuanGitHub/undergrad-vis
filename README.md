@@ -1,5 +1,7 @@
 # Productivity (2021–2026) — Undergraduate Visualization
 
+[Productivity (2021–2026) — Undergraduate Visualization](https://paulduangithub.github.io/undergrad-vis/)
+
 An interactive 3D data story visualizing **567 workfiles** created across five years of undergraduate study (Fall 2021 – Winter 2026). 
 ![Undergrad Vis GIF](./undergrad-vis.gif)
 

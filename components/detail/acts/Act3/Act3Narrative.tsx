@@ -53,12 +53,12 @@ export const ACT3SUBSTEPS = [
 export default function Act3Narrative() {
   return (
     <div className="flex flex-col items-start w-full">
-      <h2 className="text-2xl mb-4 font-semibold">Act 3: The Bubbles</h2>
+      <h2 className="text-2xl py-100 mb-4 font-semibold">Act 3: The Bubbles</h2>
       {ACT3SUBSTEPS.map((s) => (
         <div
           key={s.step}
           data-act3-step={s.step}
-          className="act3-substep flex flex-col justify-center py-100"
+          className="act3-substep flex flex-col justify-center py-150"
         >
           <div className="text-sm lg:text-base">{s.text}</div>
         </div>

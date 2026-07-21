@@ -56,12 +56,12 @@ export default function Act1Narrative() {
         and color.
       </p>
 
-      <h2 className="text-2xl mb-4 font-semibold">Act 1: The Cubes</h2>
+      <h2 className="text-2xl py-100 mb-4 font-semibold">Act 1: The Cubes</h2>
       {ACT1SUBSTEPS.map((s) => (
         <div
           key={s.step}
           data-act1-step={s.step}
-          className="act1-substep flex flex-col justify-center py-100"
+          className="act1-substep flex flex-col justify-center py-150"
         >
           <div className="text-sm lg:text-base">{s.text}</div>
         </div>

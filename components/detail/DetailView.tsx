@@ -210,7 +210,7 @@ export default function DetailView({ scrollRef, isDetailVisible, onExit }: Detai
             <h2 className="mb-2">My 2021 - 2026</h2>
             <h1 className="text-4xl lg:text-5xl mb-8">Productivity</h1>
             <h2 className="text-center italic mb-8 text-sm lg:text-base">
-                A visualization of over 600 workfiles created during my undergraduate.
+                A visualization of over 550 workfiles created during my undergraduate.
             </h2>
             <p className='text-text-secondary text-sm'>By <a href="https://www.xianzhaoduan.com" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">Paul Duan</a></p>
           </div>

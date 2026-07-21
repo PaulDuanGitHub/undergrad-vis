@@ -46,12 +46,12 @@ export const ACT2SUBSTEPS = [
 export default function Act2Narrative() {
   return (
     <div className="flex flex-col items-start w-full">
-      <h2 className="text-2xl mb-4 font-semibold">Act 2: The Strips</h2>
+      <h2 className="text-2xl py-100 mb-4 font-semibold">Act 2: The Strips</h2>
       {ACT2SUBSTEPS.map((s) => (
         <div
           key={s.step}
           data-act2-step={s.step}
-          className="act2-substep flex flex-col justify-center py-100"
+          className="act2-substep flex flex-col justify-center py-150"
         >
           <div className="text-sm lg:text-base">{s.text}</div>
         </div>
