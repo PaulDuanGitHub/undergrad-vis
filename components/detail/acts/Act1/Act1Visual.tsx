@@ -455,14 +455,57 @@ return (
 
 // ── Entry Point ──
 export default function Act1Visual({ step }: { step: number }) {
+  const [isContextLost, setIsContextLost] = useState(false);
+
+  // Handle WebGL context loss: try to prevent it, track state for graceful recovery
+  const handleCreated = useCallback(({ gl }: { gl: THREE.WebGLRenderer }) => {
+    const canvas = gl.domElement;
+
+    const onContextLost = (e: Event) => {
+      e.preventDefault(); // Ask browser to preserve the context
+      console.warn('[Act1Visual] WebGL context loss detected, attempting to preserve...');
+    };
+
+    const onContextRestored = () => {
+      console.warn('[Act1Visual] WebGL context restored');
+      setIsContextLost(false);
+    };
+
+    canvas.addEventListener('webglcontextlost', onContextLost);
+    canvas.addEventListener('webglcontextrestored', onContextRestored);
+
+    // If context is already lost when we mount, mark it
+    if (gl.getContext().isContextLost()) {
+      setIsContextLost(true);
+    }
+  }, []);
+
   return (
     <div className="w-full h-full flex-col items-center justify-center overflow-visible">
-      <Canvas shadows style={{ overflow: 'visible' }}>
+      <Canvas 
+        shadows 
+        style={{ overflow: 'visible' }}
+        gl={{ 
+          preserveDrawingBuffer: true,
+          powerPreference: 'high-performance',
+        }}
+        dpr={[1, 1.5]}
+        onCreated={handleCreated}
+      >
         <OrthographicCamera makeDefault zoom={14} near={0.1} far={1000} />
         <ambientLight intensity={0.6} />
         <directionalLight position={[10, 20, 10]} intensity={2} castShadow />
         <CubesScene data={file_summary as FileData[]} emptyDaysData={term_empty_days} step={step} />
       </Canvas>
+      {/* Show a subtle overlay during context loss instead of blank screen */}
+      {isContextLost && (
+        <div className="absolute inset-0 flex items-center justify-center bg-surface/80 backdrop-blur-sm z-10">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm text-text-secondary">Restoring 3D context...</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

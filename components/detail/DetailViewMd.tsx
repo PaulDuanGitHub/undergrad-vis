@@ -7,6 +7,7 @@ import Act3Visual from '@/components/detail/acts/Act3/Act3Visual';
 import Act1NarrativeMd from '@/components/detail/acts/Act1/Act1NarrativeMd';
 import Act2NarrativeMd from '@/components/detail/acts/Act2/Act2NarrativeMd';
 import Act3NarrativeMd from '@/components/detail/acts/Act3/Act3NarrativeMd';
+import Footer from '@/components/detail/Footer';
 import { useThemeVariable } from '@/hooks/useThemeVariable';
 
 // ── Constants ──
@@ -55,6 +56,7 @@ export default function DetailViewMd({ isDetailVisible, onExit }: DetailViewMdPr
   const [act1Step, setAct1Step] = useState(0);
   const [act2Step, setAct2Step] = useState(0);
   const [act3Step, setAct3Step] = useState(0);
+  const [showFooter, setShowFooter] = useState(false);
 
   const currentStep =
     activeAct === 1 ? act1Step : activeAct === 2 ? act2Step : act3Step;
@@ -102,15 +104,23 @@ export default function DetailViewMd({ isDetailVisible, onExit }: DetailViewMdPr
 
   // ── Navigation ──
   const goNext = useCallback(() => {
+    if (showFooter) return;
     if (currentStep < maxStep - 1) {
       setStepForAct(activeAct, currentStep + 1);
     } else if (activeAct < TOTAL_ACTS) {
       setActiveAct(activeAct + 1);
       setStepForAct(activeAct + 1, 0);
+    } else {
+      // Last step of last act → show footer
+      setShowFooter(true);
     }
-  }, [activeAct, currentStep, maxStep, setStepForAct]);
+  }, [activeAct, currentStep, maxStep, setStepForAct, showFooter]);
 
   const goPrev = useCallback(() => {
+    if (showFooter) {
+      setShowFooter(false);
+      return;
+    }
     if (currentStep > 0) {
       setStepForAct(activeAct, currentStep - 1);
     } else if (activeAct > 1) {
@@ -118,12 +128,10 @@ export default function DetailViewMd({ isDetailVisible, onExit }: DetailViewMdPr
       setActiveAct(prev);
       setStepForAct(prev, ACT_MAX_STEPS[prev] - 1);
     }
-  }, [activeAct, currentStep, setStepForAct]);
+  }, [activeAct, currentStep, setStepForAct, showFooter]);
 
-  const canGoNext = !(
-    activeAct === TOTAL_ACTS && currentStep >= ACT_MAX_STEPS[TOTAL_ACTS] - 1
-  );
-  const canGoPrev = !(activeAct === 1 && currentStep === 0);
+  const canGoNext = !showFooter;
+  const canGoPrev = showFooter || !(activeAct === 1 && currentStep === 0);
 
   // ── Pull-to-exit & horizontal swipe navigation ──
   const [pullProgress, setPullProgress] = useState(0);
@@ -310,9 +318,15 @@ export default function DetailViewMd({ isDetailVisible, onExit }: DetailViewMdPr
           </button>
         </div>
 
-        {/* Narrative text */}
+        {/* Narrative text or Footer */}
         <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-4">
-          <NarrativeComponent step={currentStep} />
+          {showFooter ? (
+            <div className="pt-8">
+              <Footer onExit={onExit} />
+            </div>
+          ) : (
+            <NarrativeComponent step={currentStep} />
+          )}
         </div>
       </div>
     </div>

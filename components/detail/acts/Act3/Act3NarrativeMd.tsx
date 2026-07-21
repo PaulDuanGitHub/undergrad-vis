@@ -1,23 +1,5 @@
 'use client';
-
-const SUBSTEPS = [
-  {
-    step: 0,
-    text: 'Freshman year, Fall 2021. Each track is an assignment, each bubble a burst of file saves. Notice how the bubbles cluster at the right edge — the deadline. Almost every commit happened in the final 24 hours. The classic pattern of a beginner: all panic, no pacing.',
-  },
-  {
-    step: 1,
-    text: "Four years later, Fall 2025. The courses are harder — advanced algorithms, system design, software architecture. The projects are larger. But look at the bubble distribution. The right edge still dominates. The tools improved; the habits didn't.",
-  },
-  {
-    step: 2,
-    text: "Now all 59 major assignments compress into a single dense grid. Five years, 24,000 commits, squeezed into one view. The pattern is no longer a suspicion — it's a signature. I am, and apparently always have been, a deadline-driven creature.",
-  },
-  {
-    step: 3,
-    text: 'When exactly does the work happen? This heatmap maps 43,000 file edits across days of the week and hours of the day. Sunday evenings burn brightest — 8pm, the undisputed peak of productivity. Even weekends are not spared: a full third of all edits happen on Saturday and Sunday. The architecture of my time, laid bare.',
-  },
-];
+import { ACT3SUBSTEPS } from './Act3Narrative';
 
 export default function Act3NarrativeMd({ step }: { step: number }) {
   return (
@@ -25,13 +7,13 @@ export default function Act3NarrativeMd({ step }: { step: number }) {
       <h2 className="text-lg font-semibold text-slate-800 mb-3">
         Act 3: The Bubbles
       </h2>
-      {SUBSTEPS.filter((s) => s.step === step).map((s) => (
-        <p
+      {ACT3SUBSTEPS.filter((s) => s.step === step).map((s) => (
+        <div
           key={s.step}
           className="text-sm leading-relaxed text-slate-700"
         >
           {s.text}
-        </p>
+        </div>
       ))}
     </div>
   );

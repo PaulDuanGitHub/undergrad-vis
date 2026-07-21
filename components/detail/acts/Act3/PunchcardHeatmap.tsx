@@ -80,7 +80,7 @@ export default function PunchcardHeatmap({
         {hoveredData && hoveredData.count > 0 ? (
           <div>
             <span className="text-brand">{`${hoveredData.count}`}</span>{' '}
-            {` files at ${hoveredData.hour}:00 on ${DAYS[hoveredData.day_of_week]}`}
+            {` file edits at ${hoveredData.hour}:00 on ${DAYS[hoveredData.day_of_week]}`}
           </div>
         ) : (
           ' '

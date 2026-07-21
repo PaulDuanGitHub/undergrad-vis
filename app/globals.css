@@ -80,3 +80,7 @@ canvas, [data-touch-lock] {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
+
+b {
+  color: var(--color-brand-900);
+}

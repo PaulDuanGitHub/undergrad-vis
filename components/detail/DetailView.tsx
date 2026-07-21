@@ -12,6 +12,7 @@ import Act2Visual from '@/components/detail/acts/Act2/Act2Visual';
 import Act3Narrative from '@/components/detail/acts/Act3/Act3Narrative';
 import Act3Visual from '@/components/detail/acts/Act3/Act3Visual';
 import DetailViewMd from '@/components/detail/DetailViewMd';
+import Footer from './Footer';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -22,7 +23,7 @@ const ACTS = [
   { id: 3, narrative: <Act3Narrative /> },
 ] as const;
 
-const isDev = true;
+const isDev = process.env.NODE_ENV === 'development';
 
 interface DetailViewProps {
   scrollRef: RefObject<HTMLDivElement | null>;
@@ -230,53 +231,7 @@ export default function DetailView({ scrollRef, isDetailVisible, onExit }: Detai
         </div>
       </div>
 
-      {/* Footer: Methodology & Colophon */}
-      <div className="w-full bg-surface flex flex-col font-serif select-text">
-        <hr className="border-t border-brand/10 w-[80%] mx-auto" />
-        <div className="max-w-4xl mx-auto py-24 px-8 flex flex-col gap-16">
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            {/* Methodology */}
-            <div>
-              <h3 className="text-sm tracking-widest text-text-secondary uppercase mb-6">Data Methodology</h3>
-              <p className="text-sm leading-relaxed text-text-primary/80 mb-4">
-                The dataset was sourced organically from my personal OneDrive version history spanning Fall 2021 to Winter 2026. Automated scripts were used to filter out system files, node_modules, and cache directories.
-              </p>
-              <p className="text-sm leading-relaxed text-text-primary/80">
-                A single "commit" or "version" represents an autosave snapshot triggered by meaningful file modifications. While minor sync discrepancies exist, they preserve the true macroscopic rhythm of my academic journey.
-              </p>
-            </div>
-
-            {/* Colophon & Tech Stack */}
-            <div>
-              <h3 className="text-sm tracking-widest text-text-secondary uppercase mb-6">Colophon</h3>
-              <p className="text-sm leading-relaxed text-text-primary/80 mb-4">
-                Designed and developed with <strong>React</strong> and <strong>Next.js</strong>. 
-                The 3D environment is rendered using <strong>Three.js</strong> and <strong>React Three Fiber</strong>.
-              </p>
-              <p className="text-sm leading-relaxed text-text-primary/80">
-                Data processing and vector visualizations were mathematically generated via <strong>D3.js</strong>, while complex state transitions and morphing animations were strictly orchestrated by <strong>GSAP</strong>. Typography is set in Roboto Serif and Geist.
-              </p>
-            </div>
-          </div>
-
-          <hr className="border-t border-brand/10" />
-
-          {/* Action Area */}
-          <div className="flex flex-col items-center justify-center text-center">
-            <button 
-              onClick={onExit}
-              className="px-8 py-3 border border-brand text-brand rounded hover:bg-brand hover:text-surface transition-colors duration-300 tracking-widest text-sm uppercase"
-            >
-              Return to Desk
-            </button>
-            <p className="mt-8 text-xs text-text-secondary">
-              © {new Date().getFullYear()} Paul Duan. All rights reserved.
-            </p>
-          </div>
-          
-        </div>
-      </div>
+      <Footer onExit={onExit}/>
     </div>
   );
 }

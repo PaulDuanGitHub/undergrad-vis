@@ -391,7 +391,7 @@ export default function Act2Visual({
         {
           opacity: 1,
           duration: 0.4,
-          stagger: 0.02,
+          stagger: 0.01,
           ease: 'power2.out',
         },
         "-=0.2"
@@ -399,8 +399,8 @@ export default function Act2Visual({
       .fromTo(
         '.parallel-clip-rect',
         { attr: { width: 0 } },
-        { attr: { width: svgWidth }, duration: 0.8, ease: 'power2.inOut' },
-        "<"
+        { attr: { width: svgWidth }, duration: 1, ease: 'power3.out' },
+        "+=0.1"
       )
       .fromTo(
         '.parallel-right-node',
