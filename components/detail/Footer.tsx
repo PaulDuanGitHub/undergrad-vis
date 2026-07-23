@@ -50,6 +50,7 @@ export default function Footer({ onExit }: FooterProps) {
                             </p>
                             <p className="text-sm leading-relaxed text-text-primary/80 mb-6">
                                 You are welcome to checkout the <a href="https://github.com/PaulDuanGitHub/undergrad-vis" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">GitHub Repo</a> for this website.
+                                Also <a href="https://paulduangithub.github.io/blog/2026/07/23/From-3D-to-D3-Visualizing-550-Files-and-5-Years-of-University/" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">the Epilogue on my BLOG</a>!
                                 Don't hesitate to star if you like this project!
                             </p>
                             <div>
