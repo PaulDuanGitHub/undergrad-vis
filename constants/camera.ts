@@ -1,6 +1,12 @@
 import * as THREE from 'three';
 
-export const INTRO_CAMERA_POSITION = new THREE.Vector3(0.5, 0.6, 2.5);
+// 1. Hugging the blank part of the desk
+export const INTRO_CAMERA_POSITION = new THREE.Vector3(-0.13234, 0.2026, 0.06294);
+export const INTRO_TARGET = new THREE.Vector3(-0.13234, 0.06838, 0.06294);
+
+// Point 1: Y-axis lift to pull away from the close-up.
+export const INTRO_LIFT_CAMERA_POS = new THREE.Vector3(-0.03207, 0.50926, 0.69346);
+export const INTRO_LIFT_TARGET = new THREE.Vector3(-0.09379, 0.06838, 0.03440);
 
 // lg (≥1024px)
 export const INITIAL_CAMERA_POSITION = new THREE.Vector3(
@@ -48,6 +54,46 @@ export function getInitialCamera(width: number): {
   return { position: INITIAL_CAMERA_POSITION_SM, target: INITIAL_TARGET_SM };
 }
 
+export type CameraPose = {
+  position: THREE.Vector3;
+  target: THREE.Vector3;
+};
+
+export type IntroCurves = {
+  position: THREE.CatmullRomCurve3;
+  target: THREE.CatmullRomCurve3;
+};
+
+/** Built once per breakpoint so the per-frame `getPointAt` never allocates. */
+const introCurveCache = new Map<'lg' | 'md' | 'sm', IntroCurves>();
+
+/**
+ * Camera splines for the intro fly-through: INTRO → LIFT → responsive rest pose.
+ * Centripetal Catmull-Rom (the `THREE.CatmullRomCurve3` default) is the variant
+ * that does not overshoot, so the lift cannot swing past the resting pose.
+ */
+export function getIntroCurves(width: number): IntroCurves {
+  const key = width >= 1024 ? 'lg' : width >= 768 ? 'md' : 'sm';
+  const cached = introCurveCache.get(key);
+  if (cached) return cached;
+
+  const rest = getInitialCamera(width);
+  const curves: IntroCurves = {
+    position: new THREE.CatmullRomCurve3([
+      INTRO_CAMERA_POSITION.clone(),
+      INTRO_LIFT_CAMERA_POS.clone(),
+      rest.position.clone(),
+    ]),
+    target: new THREE.CatmullRomCurve3([
+      INTRO_TARGET.clone(),
+      INTRO_LIFT_TARGET.clone(),
+      rest.target.clone(),
+    ]),
+  };
+  introCurveCache.set(key, curves);
+  return curves;
+}
+
 export const FOCUS_TARGET = new THREE.Vector3(-0.0024912, 0.06838, -0.0225949);
 export const FOCUS_CAMERA_POSITION = new THREE.Vector3(
   -0.0049475,
@@ -55,10 +101,11 @@ export const FOCUS_CAMERA_POSITION = new THREE.Vector3(
   0.386744
 );
 
-export const INTRO_DURATION = 1;
+export const INTRO_DURATION = 2;
 export const ANIMATION_DURATION = 0.8;
 export const PARALLAX_AMOUNT = 0.015;
 
 export const easeInOut = (t: number) => 0.5 * (1 - Math.cos(Math.PI * t));
 export const easeOutQuart = (t: number) => 1 - Math.pow(1 - t, 4);
 export const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+export const easeInOutCubic = (t: number) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
