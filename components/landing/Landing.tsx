@@ -1,7 +1,7 @@
 ﻿"use client";
-import React, { Suspense, useEffect, useRef, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Environment, useProgress } from "@react-three/drei";
+import { Environment } from "@react-three/drei";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { INTRO_CAMERA_POSITION } from "@/constants/camera";
@@ -11,7 +11,6 @@ import LoadingOverlay from "@/components/landing/LoadingOverlay";
 import DetailView from "@/components/detail/DetailView";
 
 export default function Landing() {
-  const { progress } = useProgress();
   const [isLoaded, setIsLoaded] = useState(false);
   const [isIntroDone, setIsIntroDone] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -23,12 +22,9 @@ export default function Landing() {
   const touchStartRef = useRef({ x: 0, y: 0, time: 0 });
   const SWIPE_THRESHOLD = 50; // min px to trigger swipe
 
-  useEffect(() => {
-    if (progress === 100) {
-      const timer = setTimeout(() => setIsLoaded(true), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [progress]);
+  // The preloader owns the asset progress + its own exit choreography, and
+  // calls back once it has fully faded — that's when the scene takes over.
+  const handleLoaded = useCallback(() => setIsLoaded(true), []);
 
   const closeDetail = () => {
     setIsDetailVisible(false);
@@ -98,7 +94,7 @@ export default function Landing() {
         isDetailOpen ? "bg-surface" : "bg-surface"
       }`}
     >
-      <LoadingOverlay isLoaded={isLoaded} />
+      <LoadingOverlay onLoaded={handleLoaded} />
 
       <div
         className={`fixed top-0 flex flex-col flex-1 items-center justify-start pointer-events-none z-10 transition-all duration-600 ease-out ${

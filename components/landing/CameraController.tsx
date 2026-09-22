@@ -3,7 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import {
   INTRO_CAMERA_POSITION,
-  INITIAL_TARGET,
+  INTRO_TARGET,
   FOCUS_CAMERA_POSITION,
   FOCUS_TARGET,
   INTRO_DURATION,
@@ -12,7 +12,13 @@ import {
   easeInOut,
   easeOutQuart,
   getInitialCamera,
+  getIntroCurves,
+  easeInOutCubic,
 } from '@/constants/camera';
+
+/** Scratch vectors reused by the per-frame spline sampling (keeps the frame allocation-free). */
+const _curvePos = new THREE.Vector3();
+const _curveTarget = new THREE.Vector3();
 
 interface CameraControllerProps {
   isDetailOpen: boolean;
@@ -62,29 +68,30 @@ export default function CameraController({
   }, [isDetailOpen, isIntroDone, size.width]);
 
   useFrame((state, delta) => {
-    // Phase 0: loading — camera stays at intro position
+    // Phase 0: loading — camera stays at the first spline point (on the desk)
     if (!isLoaded) {
       camera.position.copy(INTRO_CAMERA_POSITION);
-      camera.lookAt(INITIAL_TARGET);
+      camera.lookAt(INTRO_TARGET);
       return;
     }
 
-    // Phase 1: intro animation — lerp from intro position to responsive initial position
+    // Phase 1: intro fly-through — position and look-at target each follow their
+    // own Catmull-Rom spline (desk → lift → responsive rest pose). `getPointAt`
+    // keeps the base speed constant along the arc length, so `easeInOut` is
+    // the only thing shaping the acceleration.
     if (!isIntroDone) {
-      const init = getInitialCamera(size.width);
+      const curves = getIntroCurves(size.width);
       introProgress.current += delta / INTRO_DURATION;
       const p = Math.min(introProgress.current, 1);
-      const eased = easeOutQuart(p);
-      currentBasePos.current.lerpVectors(
-        INTRO_CAMERA_POSITION,
-        init.position,
-        eased
-      );
+      const eased = easeInOutCubic(p);
+      curves.position.getPointAt(eased, _curvePos);
+      curves.target.getPointAt(eased, _curveTarget);
+      currentBasePos.current.copy(_curvePos);
+      currentBaseTarget.current.copy(_curveTarget);
       camera.position.copy(currentBasePos.current);
-      camera.lookAt(init.target);
+      camera.lookAt(currentBaseTarget.current);
       smoothedCameraPos.current.copy(currentBasePos.current);
-      smoothedTarget.current.copy(init.target);
-      currentBaseTarget.current.copy(init.target);
+      smoothedTarget.current.copy(currentBaseTarget.current);
       if (p >= 1) {
         onIntroDone();
       }
