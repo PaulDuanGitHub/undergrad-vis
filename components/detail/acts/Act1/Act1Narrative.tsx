@@ -7,7 +7,7 @@ export const ACT1SUBSTEPS = [
       <>
         Here lies every single <b>workfile</b> I've created across five years of undergraduate courses.
         In total, there are <b>567</b> files, each one a cube in this 3D space.
-        Each cube representing an assignment, a report, a piece of code. Hovering on the cube to take a glance.
+        Each cube representing an assignment, a report, a piece of code. Hovering or tapping a cube to take a glance.
       </>,
   },
   {
@@ -22,7 +22,7 @@ export const ACT1SUBSTEPS = [
     text: 
       <>
         Now the cubes take on the colors of their courses.
-        Within this dataset, there are <b>34</b> unique of them.
+        Within this dataset, there are <b>34</b> distinct courses.
       </>
   },
   {

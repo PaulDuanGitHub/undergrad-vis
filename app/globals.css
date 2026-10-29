@@ -1,6 +1,11 @@
 @import "tailwindcss";
 
 :root {
+  /* The design is locked to the warm light palette: the 3D scene, its baked
+     textures and the paper surface have no dark counterpart. Declaring this
+     stops the UA from darkening native form controls, scrollbars and the
+     canvas backdrop on a system set to dark mode. */
+  color-scheme: light;
   --background: #F9F9F8; /* warm off-white */
   --foreground: #1C1917; /* soft charcoal */
   --color-brand: #D4442E; /* brick red */
@@ -33,16 +38,17 @@
   --color-surface: var(--color-surface);
   --color-text-primary: var(--color-text-primary);
   --color-text-secondary: var(--color-text-secondary);
+
+  /* Hero marker band + warm ink: the band is a material (kraft/manila, the same
+     family as the desk's paper and the baked shadows) rather than a brand
+     accent, so it adds warmth without introducing a hue the scene can't
+     support. Ink is warmed to match the wood. See components/landing/Landing.tsx. */
+  --color-kraft: #E4D5BC;
+  --color-ink-warm: #2E2118;
+
   --font-sans: var(--font-geist-sans);
   --font-serif: var(--font-roboto-serif);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0F172A;
-    --foreground: #F1F5F9;
-  }
 }
 
 body {
@@ -64,9 +70,10 @@ input, button, select, textarea {
   touch-action: manipulation;
 }
 
-/* Canvas / interactive areas: fully disable browser gestures */
+/* Canvas / interactive areas: keep browser panning out of the way, but allow
+   pinch-zoom so the small chart labels remain zoomable (WCAG 1.4.4). */
 canvas, [data-touch-lock] {
-  touch-action: none;
+  touch-action: pinch-zoom;
 }
 
 /* Prevent text selection on interactive UI elements */
@@ -79,6 +86,40 @@ canvas, [data-touch-lock] {
 .overscroll-contain {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+}
+
+/* One visible focus ring for every keyboard-reachable control. `:where()` keeps
+   specificity at zero so component-level ring utilities can still override it. */
+:where(a, button, [role="button"]):focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Containers that are only focused programmatically (tabIndex -1) are not Tab
+   stops: they exist so assistive tech lands inside a region, and a ring around
+   a viewport-sized panel would read as a page border rather than a focus cue. */
+[tabindex="-1"]:focus-visible {
+  outline: none;
+}
+
+/* The scene layer is the whole viewport. Its focus cue is the entry hint pill,
+   highlighted by the component — a full-window frame is not a usable signal. */
+[data-scene]:focus-visible {
+  outline: none;
+}
+
+/* Safety net for the CSS half of the motion design (the JS half branches on the
+   same query): everything lands in its final state instead of animating. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 b {

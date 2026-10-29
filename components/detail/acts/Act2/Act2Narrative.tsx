@@ -38,7 +38,7 @@ export const ACT2SUBSTEPS = [
       <>
         But totals flatten time.
         Watch the bars melt into a flowing stream, semester by semester.
-        Hovering over the legend to reveal each stream.
+        Hovering or tapping the legend to reveal each stream.
       </>
   },
 ];

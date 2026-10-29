@@ -10,7 +10,7 @@ export default function Act1NarrativeMd({ step }: { step: number }) {
       {ACT1SUBSTEPS.filter((s) => s.step === step).map((s) => (
         <div
           key={s.step}
-          className="text-sm leading-relaxed text-slate-700"
+          className="text-[15px] leading-relaxed text-slate-700"
         >
           {s.text}
         </div>

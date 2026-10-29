@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useMemo, useRef, useState, useCallback } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { OrthographicCamera, Html, OrbitControls } from "@react-three/drei";
 import file_summary from "@/data/file_summary.json";
 import term_empty_days from "@/data/term_empty_days.json";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import * as THREE from "three";
 
 // ── Constants ──
@@ -12,6 +13,10 @@ const SPACING = 1.5;
 const MIN_HEIGHT = 0.5;
 const HOVER_SPEED = 8;
 const LERP_SPEED = 5;
+
+/** Only a real mouse should light up hover; touch produces pinning instead. */
+type PointerLike = { nativeEvent?: { pointerType?: string }; pointerType?: string };
+const isMouseEvent = (e: PointerLike) => (e.nativeEvent?.pointerType ?? e.pointerType) !== "touch";
 
 // Step 1-3 layout: 4 columns × 2 rows
 const GROUP_SPACING_X = 27; 
@@ -69,6 +74,9 @@ interface CubesSceneProps {
   data: FileData[];           
   emptyDaysData: Record<string, {relative_week: number, day_of_week: number}[]>; 
   step: number; 
+  compact?: boolean;
+  visible?: boolean;
+  onTooltipChange?: (payload: { step: number; cube: ProcessedCube } | null) => void;
 }
 
 // ── Helpers ──
@@ -236,37 +244,70 @@ function getCubeTargets(cube: ProcessedCube, step: number, isHovered: boolean) {
 }
 
 // ── 3D Scene Component ──
-export function CubesScene({ data, emptyDaysData, step }: CubesSceneProps) {
+export function CubesScene({ data, emptyDaysData, step, compact = false, visible = true, onTooltipChange }: CubesSceneProps) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const groupContainerRef = useRef<THREE.Group>(null);
   const tooltipGroupRef = useRef<THREE.Group>(null);
   const labelGroupRefs = useRef<(THREE.Group | null)[]>([]);
   
   const dummy = useMemo(() => new THREE.Object3D(), []);
+  const reducedMotion = useReducedMotion();
   
-  const hoveredRef = useRef(-1);
-  const [hoveredIdx, setHoveredIdx] = useState(-1);
+  // Hover is the desktop affordance; on touch a tap pins a cube instead. The
+  // step is stored with the selection so a tooltip never survives a stage change.
+  const [hovered, setHovered] = useState<{ idx: number; step: number } | null>(null);
+  const [selected, setSelected] = useState<{ idx: number; step: number } | null>(null);
+  const hoveredIdx = visible && hovered?.step === step ? hovered.idx : -1;
+  const selectedIdx = visible && selected?.step === step ? selected.idx : -1;
+  const activeIdx = hoveredIdx !== -1 ? hoveredIdx : selectedIdx;
+  const activeRef = useRef(-1);
+
+  useEffect(() => {
+    activeRef.current = activeIdx;
+  }, [activeIdx]);
+
+  /* eslint-disable react-hooks/set-state-in-effect -- one-shot clear when the panel closes */
+  useEffect(() => {
+    if (visible) return;
+    setHovered(null);
+    setSelected(null);
+  }, [visible]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const { cubeData, termLabels, gridOffset, groupBlocksOffset, heatmapBlocksOffset } = useMemo(
     () => getSceneData(data, emptyDaysData), 
     [data, emptyDaysData]
   );
 
+  // The phone tooltip is rendered outside the canvas so it can never be clipped
+  // by the visual-area overflow or the cube's screen position.
+  useEffect(() => {
+    onTooltipChange?.(activeIdx === -1 ? null : { step, cube: cubeData[activeIdx] });
+  }, [activeIdx, step, cubeData, onTooltipChange]);
+
   const { camera, size } = useThree();
 
-  const handlePointerEnter = useCallback((e: any) => {
+  const handlePointerEnter = useCallback((e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation();
-    if (e.instanceId != null) {
-      hoveredRef.current = e.instanceId;
-      setHoveredIdx(e.instanceId);
-    }
+    if (isMouseEvent(e) && e.instanceId != null) setHovered({ idx: e.instanceId, step });
+  }, [step]);
+
+  const handlePointerLeave = useCallback((e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation();
+    if (isMouseEvent(e)) setHovered(null);
   }, []);
 
-  const handlePointerLeave = useCallback((e: any) => {
+  // Tap/click pins a cube; tapping it again (or empty space) dismisses it.
+  const handleCubeClick = useCallback((e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
-    hoveredRef.current = -1;
-    setHoveredIdx(-1);
-  }, []);
+    const idx = e.instanceId;
+    if (idx == null) return;
+    setSelected((prev) =>
+      prev && prev.idx === idx && prev.step === step
+        ? null
+        : { idx, step },
+    );
+  }, [step]);
 
   // Design reference: at 931px canvas width, the current layout fits exactly without clipping
   const BASE_CANVAS_WIDTH = 931;
@@ -293,12 +334,21 @@ export function CubesScene({ data, emptyDaysData, step }: CubesSceneProps) {
 
   // Frame Loop: lerp camera, cubes, labels, and tooltip
   useFrame((_, delta) => {
+    // The frameloop is paused while this act is inactive, and the browser pauses
+    // rAF in background tabs — either way the first frame back reports a huge
+    // delta. `Vector3.lerp` extrapolates past its target when alpha > 1, so the
+    // scene would fling on resume. Cap the step at one 30 fps frame.
+    const d = Math.min(delta, 1 / 30);
+    // Reduced motion: every eased approach below becomes a jump, so a step
+    // change lands the cubes where they belong instead of sliding them there.
+    const snap = reducedMotion;
+
     const orthoCam = camera as THREE.OrthographicCamera;
     const targetCamPos = getTargetCameraPos();
     const targetZoom = getTargetCameraZoom(); 
     
-    orthoCam.position.lerp(targetCamPos, delta * LERP_SPEED * 0.8);
-    orthoCam.zoom += (targetZoom - orthoCam.zoom) * delta * LERP_SPEED * 0.8;
+    orthoCam.position.lerp(targetCamPos, snap ? 1 : d * LERP_SPEED * 0.8);
+    orthoCam.zoom += (targetZoom - orthoCam.zoom) * (snap ? 1 : d * LERP_SPEED * 0.8);
     orthoCam.updateProjectionMatrix();
     orthoCam.lookAt(0, 0, 0);
 
@@ -308,13 +358,13 @@ export function CubesScene({ data, emptyDaysData, step }: CubesSceneProps) {
     // Cubes Lerp
     for (let i = 0; i < cubeData.length; i++) {
       const cube = cubeData[i];
-      const isHovered = isInteractive && hoveredRef.current === i;
+      const isHovered = isInteractive && activeRef.current === i;
       
       const { targetPos, targetColor, targetHeight, targetScaleY } = getCubeTargets(cube, step, isHovered);
 
-      cube.currentPos.lerp(targetPos, delta * LERP_SPEED);
-      cube.currentHeight += (targetHeight - cube.currentHeight) * Math.min(delta * (isHovered ? HOVER_SPEED : LERP_SPEED), 1);
-      cube.currentColor.lerp(targetColor, delta * HOVER_SPEED);
+      cube.currentPos.lerp(targetPos, snap ? 1 : d * LERP_SPEED);
+      cube.currentHeight += (targetHeight - cube.currentHeight) * (snap ? 1 : Math.min(d * (isHovered ? HOVER_SPEED : LERP_SPEED), 1));
+      cube.currentColor.lerp(targetColor, snap ? 1 : d * HOVER_SPEED);
 
       const scaleY = Math.max(cube.currentHeight * targetScaleY, 0.0001); 
       dummy.position.set(cube.currentPos.x, scaleY / 2, cube.currentPos.z);
@@ -332,7 +382,7 @@ export function CubesScene({ data, emptyDaysData, step }: CubesSceneProps) {
     let targetOffset = groupBlocksOffset;
     if (step === 0) targetOffset = gridOffset;
     if (step === 4) targetOffset = heatmapBlocksOffset;
-    groupContainerRef.current.position.lerp(targetOffset, delta * LERP_SPEED);
+    groupContainerRef.current.position.lerp(targetOffset, snap ? 1 : d * LERP_SPEED);
 
     // Label position tracking
     for (let i = 0; i < termLabels.length; i++) {
@@ -342,7 +392,7 @@ export function CubesScene({ data, emptyDaysData, step }: CubesSceneProps) {
       if (step === 0) targetLabelPos = labelData.gridLabelPos;
       if (step === 4) targetLabelPos = labelData.heatmapLabelPos;
       
-      labelData.currentPos.lerp(targetLabelPos, delta * LERP_SPEED);
+      labelData.currentPos.lerp(targetLabelPos, snap ? 1 : d * LERP_SPEED);
       
       if (labelGroupRefs.current[i]) {
         labelGroupRefs.current[i]!.position.copy(labelData.currentPos);
@@ -350,14 +400,14 @@ export function CubesScene({ data, emptyDaysData, step }: CubesSceneProps) {
     }
 
     // Tooltip Tracker
-    if (hoveredRef.current !== -1 && tooltipGroupRef.current) {
-      const activeCube = cubeData[hoveredRef.current];
+    if (activeRef.current !== -1 && tooltipGroupRef.current) {
+      const activeCube = cubeData[activeRef.current];
       tooltipGroupRef.current.position.copy(activeCube.currentPos);
       tooltipGroupRef.current.position.y = activeCube.currentHeight + 1.5; 
     }
   });
 
-  const tooltipData = hoveredIdx !== -1 ? cubeData[hoveredIdx] : null;
+  const tooltipData = activeIdx !== -1 ? cubeData[activeIdx] : null;
 
 return (
     <group ref={groupContainerRef}>
@@ -366,36 +416,40 @@ return (
         args={[undefined, undefined, cubeData.length]}
         onPointerEnter={handlePointerEnter}
         onPointerLeave={handlePointerLeave}
+        onClick={handleCubeClick}
+        onPointerMissed={() => setSelected(null)}
       >
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial roughness={step === 4 ? 1 : 0.8} />
       </instancedMesh>
 
-      {/* --- Tooltip --- */}
+      {/* --- Tooltip (desktop hover) --- */}
       <group ref={tooltipGroupRef}>
-        <Html className="pointer-events-none transition-opacity duration-200 z-9999" style={{ opacity: hoveredIdx !== -1 && step !== 3 ? 1 : 0 }}>
-          {tooltipData && (
-            <div className="absolute right-5 bg-white/95 backdrop-blur-md px-4 py-3 rounded-xl shadow-xl border border-slate-200 whitespace-nowrap">
-              {step < 3 && !tooltipData.isEmptyCube ? (
-                <>
-                  <div className="text-[10px] uppercase tracking-widest text-slate-500 mb-1">
-                    {tooltipData.term} <span className="mx-1">//</span> {tooltipData.course}
+        {!compact && (
+          <Html className="pointer-events-none transition-opacity duration-200 z-9999" style={{ opacity: activeIdx !== -1 && step !== 3 ? 1 : 0 }}>
+            {tooltipData && (
+              <div className="absolute right-5 bg-white/95 backdrop-blur-md px-4 py-3 rounded-xl shadow-xl border border-slate-200 whitespace-nowrap">
+                {step < 3 && !tooltipData.isEmptyCube ? (
+                  <>
+                    <div className="text-[10px] uppercase tracking-widest text-slate-500 mb-1">
+                      {tooltipData.term} <span className="mx-1">{'//'}</span> {tooltipData.course}
+                    </div>
+                    <div className="text-lg font-serif text-slate-900 mb-1">{tooltipData.fileName} file</div>
+                    <div className="text-xs text-slate-600">
+                      Total Versions: <span className="font-bold text-brand">{tooltipData.totalVersions}</span>
+                    </div>
+                  </>
+                ) : (step === 4 && (
+                  <div className="text-sm font-serif text-slate-900 leading-relaxed">
+                    <span className="font-bold text-brand text-base">{tooltipData.dailyCount}</span> 
+                    {' '}work {tooltipData.dailyCount === 1 ? 'file was' : 'files were'} created on<br />
+                    <span className="italic text-slate-600">{tooltipData.dateStr}</span>
                   </div>
-                  <div className="text-lg font-serif text-slate-900 mb-1">{tooltipData.fileName} file</div>
-                  <div className="text-xs text-slate-600">
-                    Total Versions: <span className="font-bold text-brand">{tooltipData.totalVersions}</span>
-                  </div>
-                </>
-              ) : (step === 4 && (
-                <div className="text-sm font-serif text-slate-900 leading-relaxed">
-                  <span className="font-bold text-brand text-base">{tooltipData.dailyCount}</span> 
-                  {' '}work {tooltipData.dailyCount === 1 ? 'file was' : 'files were'} created on<br />
-                  <span className="italic text-slate-600">{tooltipData.dateStr}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </Html>
+                ))}
+              </div>
+            )}
+          </Html>
+        )}
       </group>
 
       {/* Term Labels & Y-Axis */}
@@ -412,40 +466,49 @@ return (
             {/* 3x Supersampling: render at triple resolution then CSS-scale down for sharper CSS3D */}
             <div style={{ transform: 'scale(0.333)', transformOrigin: 'center center' }}>
               <div className="absolute pr-12 right-0 text-right flex flex-col items-end w-max -translate-y-12" style={{ top: (step === 4) ? '-240px' : '240px' }}>
-                <span className="font-light text-slate-900 mb-3" style={{ fontSize: '13rem', lineHeight: '1' }}>{label.term}</span>
-                <div className="flex flex-col items-end gap-8 overflow-hidden transition-all duration-700" style={{ maxHeight: (step === 2 || step === 3) ? '900px' : '0px', opacity: (step === 2 || step === 3) ? 1 : 0 }}>
-                  {label.courses.map((course: string, cIdx: number) => (
-                    <div key={course} className="flex items-center gap-6" style={{ fontSize: '2.625rem', color: '#475569' }}>
-                      <span style={{ fontSize: '9rem', lineHeight: '1' }}>{course}</span>
-                      <span className="rounded-full" style={{ width: '72px', height: '72px', backgroundColor: `#${COURSE_COLORS[cIdx % COURSE_COLORS.length].getHexString()}` }} />
-                    </div>
-                  ))}
-                </div>
+                <span className="font-light text-slate-900 mb-3" style={{ fontSize: compact ? '18rem' : '13rem', lineHeight: '1' }}>{label.term}</span>
+                {/* 34 rotated course names are illegible on a phone; the term
+                    headings and the cube colours carry the stage instead. */}
+                {!compact && (
+                  <div className="flex flex-col items-end gap-8 overflow-hidden transition-all duration-700" style={{ maxHeight: (step === 2 || step === 3) ? '900px' : '0px', opacity: (step === 2 || step === 3) ? 1 : 0 }}>
+                    {label.courses.map((course: string, cIdx: number) => (
+                      <div key={course} className="flex items-center gap-6" style={{ fontSize: '2.625rem', color: '#475569' }}>
+                        <span style={{ fontSize: '9rem', lineHeight: '1' }}>{course}</span>
+                        <span className="rounded-full" style={{ width: '72px', height: '72px', backgroundColor: `#${COURSE_COLORS[cIdx % COURSE_COLORS.length].getHexString()}` }} />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </Html>
 
-          {/* Y-axis: Day-of-week labels (Step 4 only) */}
-          {/* Monday */}
-          <Html position={[0, 0, 1 * SPACING]} className="pointer-events-none transition-opacity duration-700" style={{ opacity: step === 4 ? 1 : 0 }}>
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 font-serif text-[10px] text-slate-400 uppercase tracking-widest">
-              Mon
-            </div>
-          </Html>
+          {/* Y-axis: Day-of-week labels (Step 4 only). On compact screens the
+              eight repeated MON/WED/FRI sets collapse into noise. */}
+          {!compact && (
+            <>
+              {/* Monday */}
+              <Html position={[0, 0, 1 * SPACING]} className="pointer-events-none transition-opacity duration-700" style={{ opacity: step === 4 ? 1 : 0 }}>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 font-serif text-[10px] text-slate-400 uppercase tracking-widest">
+                  Mon
+                </div>
+              </Html>
 
-          {/* Wednesday */}
-          <Html position={[0, 0, 3 * SPACING]} className="pointer-events-none transition-opacity duration-700" style={{ opacity: step === 4 ? 1 : 0 }}>
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 font-serif text-[10px] text-slate-400 uppercase tracking-widest">
-              Wed
-            </div>
-          </Html>
+              {/* Wednesday */}
+              <Html position={[0, 0, 3 * SPACING]} className="pointer-events-none transition-opacity duration-700" style={{ opacity: step === 4 ? 1 : 0 }}>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 font-serif text-[10px] text-slate-400 uppercase tracking-widest">
+                  Wed
+                </div>
+              </Html>
 
-          {/* Friday */}
-          <Html position={[0, 0, 5 * SPACING]} className="pointer-events-none transition-opacity duration-700" style={{ opacity: step === 4 ? 1 : 0 }}>
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 font-serif text-[10px] text-slate-400 uppercase tracking-widest">
-              Fri
-            </div>
-          </Html>
+              {/* Friday */}
+              <Html position={[0, 0, 5 * SPACING]} className="pointer-events-none transition-opacity duration-700" style={{ opacity: step === 4 ? 1 : 0 }}>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 font-serif text-[10px] text-slate-400 uppercase tracking-widest">
+                  Fri
+                </div>
+              </Html>
+            </>
+          )}
 
         </group>
       ))}
@@ -454,8 +517,14 @@ return (
 }
 
 // ── Entry Point ──
-export default function Act1Visual({ step }: { step: number }) {
+// `isActive` gates the frameloop: the three acts are all mounted and stacked,
+// so without it this canvas keeps drawing 567 instanced cubes behind an
+// opacity-0 wrapper for the whole of Act 2 and Act 3, competing with whatever
+// transition is playing. `preserveDrawingBuffer` keeps the last frame on screen
+// while paused, so the wrapper's cross-fade still has something to fade.
+export default function Act1Visual({ step, isActive = true, compact = false, visible = true }: { step: number; isActive?: boolean; compact?: boolean; visible?: boolean }) {
   const [isContextLost, setIsContextLost] = useState(false);
+  const [tooltip, setTooltip] = useState<{ step: number; cube: ProcessedCube } | null>(null);
 
   // Handle WebGL context loss: try to prevent it, track state for graceful recovery
   const handleCreated = useCallback(({ gl }: { gl: THREE.WebGLRenderer }) => {
@@ -481,10 +550,13 @@ export default function Act1Visual({ step }: { step: number }) {
   }, []);
 
   return (
-    <div className="w-full h-full flex-col items-center justify-center overflow-visible">
+    <div className="relative w-full h-full flex-col items-center justify-center overflow-visible">
       <Canvas 
         shadows 
+        frameloop={isActive && visible ? 'always' : 'never'}
         style={{ overflow: 'visible' }}
+        role="img"
+        aria-label="3D bar chart of course assignments per term. Tap a cube to see its course and count."
         gl={{ 
           preserveDrawingBuffer: true,
           powerPreference: 'high-performance',
@@ -495,8 +567,33 @@ export default function Act1Visual({ step }: { step: number }) {
         <OrthographicCamera makeDefault zoom={14} near={0.1} far={1000} />
         <ambientLight intensity={0.6} />
         <directionalLight position={[10, 20, 10]} intensity={2} castShadow />
-        <CubesScene data={file_summary as FileData[]} emptyDaysData={term_empty_days} step={step} />
+        <CubesScene data={file_summary as FileData[]} emptyDaysData={term_empty_days} step={step} compact={compact} visible={visible} onTooltipChange={compact ? setTooltip : undefined} />
       </Canvas>
+
+      {/* Phone tooltip: a clamped card, outside the canvas and its overflow. */}
+      {compact && visible && tooltip && tooltip.step !== 3 && !(tooltip.step < 3 && tooltip.cube.isEmptyCube) && (
+        <div className="pointer-events-none absolute left-1/2 top-3 z-20 w-[calc(100%-1.5rem)] max-w-sm -translate-x-1/2 rounded-xl border border-slate-200 bg-white/95 px-4 py-3 text-left shadow-xl backdrop-blur-md">
+          {tooltip.step < 3 ? (
+            <>
+              <div className="mb-1 text-[10px] uppercase tracking-widest text-slate-500">
+                {tooltip.cube.term} <span className="mx-1">{'//'}</span> {tooltip.cube.course}
+              </div>
+              <div className="mb-1 font-serif text-lg text-slate-900">{tooltip.cube.fileName} file</div>
+              <div className="text-xs text-slate-600">
+                Total Versions: <span className="font-bold text-brand">{tooltip.cube.totalVersions}</span>
+              </div>
+            </>
+          ) : (
+            <div className="font-serif text-sm leading-relaxed text-slate-900">
+              <span className="text-base font-bold text-brand">{tooltip.cube.dailyCount}</span>{' '}
+              work {tooltip.cube.dailyCount === 1 ? 'file was' : 'files were'} created on
+              <br />
+              <span className="italic text-slate-600">{tooltip.cube.dateStr}</span>
+            </div>
+          )}
+          <div className="mt-2 text-[10px] tracking-wide text-slate-400">Tap the cube again to close</div>
+        </div>
+      )}
       {/* Show a subtle overlay during context loss instead of blank screen */}
       {isContextLost && (
         <div className="absolute inset-0 flex items-center justify-center bg-surface/80 backdrop-blur-sm z-10">

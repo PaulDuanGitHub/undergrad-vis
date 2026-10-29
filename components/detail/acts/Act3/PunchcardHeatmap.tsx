@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { scaleLinear } from 'd3-scale';
 import { max } from 'd3-array';
 import { useThemeVariable } from '@/hooks/useThemeVariable';
@@ -14,6 +14,8 @@ interface PunchcardData {
 interface PunchcardProps {
   data: PunchcardData[];
   width?: number;
+  /** Available height of the chart box; the grid is scaled to fit instead of clipping. */
+  height?: number;
   flip?: boolean;
 }
 
@@ -29,11 +31,27 @@ const FLIPPED_CELL_H = 20;
 export default function PunchcardHeatmap({
   data,
   width = 800,
+  height,
   flip = false,
 }: PunchcardProps) {
   const flipped = flip;
   const [hoveredData, setHoveredData] = useState<PunchcardData | null>(null);
   const COLOR_BRAND = useThemeVariable('--color-brand');
+
+  // Touch taps are followed by emulated mouse events; ignore hover briefly and
+  // let the click pin a cell (tap it again to clear).
+  const touchRef = useRef(false);
+  const markTouch = () => {
+    touchRef.current = true;
+    window.setTimeout(() => { touchRef.current = false; }, 700);
+  };
+  const fromTouch = () => touchRef.current;
+  const selectCell = (d: PunchcardData) => {
+    const toggle = fromTouch();
+    setHoveredData((prev) =>
+      prev && prev.day_of_week === d.day_of_week && prev.hour === d.hour && toggle ? null : d,
+    );
+  };
 
   const pad = flipped
     ? { top: 10, right: 15, bottom: 35, left: 45 }
@@ -42,10 +60,17 @@ export default function PunchcardHeatmap({
   const cols = flipped ? DAYS_COUNT : HOURS;
   const rows = flipped ? HOURS : DAYS_COUNT;
 
-  const cellW = flipped ? FLIPPED_CELL_W : (width - pad.left - pad.right) / cols;
+  const availW = Math.max(8, width - pad.left - pad.right);
+  const targetH = height != null
+    ? (flipped ? height : Math.min(height, width * ASPECT_LANDSCAPE))
+    : width * ASPECT_LANDSCAPE;
+  const availH = Math.max(8, targetH - pad.top - pad.bottom);
+  const cellW = flipped
+    ? Math.max(8, Math.min(FLIPPED_CELL_W, availW / cols))
+    : availW / cols;
   const cellH = flipped
-    ? FLIPPED_CELL_H
-    : (width * ASPECT_LANDSCAPE - pad.top - pad.bottom) / rows;
+    ? Math.max(4, Math.min(FLIPPED_CELL_H, availH / rows))
+    : Math.max(2, availH / rows);
 
   const innerW = cellW * cols;
   const innerH = cellH * rows;
@@ -55,9 +80,10 @@ export default function PunchcardHeatmap({
 
   const { maxCount, radiusScale } = useMemo(() => {
     const maxVal = max(data, (d) => d.count) || 1;
-    const radiusScale = scaleLinear().domain([0, maxVal]).range([0, 16]);
+    const maxRadius = Math.max(2, Math.min(16, cellW * 0.6, cellH * 0.9));
+    const radiusScale = scaleLinear().domain([0, maxVal]).range([0, maxRadius]);
     return { maxCount: maxVal, radiusScale };
-  }, [data]);
+  }, [data, cellW, cellH]);
 
   const xLabels = flipped
     ? DAYS.map((day, i) => ({ label: day, pos: i }))
@@ -75,7 +101,10 @@ export default function PunchcardHeatmap({
   const gridLines = Array.from({ length: rows }, (_, i) => i);
 
   return (
-    <div className="relative w-full flex flex-col items-center" onTouchEnd={() => setHoveredData(null)}>
+    <div
+      className="relative w-full flex flex-col items-center"
+      onTouchStart={markTouch}
+    >
       <div className="h-6 mb-2 font-serif text-slate-900 text-xs sm:text-sm tracking-widest">
         {hoveredData && hoveredData.count > 0 ? (
           <div>
@@ -96,7 +125,7 @@ export default function PunchcardHeatmap({
               y={pos * cellH + cellH / 2}
               dominantBaseline="central"
               textAnchor="end"
-              className="fill-slate-400 font-serif text-[8px] sm:text-[10px] tracking-widest"
+              className="fill-slate-500 font-serif text-[9px] sm:text-[10px] tracking-widest"
             >
               {label}
             </text>
@@ -113,7 +142,7 @@ export default function PunchcardHeatmap({
                   ? `rotate(-45, ${pos * cellW + cellW / 2}, ${innerH + 20})`
                   : undefined
               }
-              className="fill-slate-400 font-serif text-[8px] sm:text-[10px] tracking-widest"
+              className="fill-slate-500 font-serif text-[9px] sm:text-[10px] tracking-widest"
             >
               {label}
             </text>
@@ -144,10 +173,11 @@ export default function PunchcardHeatmap({
                 r={r}
                 fill={COLOR_BRAND}
                 opacity={d.count === 0 ? 0 : opacity}
-                className="transition-all duration-300 hover:fill-brand-700"
-                onMouseEnter={() => setHoveredData(d)}
-                onMouseLeave={() => setHoveredData(null)}
-                onTouchStart={() => setHoveredData(d)}
+                className="transition-all duration-300 hover:fill-brand-700 cursor-pointer"
+                style={{ pointerEvents: d.count === 0 ? 'none' : 'auto' }}
+                onMouseEnter={() => { if (!fromTouch()) setHoveredData(d); }}
+                onMouseLeave={() => { if (!fromTouch()) setHoveredData(null); }}
+                onClick={() => selectCell(d)}
               />
             );
           })}

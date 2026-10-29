@@ -8,10 +8,11 @@ import { useEffect, useRef, useState } from 'react';
  */
 export function useContainerDim<T extends HTMLElement = HTMLDivElement>(
   defaultWidth: number = 850,
+  defaultHeight?: number,
 ): { ref: React.RefObject<T | null>; width: number; height: number } {
   const ref = useRef<T | null>(null);
   const [width, setWidth] = useState(defaultWidth);
-  const [height, setHeight] = useState(Math.round(defaultWidth * 0.65));
+  const [height, setHeight] = useState(defaultHeight ?? Math.round(defaultWidth * 0.65));
 
   useEffect(() => {
     const el = ref.current;
