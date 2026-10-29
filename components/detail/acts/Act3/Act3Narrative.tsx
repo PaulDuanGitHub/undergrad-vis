@@ -12,6 +12,9 @@ export const ACT3SUBSTEPS = [
         <p className='mt-6'>
           <b>all panic, no pacing</b>.
         </p>
+        <p className='mt-4'>
+          Tap a band (12h, 1d, …) to see the exact share.
+        </p>
       </>
   },
   {
@@ -46,6 +49,9 @@ export const ACT3SUBSTEPS = [
         Sunday evenings burn brightest. <b>8pm</b>, the undisputed peak of productivity.
         Weekends are not spared: a full third of all edits happen on Saturday and Sunday.
         In the contrast, morning time are almost wasted.
+        <p className='mt-4'>
+          Tap a cell to read that hour's file count.
+        </p>
       </>
   },
 ];

@@ -4,6 +4,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import { useThemeVariable } from "@/hooks/useThemeVariable";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 import Act1Narrative from '@/components/detail/acts/Act1/Act1Narrative';
 import Act1Visual from '@/components/detail/acts/Act1/Act1Visual';
@@ -28,18 +29,59 @@ const isDev = process.env.NODE_ENV === 'development';
 interface DetailViewProps {
   scrollRef: RefObject<HTMLDivElement | null>;
   isDetailVisible: boolean;
+  /** Keep the mobile panel mounted through the open/close transition. */
+  isDetailMounted: boolean;
+  /** `#actN` deep link: the act the story should open on (null = act 1). */
+  initialAct?: 1 | 2 | 3 | null;
   onExit: () => void;
 }
 
 // ── Shared helpers ──
-function animateActTransition(texts: HTMLElement[], charts: HTMLElement[], activeIndex: number, direction: 'forward' | 'backward') {
-  const chartSlideY = direction === 'forward' ? -20 : 20;
-  gsap.to(texts, { opacity: 0.2, duration: 0.5 });
-  gsap.to(texts[activeIndex], { opacity: 1, duration: 0.5 });
+function animateActTransition(
+  texts: HTMLElement[],
+  charts: HTMLElement[],
+  activeIndex: number,
+  direction: 'forward' | 'backward',
+  /** Reduced motion: land on the final state with no tween. */
+  instant = false,
+) {
+  const chartSlideY = instant ? 0 : direction === 'forward' ? -20 : 20;
+  if (!charts[activeIndex]) return;
+  // A fast scrub fires several of these back-to-back, so it has to be
+  // idempotent: kill whatever is still in flight and only ever fade the
+  // NON-active charts out. The old version faded EVERY chart out and then faded
+  // the incoming one back in, so two tweens owned the incoming chart's opacity
+  // and which one won came down to GSAP's render order — which is how Act 2's
+  // stream ended up sitting on top of Act 1's cubes.
+  gsap.killTweensOf(charts);
+  gsap.killTweensOf(texts);
   gsap.set(charts, { pointerEvents: 'none' });
-  gsap.to(charts, { opacity: 0, y: chartSlideY, duration: 0.5 });
   gsap.set(charts[activeIndex], { pointerEvents: 'auto' });
-  gsap.to(charts[activeIndex], { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' });
+  if (instant) {
+    charts.forEach((chart, i) => {
+      gsap.set(chart, { opacity: i === activeIndex ? 1 : 0, y: 0 });
+    });
+    texts.forEach((text, i) => {
+      gsap.set(text, { opacity: i === activeIndex ? 1 : 0.2 });
+    });
+    return;
+  }
+  charts.forEach((chart, i) => {
+    if (i !== activeIndex) gsap.to(chart, { opacity: 0, y: chartSlideY, duration: 0.3 });
+  });
+  // The incoming chart starts a beat later so the two never sit at full strength
+  // together, and keeps whatever `y` it already has (a fast scrub can catch it
+  // mid-fade, and re-seating `y` would make it jump).
+  gsap.to(charts[activeIndex], {
+    opacity: 1,
+    y: 0,
+    duration: 0.5,
+    delay: 0.18,
+    ease: 'power2.out',
+  });
+  texts.forEach((text, i) => {
+    gsap.to(text, { opacity: i === activeIndex ? 1 : 0.2, duration: 0.4 });
+  });
 }
 
 function createSubstepTriggers(cssSelector: string, datasetKey: string, scroller: HTMLElement, onStepChange: (step: number) => void) {
@@ -55,11 +97,18 @@ function createSubstepTriggers(cssSelector: string, datasetKey: string, scroller
 }
 
 // ── Component ──
-export default function DetailView({ scrollRef, isDetailVisible, onExit }: DetailViewProps) {
+export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted, initialAct = null, onExit }: DetailViewProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const rightChartRef = useRef<HTMLDivElement>(null);
 
   const colorBrand = useThemeVariable('--color-brand');
+  const reducedMotion = useReducedMotion();
+  // The ScrollTriggers are built once (see `useGSAP` below), so the reduced
+  // motion branch reads a ref instead of forcing the context to rebuild.
+  const reducedMotionRef = useRef(reducedMotion);
+  useEffect(() => {
+    reducedMotionRef.current = reducedMotion;
+  }, [reducedMotion]);
 
   const [act1Step, setAct1Step] = useState(0);
   const [act2Step, setAct2Step] = useState(0);
@@ -146,14 +195,14 @@ export default function DetailView({ scrollRef, isDetailVisible, onExit }: Detai
     const texts = gsap.utils.toArray<HTMLElement>('.narrative-text', scroller);
     const charts = gsap.utils.toArray<HTMLElement>('.chart-layer', scroller);
 
-    gsap.set(charts.slice(1), { opacity: 0, y: 20, pointerEvents: 'none' });
+    gsap.set(charts.slice(1), { opacity: 0, y: reducedMotionRef.current ? 0 : 20, pointerEvents: 'none' });
     gsap.set(texts, { opacity: 0.2 });
 
     texts.forEach((text, i) => {
       ScrollTrigger.create({
         id: `act-${i + 1}`, trigger: text, scroller, markers: isDev, start: 'top center', end: 'bottom center',
-        onEnter: () => { setActiveAct(i + 1); animateActTransition(texts, charts, i, 'forward'); },
-        onEnterBack: () => { setActiveAct(i + 1); animateActTransition(texts, charts, i, 'backward'); },
+        onEnter: () => { setActiveAct(i + 1); animateActTransition(texts, charts, i, 'forward', reducedMotionRef.current); },
+        onEnterBack: () => { setActiveAct(i + 1); animateActTransition(texts, charts, i, 'backward', reducedMotionRef.current); },
       });
     });
 
@@ -163,9 +212,17 @@ export default function DetailView({ scrollRef, isDetailVisible, onExit }: Detai
 
   }, { scope: scrollRef });
 
+  // ── Keyboard: focus the scroller so ↑/↓, PageUp/PageDown, Home/End scroll the
+  // story natively (the browser owns the step distances; ScrollTrigger follows
+  // the scroll position, so acts still change as they would with a wheel).
+  useEffect(() => {
+    if (!isDetailVisible || isMdDown) return;
+    scrollRef.current?.focus({ preventScroll: true });
+  }, [isDetailVisible, isMdDown, scrollRef]);
+
   // ── sm / md: use DetailViewMd ──
   if (isMdDown) {
-    return <DetailViewMd isDetailVisible={isDetailVisible} onExit={onExit} />;
+    return isDetailMounted ? <DetailViewMd isDetailVisible={isDetailVisible} initialAct={initialAct} onExit={onExit} /> : null;
   }
 
   return (
@@ -175,7 +232,13 @@ export default function DetailView({ scrollRef, isDetailVisible, onExit }: Detai
       onTouchStart={handleTouchStartPull}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEndPull}
-      className={`absolute inset-0 overflow-y-auto overscroll-contain transition-opacity ease-out ${
+      role="region"
+      aria-label="Data story"
+      aria-hidden={!isDetailVisible}
+      inert={!isDetailVisible}
+      tabIndex={-1}
+      data-detail-scroller
+      className={`absolute inset-0 overflow-y-auto overscroll-contain scroll-smooth transition-opacity ease-out ${
         isDetailVisible
           ? "duration-1000 opacity-100 pointer-events-auto z-10"
           : "duration-200 opacity-0 pointer-events-none"
@@ -210,7 +273,7 @@ export default function DetailView({ scrollRef, isDetailVisible, onExit }: Detai
             <h2 className="mb-2">My 2021 - 2026</h2>
             <h1 className="text-4xl lg:text-5xl mb-8">Productivity</h1>
             <h2 className="text-center italic mb-8 text-sm lg:text-base">
-                A visualization of over 550 workfiles created during my undergraduate.
+                A visualization of 567 workfiles created during my undergraduate.
             </h2>
             <p className='text-text-secondary text-sm'>By <a href="https://www.xianzhaoduan.com" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">Paul Duan</a></p>
           </div>
@@ -222,9 +285,9 @@ export default function DetailView({ scrollRef, isDetailVisible, onExit }: Detai
         </div>
 
         {/* Right: pinned chart layers */}
-        <div className="w-[65%] h-screen sticky top-0 flex items-center justify-center p-8">
+        <div className="w-[65%] h-dvh sticky top-0 flex items-center justify-center p-8">
           <div ref={rightChartRef} className="relative w-full h-full flex items-center justify-center">
-            <div className="chart-layer absolute inset-0 flex items-center justify-center"><Act1Visual step={act1Step} /></div>
+            <div className="chart-layer absolute inset-0 flex items-center justify-center"><Act1Visual step={act1Step} isActive={activeAct === 1} visible={isDetailVisible} /></div>
             <div className="chart-layer absolute inset-0 flex items-center justify-center"><Act2Visual isActive={activeAct === 2} step={act2Step} /></div>
             <div className="chart-layer absolute inset-0 flex items-center justify-center"><Act3Visual isActive={activeAct === 3} step={act3Step} /></div>
           </div>

@@ -104,7 +104,6 @@ export default function LoadingOverlay({ onLoaded }: LoadingOverlayProps) {
 
   // Progress is monotonic — GLTF/texture loads finish out of order and can tick back.
   useEffect(() => {
-    console.log('Loading progress:', progress, 'Target:', targetRef.current);
     if (progress > targetRef.current) targetRef.current = Math.min(progress, 100);
   }, [progress]);
 

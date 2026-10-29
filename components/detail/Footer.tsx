@@ -1,16 +1,18 @@
 interface FooterProps {
     onExit: () => void;
+    /** Tighter rhythm for the phone-sized narrative pane. */
+    compact?: boolean;
 }
 
-export default function Footer({ onExit }: FooterProps) {
+export default function Footer({ onExit, compact = false }: FooterProps) {
     return (
         <>
             {/* Footer: Methodology & Colophon */}
             <div className="w-full bg-surface flex flex-col font-serif select-text">
                 <hr className="border-t border-brand/10 w-[80%] mx-auto" />
-                <div className="max-w-4xl mx-auto py-24 px-8 flex flex-col gap-16">
+                <div className={`max-w-4xl mx-auto flex flex-col ${compact ? 'py-8 px-5 gap-8' : 'py-24 px-8 gap-16'}`}>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div className={`grid grid-cols-1 md:grid-cols-2 ${compact ? 'gap-8' : 'gap-12'}`}>
                         {/* Methodology */}
                         <div>
                             <h3 className="text-sm tracking-widest text-text-secondary uppercase mb-6">Data Methodology</h3>
@@ -20,13 +22,13 @@ export default function Footer({ onExit }: FooterProps) {
                             </p>
                             <p className="text-sm leading-relaxed text-text-primary/80 mb-4">
                                 A single "commit" or "version" represents an autosave snapshot triggered by OneDrive file modifications.
-                                For each single file, OneDrive only keeps the lastest <b>500</b> versions, however, these files don't occupy major of the dataset.
+                                For each single file, OneDrive only keeps the latest <b>500</b> versions, however, these files don't occupy major of the dataset.
                                 While minor sync discrepancies exist, they preserve the true macroscopic rhythm of my academic journey.
                             </p>
                             <p className="text-sm leading-relaxed text-text-primary/80 mb-4">
                                 In Act 3, an assignment is represented by a bunch of files' version history that grouped manually.
                                 And all assignments displayed here are considered "major assignment" which means they have over <b>100</b> versions
-                                in total. The deadline is determined by the lastest version's creation time of that assignment's files.
+                                in total. The deadline is determined by the latest version's creation time of that assignment's files.
                                 Manual data correction was made to handle obvious errors,
                                 such as when an assignment is opened after the deadline and a new version is created.
                             </p>
@@ -49,7 +51,7 @@ export default function Footer({ onExit }: FooterProps) {
                                 Typography is set in Roboto Serif.
                             </p>
                             <p className="text-sm leading-relaxed text-text-primary/80 mb-6">
-                                You are welcome to checkout the <a href="https://github.com/PaulDuanGitHub/undergrad-vis" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">GitHub Repo</a> for this website.
+                                You are welcome to check out the <a href="https://github.com/PaulDuanGitHub/undergrad-vis" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">GitHub Repo</a> for this website.
                                 Also <a href="https://paulduangithub.github.io/blog/2026/07/23/From-3D-to-D3-Visualizing-550-Files-and-5-Years-of-University/" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">the Epilogue on my BLOG</a>!
                                 Don't hesitate to star if you like this project!
                             </p>

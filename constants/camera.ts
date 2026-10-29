@@ -105,6 +105,17 @@ export const INTRO_DURATION = 2;
 export const ANIMATION_DURATION = 0.8;
 export const PARALLAX_AMOUNT = 0.015;
 
+/**
+ * Intro progress (0–1, before easing) at which the hero copy is allowed to
+ * appear. The camera starts as an extreme close-up where the desk fills the
+ * whole frame — revealing type there means type on top of the desk (and on top
+ * of the paper's own baked "Author / Paul DUAN" typography). By this point the
+ * pull-back has carried the desk out of the copy band, so the lines wipe in on
+ * empty background and the last one lands just as the camera settles.
+ * Lower = copy earlier (more overlap), higher = longer empty beat.
+ */
+export const INTRO_COPY_AT = 0.6;
+
 export const easeInOut = (t: number) => 0.5 * (1 - Math.cos(Math.PI * t));
 export const easeOutQuart = (t: number) => 1 - Math.pow(1 - t, 4);
 export const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);

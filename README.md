@@ -66,6 +66,27 @@ The 3D camera adapts to three viewport breakpoints:
 
 Camera positions are defined in `constants/camera.ts` and selected at runtime based on `window.innerWidth`.
 
+## Accessibility & Motion
+
+The whole story is operable without a pointer:
+
+| Input | Landing | Detail view |
+|-------|---------|-------------|
+| `Tab` | Focuses the scene, then the author link | Focuses the story panel; tab order follows the controls |
+| `Enter` / `Space` | Opens the story | Activates the focused control |
+| `Esc` | — | Closes the story and returns focus to the scene |
+| `↓` / `PageDown` | — | Next passage (desktop: scrolls; phone: next step) |
+| `↑` / `PageUp` | — | Previous passage |
+| `Home` / `End` | — | First / last passage |
+
+`prefers-reduced-motion: reduce` is honoured throughout: the loader and the hero wipe snap to their final state, the camera cuts instead of flying, pointer parallax is off, and the charts land on their target state instead of tweening. Deep links are supported — `/#story` opens the story, `/#act2` opens it on Act 2 — and the back button closes the story rather than leaving the site.
+
+## Metadata
+
+`app/layout.tsx` owns the Open Graph / Twitter metadata (canonical URL, theme colour, social card). The social card is the committed `public/og.png` at 1600×1200 — deliberately a 4:3 static PNG rather than a generated metadata route, because GitHub Pages serves extensionless files as `application/octet-stream`. `app/sitemap.ts` and `app/robots.ts` are static exports for the same reason.
+
+The narrative copy is also rendered as a visually hidden `StorySummary` section so the text and numbers exist in the initial HTML for crawlers and screen readers.
+
 ## Build & Deploy
 
 The project is configured for deployment on [Vercel](https://vercel.com). Production builds include Google Analytics (ID `G-KNPEXFEH64`). Ensure environment variables are set appropriately for your deployment target.
