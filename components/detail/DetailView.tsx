@@ -7,12 +7,14 @@ import { useThemeVariable } from "@/hooks/useThemeVariable";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 import Act1Narrative from '@/components/detail/acts/Act1/Act1Narrative';
-import Act1Visual from '@/components/detail/acts/Act1/Act1Visual';
+import Act1Figure from '@/components/detail/acts/Act1/Act1Figure';
 import Act2Narrative from '@/components/detail/acts/Act2/Act2Narrative';
-import Act2Visual from '@/components/detail/acts/Act2/Act2Visual';
+import Act2Figure from '@/components/detail/acts/Act2/Act2Figure';
 import Act3Narrative from '@/components/detail/acts/Act3/Act3Narrative';
-import Act3Visual from '@/components/detail/acts/Act3/Act3Visual';
+import Act3Figure from '@/components/detail/acts/Act3/Act3Figure';
 import DetailViewMd from '@/components/detail/DetailViewMd';
+import { Kicker } from '@/components/detail/narrative/ReportType';
+import { EmphasisProvider } from '@/components/detail/narrative/EmphasisContext';
 import Footer from './Footer';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -88,6 +90,22 @@ function createSubstepTriggers(cssSelector: string, datasetKey: string, scroller
   const elements = gsap.utils.toArray<HTMLElement>(cssSelector);
   elements.forEach((el) => {
     const step = parseInt(el.dataset[datasetKey] || '0', 10);
+
+    // A pinned substep owns a word-sized runway: its top is the moment the
+    // copy starts reading, so the chart has to change there, not at the
+    // centre of the (much taller) section. The trigger is active for the
+    // whole section; `onToggle` also handles scrolling back into it.
+    if (el.classList.contains('narrative-step--pinned')) {
+      ScrollTrigger.create({
+        id: `substep-${datasetKey}-${step}`,
+        trigger: el, scroller, start: 'top top', end: 'bottom top', markers: isDev,
+        onToggle: (self) => {
+          if (self.isActive) onStepChange(step);
+        },
+      });
+      return;
+    }
+
     ScrollTrigger.create({
       id: `substep-${datasetKey}-${step}`,
       trigger: el, scroller, start: 'center center', end: 'center center', markers: isDev,
@@ -114,6 +132,8 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
   const [act2Step, setAct2Step] = useState(0);
   const [act3Step, setAct3Step] = useState(0);
   const [activeAct, setActiveAct] = useState(1);
+  /** False on the introduction: the Act I plate/notes belong to the act proper. */
+  const [act1Started, setAct1Started] = useState(false);
 
   // ── Breakpoint detection ──
   const [isMdDown, setIsMdDown] = useState(false);
@@ -194,21 +214,53 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
 
     const texts = gsap.utils.toArray<HTMLElement>('.narrative-text', scroller);
     const charts = gsap.utils.toArray<HTMLElement>('.chart-layer', scroller);
+    // The acts switch on their chapter openers, not on the wrapper's top: the
+    // opener's copy is vertically centred, so `center center` puts the act
+    // title at the viewport's centre exactly when the chart changes.
+    // The introduction borrows the opener's typography but is not an act.
+    const openers = gsap.utils
+      .toArray<HTMLElement>('.narrative-act', scroller)
+      .filter((el) => !el.classList.contains('narrative-intro'));
 
     gsap.set(charts.slice(1), { opacity: 0, y: reducedMotionRef.current ? 0 : 20, pointerEvents: 'none' });
     gsap.set(texts, { opacity: 0.2 });
+    // Act 1 is live from the first frame; its wrapper starts at the Act I opener.
+    if (texts[0]) gsap.set(texts[0], { opacity: 1 });
 
-    texts.forEach((text, i) => {
+    openers.forEach((opener, i) => {
       ScrollTrigger.create({
-        id: `act-${i + 1}`, trigger: text, scroller, markers: isDev, start: 'top center', end: 'bottom center',
-        onEnter: () => { setActiveAct(i + 1); animateActTransition(texts, charts, i, 'forward', reducedMotionRef.current); },
-        onEnterBack: () => { setActiveAct(i + 1); animateActTransition(texts, charts, i, 'backward', reducedMotionRef.current); },
+        id: `act-${i + 1}`, trigger: opener, scroller, markers: isDev, start: 'center center', end: 'center center',
+        onEnter: () => {
+          setActiveAct(i + 1);
+          if (i === 0) setAct1Started(true);
+          animateActTransition(texts, charts, i, 'forward', reducedMotionRef.current);
+        },
+        onEnterBack: () => {
+          setActiveAct(i + 1);
+          if (i === 0) setAct1Started(true);
+          animateActTransition(texts, charts, i, 'backward', reducedMotionRef.current);
+        },
+        // A zero-length opener trigger has no "end" to cross when scrolling
+        // back up: leaving it backwards means we are entering the PREVIOUS
+        // act's content (or the introduction, for Act I).
+        onLeaveBack: () => {
+          if (i === 0) {
+            setAct1Started(false);
+            return;
+          }
+          setActiveAct(i);
+          animateActTransition(texts, charts, i - 1, 'backward', reducedMotionRef.current);
+        },
       });
     });
 
     createSubstepTriggers('.act1-substep', 'act1Step', scroller, setAct1Step);
     createSubstepTriggers('.act2-substep', 'act2Step', scroller, setAct2Step);
     createSubstepTriggers('.act3-substep', 'act3Step', scroller, setAct3Step);
+
+    // The report faces swap in after first paint. Re-measure once they are
+    // in, so every act/substep trigger still lands on the copy it belongs to.
+    document.fonts?.ready.then(() => ScrollTrigger.refresh());
 
   }, { scope: scrollRef });
 
@@ -225,7 +277,18 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
     return isDetailMounted ? <DetailViewMd isDetailVisible={isDetailVisible} initialAct={initialAct} onExit={onExit} /> : null;
   }
 
+  // The step the reader is actually in. Only this step may publish a reading
+  // focus to the figure; off-screen pinned sections must not clear it when the
+  // reader scrolls back into an earlier act.
+  const activeEmphasisStep =
+    activeAct === 1
+      ? { act: 1 as const, step: act1Step }
+      : activeAct === 2
+        ? { act: 2 as const, step: act2Step }
+        : { act: 3 as const, step: act3Step };
+
   return (
+    <EmphasisProvider activeStep={activeEmphasisStep}>
     <div
       ref={scrollRef}
       onWheel={handleWheel}
@@ -238,6 +301,7 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
       inert={!isDetailVisible}
       tabIndex={-1}
       data-detail-scroller
+      data-report
       className={`absolute inset-0 overflow-y-auto overscroll-contain scroll-smooth transition-opacity ease-out ${
         isDetailVisible
           ? "duration-1000 opacity-100 pointer-events-auto z-10"
@@ -267,34 +331,39 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
 
       <div ref={contentRef} className="flex relative bg-surface text-text-primary h-fit">
 
-        {/* Left: scrollable narrative text */}
+        {/* Left: scrollable narrative text, set like a printed report */}
         <div className="w-[35%] flex flex-col items-center pt-40 px-8 select-text">
           <div className="w-full flex flex-col items-center">
-            <h2 className="mb-2">My 2021 - 2026</h2>
-            <h1 className="text-4xl lg:text-5xl mb-8">Productivity</h1>
-            <h2 className="text-center italic mb-8 text-sm lg:text-base">
-                A visualization of 567 workfiles created during my undergraduate.
-            </h2>
-            <p className='text-text-secondary text-sm'>By <a href="https://www.xianzhaoduan.com" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">Paul Duan</a></p>
+            {/* Masthead — the report's title block. */}
+            <header className="narrative-act narrative-act--statement narrative-intro">
+              <Kicker accent>Introduction</Kicker>
+              <p className="t-statement">
+                An undergraduate degree is built, block by block.
+              </p>
+              <p className="t-deck t-deck--left">
+                Five years of coursework, translated into data, geometry, and color.
+              </p>
+            </header>
+            {ACTS.map((act) => (
+              <div key={`act-${act.id}-narrative`} className="narrative-text flex flex-col w-full">
+                {act.narrative}
+              </div>
+            ))}
           </div>
-          {ACTS.map((act) => (
-            <div key={`act-${act.id}-narrative`} className="narrative-text flex flex-col">
-              {act.narrative}
-            </div>
-          ))}
         </div>
 
         {/* Right: pinned chart layers */}
         <div className="w-[65%] h-dvh sticky top-0 flex items-center justify-center p-8">
           <div ref={rightChartRef} className="relative w-full h-full flex items-center justify-center">
-            <div className="chart-layer absolute inset-0 flex items-center justify-center"><Act1Visual step={act1Step} isActive={activeAct === 1} visible={isDetailVisible} /></div>
-            <div className="chart-layer absolute inset-0 flex items-center justify-center"><Act2Visual isActive={activeAct === 2} step={act2Step} /></div>
-            <div className="chart-layer absolute inset-0 flex items-center justify-center"><Act3Visual isActive={activeAct === 3} step={act3Step} /></div>
+            <div className="chart-layer absolute inset-0 flex items-center justify-center"><Act1Figure step={act1Step} isActive={activeAct === 1} visible={isDetailVisible} started={act1Started} /></div>
+            <div className="chart-layer absolute inset-0 flex items-center justify-center"><Act2Figure isActive={activeAct === 2} step={act2Step} /></div>
+            <div className="chart-layer absolute inset-0 flex items-center justify-center"><Act3Figure isActive={activeAct === 3} step={act3Step} /></div>
           </div>
         </div>
       </div>
 
       <Footer onExit={onExit}/>
     </div>
+    </EmphasisProvider>
   );
 }

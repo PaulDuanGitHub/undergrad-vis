@@ -332,6 +332,7 @@ export default function DetailViewMd({ isDetailVisible, initialAct = null, onExi
       aria-hidden={!isDetailVisible}
       inert={!isDetailVisible}
       tabIndex={-1}
+      data-report
       className={`fixed inset-0 z-0 flex flex-col overflow-hidden bg-surface transition-opacity duration-1000 ${
         isDetailVisible
           ? 'opacity-100 pointer-events-auto z-10'
@@ -434,7 +435,7 @@ export default function DetailViewMd({ isDetailVisible, initialAct = null, onExi
                 />
               ))}
             </div>
-            <span className="text-[11px] text-slate-500 tracking-widest font-serif tabular-nums">
+            <span className="text-[11px] text-text-secondary tracking-[0.18em] font-mono tabular-nums">
               {globalStep + 1}/{TOTAL_STEPS}
             </span>
           </div>

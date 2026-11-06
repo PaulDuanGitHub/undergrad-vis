@@ -33,6 +33,8 @@ interface Act2VisualProps {
   compact?: boolean;
   /** Height of the visual pane; compact charts use it to avoid a letterboxed 46%. */
   availableHeight?: number;
+  /** Keyword focus: `format:.tex`, `course:NLP`, or `all`. */
+  emphasis?: string | null;
 }
 
 const ASPECT_RATIO = 550 / 850; // height / width
@@ -73,6 +75,7 @@ export default function Act2Visual({
   isActive,
   compact = false,
   availableHeight,
+  emphasis = null,
 }: Act2VisualProps) {
   const { ref: svgRef, width: svgWidth, height: containerHeight } = useContainerDim<HTMLDivElement>(850);
   const aspectHeight = Math.round(svgWidth * ASPECT_RATIO);
@@ -109,6 +112,19 @@ export default function Act2Visual({
     setHoveredKey(null);
   }, [step]);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  /**
+   * The keyword focus, expressed in the same vocabulary as pointer hover:
+   * a format key or a course name. `effectiveKey` lets a pointer override the
+   * keyword for a moment, then fall back to it; `null` means no filter.
+   */
+  const focusKey = useMemo(() => {
+    if (!emphasis || emphasis === 'all') return null;
+    if (emphasis.startsWith('format:')) return emphasis.slice(7);
+    if (emphasis.startsWith('course:')) return emphasis.slice(7);
+    return null;
+  }, [emphasis]);
+  const effectiveKey = hoveredKey ?? focusKey;
 
   // ── Theme colors ──
   const brand50 = useThemeVariable('--color-brand-50') || '#FEF6F5';
@@ -288,28 +304,28 @@ export default function Act2Visual({
       highlightedExts: new Set<string>(),
       highlightedCourses: new Set<string>(),
     };
-    if (!hoveredKey) return empty;
+    if (!effectiveKey) return empty;
 
     const exts = new Set<string>();
     const courses = new Set<string>();
 
     // Hovering on an extension (left node)
-    if (extToCoursesMapping[hoveredKey]) {
-      exts.add(hoveredKey);
-      (extToCoursesMapping[hoveredKey] || []).forEach((c) => courses.add(c));
+    if (extToCoursesMapping[effectiveKey]) {
+      exts.add(effectiveKey);
+      (extToCoursesMapping[effectiveKey] || []).forEach((c) => courses.add(c));
       return { highlightedExts: exts, highlightedCourses: courses };
     }
 
     // Hovering on a course (right node)
-    const linkedExts = courseToExtsMapping[hoveredKey];
+    const linkedExts = courseToExtsMapping[effectiveKey];
     if (linkedExts) {
-      courses.add(hoveredKey);
+      courses.add(effectiveKey);
       linkedExts.forEach((e) => exts.add(e));
       return { highlightedExts: exts, highlightedCourses: courses };
     }
 
     return empty;
-  }, [hoveredKey, courseToExtsMapping]);
+  }, [effectiveKey, courseToExtsMapping, extToCoursesMapping]);
 
   // ── GSAP State Machine ──
 
@@ -918,7 +934,11 @@ export default function Act2Visual({
         <div className="relative overflow-visible mt-6" style={{ width: svgWidth, height: svgHeight }}>
           {GROUPED_KEYS.map((key) => {
             const gSpot = layout.spot('glossary', key, rankedKeys.indexOf(key));
-            const isHovered = hoveredKey === key;
+            const isHovered = effectiveKey === key;
+            const isDimmed =
+              effectiveKey !== null &&
+              !isHovered &&
+              !highlightedExts.has(key);
             return (
               <div
                 key={key}
@@ -927,6 +947,8 @@ export default function Act2Visual({
                   top: gSpot.y - layout.rowH / 2,
                   left: layout.badgeX + BADGE_W,
                   height: layout.rowH,
+                  opacity: isDimmed ? 0.2 : 1,
+                  transition: 'opacity 0.3s ease',
                 }}
                 onMouseEnter={() => handleHover(key)}
               >
@@ -971,7 +993,7 @@ export default function Act2Visual({
               const isLinkHighlighted =
                 highlightedExts.has(link.ext) &&
                 highlightedCourses.has(link.course);
-              const anyHovered = hoveredKey !== null;
+              const anyHovered = effectiveKey !== null;
               const strokeColor = isLinkHighlighted ? brand500 : '#CBD5E1';
               const strokeOpacity = !anyHovered
                 ? 0.3
@@ -1000,7 +1022,7 @@ export default function Act2Visual({
           <g>
             {PS.rightNodeData.map(({ course, y }) => {
               const isCourseHighlighted = highlightedCourses.has(course);
-              const anyHovered = hoveredKey !== null;
+              const anyHovered = effectiveKey !== null;
               const opacity = !anyHovered ? 0.8 : isCourseHighlighted ? 1 : 0.2;
 
               return (
@@ -1064,8 +1086,8 @@ export default function Act2Visual({
           </defs>
           <g>
             {pathsData.map(({ key, pathBar, pathStream, color, clipId }) => {
-              const isHovered = hoveredKey === key;
-              const isFaded = hoveredKey !== null && hoveredKey !== key;
+              const isHovered = effectiveKey === key;
+              const isFaded = effectiveKey !== null && effectiveKey !== key;
 
               return (
                 <path
@@ -1088,7 +1110,7 @@ export default function Act2Visual({
           <g
             className="stream-guide"
             style={{
-              opacity: step === 3 && hoveredKey ? 1 : 0,
+              opacity: step === 3 && effectiveKey ? 1 : 0,
               transition: 'opacity 0.3s',
             }}
           >
@@ -1148,7 +1170,8 @@ export default function Act2Visual({
         svgHeight={svgHeight}
         compact={compact}
         mode={MODES[step] ?? 'glossary'}
-        hoveredKey={hoveredKey}
+        hoveredKey={effectiveKey}
+        highlightedKeys={highlightedExts}
         onHover={handleHover}
         onSelect={selectKey}
         brand500={brand500}

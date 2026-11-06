@@ -36,6 +36,8 @@ interface ExtensionLabelsProps {
   compact: boolean;
   mode: LabelMode;
   hoveredKey: string | null;
+  /** Formats that stay lit even when the focus is a course (or a set). */
+  highlightedKeys?: Set<string>;
   onHover: (key: string | null) => void;
   onSelect: (key: string) => void;
   brand500: string;
@@ -57,6 +59,7 @@ export default function ExtensionLabels({
   compact,
   mode,
   hoveredKey,
+  highlightedKeys,
   onHover,
   onSelect,
   brand500,
@@ -85,7 +88,7 @@ export default function ExtensionLabels({
           const lSpot = layout.spot('legend', key, rankIndex);
           const base = layout.evenCenterY(rankIndex);
           const isHovered = hoveredKey === key;
-          const isDimmed = !glossary && anyHovered && !isHovered;
+          const isDimmed = !glossary && anyHovered && !isHovered && !highlightedKeys?.has(key);
 
           return (
             <button
