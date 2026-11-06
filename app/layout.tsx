@@ -1,5 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Roboto_Serif } from "next/font/google";
+import {
+  Geist,
+  Geist_Mono,
+  Instrument_Serif,
+  Newsreader,
+  Roboto_Serif,
+} from "next/font/google";
 import { GoogleAnalytics } from '@next/third-parties/google'
 import "./globals.css";
 
@@ -23,6 +29,27 @@ const robotoSerif = Roboto_Serif({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+/* ── Report voices ──────────────────────────────────────────────────────
+   The detail view is set like a printed report. Two extra families carry
+   the editorial voice; the rest of the site keeps its own:
+     Instrument Serif — display: masthead, act titles, pull quotes.
+     Newsreader       — text: lede, standfirst, body copy, colophon.
+   Labels (kickers, bylines, folios) stay in Geist Mono, the site's second
+   voice, so the report is still recognisably part of this site.
+   See the "Report typography" block in globals.css for the scale. */
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument-serif",
+  weight: "400",
+  style: ["normal", "italic"],
+  subsets: ["latin"],
+});
+
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
+  style: ["normal", "italic"],
   subsets: ["latin"],
 });
 
@@ -84,7 +111,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${robotoSerif.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${robotoSerif.variable} ${instrumentSerif.variable} ${newsreader.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
       { process.env.NODE_ENV === 'production' && <GoogleAnalytics gaId="G-KNPEXFEH64" /> }

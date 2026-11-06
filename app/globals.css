@@ -51,6 +51,627 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* ── Report typography ─────────────────────────────────────────────────
+   The detail view reads as a printed report. Three voices, one fixed
+   scale:
+
+     display  Instrument Serif — masthead, act titles, pull quotes
+     text     Newsreader       — lede, standfirst, body, colophon
+     label    Geist Mono       — kickers, bylines, folios
+
+   Sizes live here once. A role keeps its size at every width: there is no
+   `text-sm lg:text-base` ramp in the narrative. The one sanctioned
+   variation is the compact scale under 1024px, where the story moves from
+   a scrolling column into a short pane — the scale changes, the roles do
+   not.
+
+   Hierarchy (match the markup to it):
+     h1 .t-masthead  the report's title            (one per page)
+     h2 .t-act       the act title                 (one per act)
+     h3 .t-subhead   section label                 (colophon blocks)
+     p  .t-kicker    overline above a title        ("Act I", "My 2021–2026")
+     p  .t-deck      italic standfirst             (under the masthead)
+     p  .t-byline    author line
+     p  .t-lede      opening paragraph
+     p  .t-body      step copy
+     p  .t-note      small print, captions
+     p  .t-pull      pull quote
+   ──────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* Families — one per voice. */
+  --t-display: var(--font-instrument-serif, Georgia, serif);
+  --t-text: var(--font-newsreader, Georgia, serif);
+  --t-label: var(--font-geist-mono, ui-monospace, monospace);
+
+  /* Fixed scale. rem-based so the reader's font-size preference still
+     counts, but never tied to the viewport. */
+  --t-size-masthead: 3.5rem; /* 56 */
+  --t-size-act: 2rem; /* 32 */
+  --t-size-deck: 1.25rem; /* 20 */
+  --t-size-lede: 1.125rem; /* 18 */
+  --t-size-body: 1.0625rem; /* 17 */
+  --t-size-pull: 1.625rem; /* 26 */
+  --t-size-kicker: 0.6875rem; /* 11 */
+  --t-size-byline: 0.6875rem; /* 11 */
+  --t-size-note: 0.875rem; /* 14 */
+
+  /* Measure + material. The column is 35% wide; the measure is a little
+     narrower than it so a justified line never has to swallow a whole
+     word to reach the right edge. */
+  --t-measure: 27rem;
+  --t-rule-length: 2rem;
+  --t-ink: var(--color-text-primary);
+  --t-ink-soft: #463e36; /* warm mid-dark, for running copy */
+  --t-muted: var(--color-text-secondary);
+  --t-accent: var(--color-brand-700); /* AA at kicker size, unlike brand-600 */
+}
+
+/* Compact scale: the narrative pane on phones. Same roles, one step down. */
+@media (max-width: 1023px) {
+  :root {
+    --t-size-masthead: 2.5rem;
+    --t-size-act: 1.5rem;
+    --t-size-deck: 1.0625rem;
+    --t-size-lede: 1rem;
+    --t-size-body: 1rem;
+    --t-size-pull: 1.375rem;
+    --t-measure: 100%;
+  }
+}
+
+@layer components {
+  /* ── Overline: a mono label opened by a hairline ── */
+  .t-kicker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: fit-content;
+    margin-inline: auto;
+    font-family: var(--t-label);
+    font-size: var(--t-size-kicker);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--t-muted);
+    text-align: center;
+  }
+
+  .t-kicker__rule {
+    flex: none;
+    width: var(--t-rule-length);
+    height: 1px;
+    background: currentColor;
+    opacity: 0.55;
+  }
+
+  /* Letter-spacing adds a trailing space to the last glyph; pull it back
+     so the label, not the tracking, is what gets centred. */
+  .t-kicker__text {
+    margin-right: -0.26em;
+  }
+
+  .t-kicker--accent {
+    color: var(--t-accent);
+  }
+
+  /* ── Display: one family, one weight, two sizes ── */
+  .t-masthead {
+    font-family: var(--t-display);
+    font-size: var(--t-size-masthead);
+    font-weight: 400;
+    line-height: 0.98;
+    letter-spacing: -0.02em;
+    color: var(--t-ink);
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  .t-act {
+    font-family: var(--t-display);
+    font-size: var(--t-size-act);
+    font-weight: 400;
+    line-height: 1.06;
+    letter-spacing: -0.01em;
+    color: var(--t-ink);
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  .t-pull {
+    max-width: var(--t-measure);
+    margin-inline: auto;
+    font-family: var(--t-display);
+    font-size: var(--t-size-pull);
+    font-style: italic;
+    font-weight: 400;
+    line-height: 1.18;
+    letter-spacing: -0.005em;
+    color: var(--t-accent);
+    text-align: center;
+    text-align-last: center;
+    hyphens: none;
+    -webkit-hyphens: none;
+    text-wrap: balance;
+  }
+
+  /* ── Text: the reading voice ── */
+  .t-deck {
+    max-width: var(--t-measure);
+    margin-inline: auto;
+    font-family: var(--t-text);
+    font-size: var(--t-size-deck);
+    font-style: italic;
+    line-height: 1.5;
+    color: var(--t-ink-soft);
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  .t-lede {
+    max-width: var(--t-measure);
+    margin-inline: auto;
+    font-family: var(--t-text);
+    font-size: var(--t-size-lede);
+    line-height: 1.65;
+    color: var(--t-ink-soft);
+    text-wrap: pretty;
+  }
+
+  .t-body {
+    max-width: var(--t-measure);
+    margin-inline: auto;
+    font-family: var(--t-text);
+    font-size: var(--t-size-body);
+    line-height: 1.68;
+    color: var(--t-ink-soft);
+    text-wrap: pretty;
+  }
+
+  /* Running copy is justified: flush to both margins, and hyphenated so
+     the word gaps stay even at this measure instead of opening rivers.
+     The last line stays ragged at the left, as in print. Headings and
+     labels keep their own alignment. */
+  .t-lede,
+  .t-body,
+  .t-note {
+    text-align: justify;
+    text-align-last: left;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+    hyphenate-limit-chars: 6 3 3;
+  }
+
+  /* Paragraph breaks inside a step, set by the system rather than by
+     one-off margins in the copy. */
+  .t-lede p + p,
+  .t-body p + p {
+    margin-top: 0.95em;
+  }
+
+  .t-deck b,
+  .t-lede b,
+  .t-body b {
+    font-weight: 600;
+    color: var(--color-brand-900);
+  }
+
+  /* Instrument Serif has one weight; never let a <b> fake a bolder one. */
+  .t-pull b {
+    font-weight: 400;
+    color: inherit;
+  }
+
+  /* A pull quote gets more air than an ordinary paragraph break. */
+  .t-body .t-pull {
+    margin-block: 1.15em;
+  }
+
+  /* ── Labels: the apparatus ── */
+  .t-byline {
+    font-family: var(--t-label);
+    font-size: var(--t-size-byline);
+    line-height: 1.4;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--t-muted);
+    text-align: center;
+  }
+
+  .t-byline a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.35em;
+    transition: color 0.2s;
+  }
+
+  .t-byline a:hover {
+    color: var(--t-accent);
+  }
+
+  .t-subhead {
+    font-family: var(--t-label);
+    font-size: var(--t-size-kicker);
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--t-muted);
+    text-align: left;
+  }
+
+  .t-note {
+    font-family: var(--t-text);
+    font-size: var(--t-size-note);
+    line-height: 1.65;
+    color: var(--t-ink-soft);
+    text-wrap: pretty;
+  }
+
+  .t-note b {
+    font-weight: 500;
+    color: var(--t-ink);
+  }
+
+  /* A figure set in the label voice, as on the cover deck ("567"). */
+  .t-figure {
+    font-family: var(--t-label);
+    font-size: 0.92em;
+    font-style: normal;
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums;
+    color: var(--t-ink);
+  }
+
+  /* ── Layout blocks ──────────────────────────────────────────────────
+     The scrollytelling rhythm: one viewport per step, so the copy is
+     centred in the pane exactly when its ScrollTrigger fires. */
+  .narrative-cover {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    text-align: center;
+  }
+
+  .narrative-cover > .t-masthead {
+    margin-top: 1rem;
+  }
+
+  .narrative-cover > .t-deck {
+    margin-top: 1.4rem;
+  }
+
+  .narrative-cover > .t-byline {
+    margin-top: 1.75rem;
+  }
+
+  /* The opening statement and each act opener own a breath of white. */
+  .narrative-lede,
+  .narrative-act {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 62svh;
+    padding-block: 4rem;
+    text-align: center;
+  }
+
+  .narrative-lede {
+    gap: 0;
+  }
+
+  .narrative-act {
+    gap: 0.9rem;
+  }
+
+  .narrative-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    width: 100%;
+    min-height: 100svh;
+    padding-block: 3rem;
+  }
+
+  /* A pinned substep: the section owns a word-sized runway, the copy stays
+     still in a sticky stage, and the reading head moves through it. */
+  .narrative-step--pinned {
+    position: relative;
+    width: 100%;
+  }
+
+  .narrative-step--pinned .pinned-stage {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100svh;
+    padding-block: 3rem;
+  }
+
+  /* The current word in the 04 word-block treatment. */
+  .word-block {
+    background: var(--color-brand);
+    color: var(--color-surface);
+    padding: 0.12em 0.08em;
+    margin-inline: -0.08em;
+    border-radius: 0.06em;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
+  /* The current token's post-word caret, centred on the word. */
+  .token-caret {
+    display: inline-block;
+    width: 3px;
+    height: 0.95em;
+    margin-left: 0.22em;
+    vertical-align: middle;
+    background: var(--color-brand);
+    border-radius: 1px;
+  }
+
+  /* The phone pane has no room for a full-height chapter break. */
+  .narrative-act--compact {
+    min-height: 0;
+    padding-block: 0;
+    gap: 0.5rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .narrative-running-head {
+    margin-bottom: 0.9rem;
+  }
+
+  /* ── Chapter statement ──────────────────────────────────────────────
+     The act opener's big line is the act's thesis, not its title. It is
+     left-aligned inside the centred column so it reads as an inscription
+     on the page rather than a second masthead. The kicker carries the
+     act number and name; the statement carries the claim. */
+  .narrative-act--statement {
+    align-items: flex-start;
+    min-height: 72svh;
+    text-align: left;
+  }
+
+  .narrative-act--statement .t-kicker {
+    margin-inline: 0;
+  }
+
+  .t-statement {
+    max-width: 20ch;
+    margin-top: 1.1rem;
+    font-family: var(--t-display);
+    font-size: 2.75rem;
+    font-weight: 400;
+    line-height: 1.04;
+    letter-spacing: -0.018em;
+    color: var(--t-ink);
+    text-align: left;
+    text-wrap: balance;
+  }
+
+  .t-statement em {
+    font-style: italic;
+    color: var(--t-accent);
+  }
+
+  .narrative-act--compact .t-statement {
+    font-size: 1.9rem;
+    margin-top: 0.7rem;
+  }
+
+  .t-deck--left {
+    max-width: 30ch;
+    margin-inline: 0;
+    text-align: left;
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  /* ── Keywords ───────────────────────────────────────────────────────
+     A keyword is a phrase in running copy that owns an annotation in the
+     visual. Read copy keeps a hairline rule; the focused keyword reverses
+     to a red block with white type, and the block wipes in from the left
+     — the same "focus on" gesture as the figure statements. */
+  .t-kw {
+    background-image:
+      linear-gradient(var(--color-brand), var(--color-brand)),
+      linear-gradient(var(--color-brand), var(--color-brand));
+    background-repeat: no-repeat;
+    background-position: 0 0, 0 100%;
+    background-size: 0% 100%, 0% 1px;
+    padding: 0.08em 0.1em;
+    margin-inline: -0.1em;
+    cursor: pointer;
+    transition:
+      background-size 0.38s cubic-bezier(0.2, 0.75, 0.2, 1),
+      color 0.18s ease,
+      opacity 0.25s ease;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
+  .t-kw[data-state="unread"] {
+    opacity: 0.42;
+  }
+
+  .t-kw[data-state="read"] {
+    background-size: 0% 100%, 100% 1px;
+  }
+
+  .t-kw[data-state="active"] {
+    background-size: 100% 100%, 0% 1px;
+    color: var(--color-surface);
+    opacity: 1;
+  }
+
+  .t-kw__index {
+    display: inline-block;
+    margin-left: 0.16em;
+    font-family: var(--t-label);
+    font-size: 0.5em;
+    font-weight: 500;
+    line-height: 0;
+    letter-spacing: 0.04em;
+    vertical-align: super;
+    color: var(--t-accent);
+    opacity: 0.55;
+    transition: opacity 0.2s ease, color 0.18s ease;
+  }
+
+  .t-kw[data-state="active"] .t-kw__index {
+    color: var(--color-surface);
+    opacity: 1;
+  }
+
+  .t-kw:focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+    border-radius: 1px;
+  }
+
+  /* The red block behind a focused figure note. */
+  .note-brush {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: var(--color-brand);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.42s cubic-bezier(0.2, 0.78, 0.2, 1);
+  }
+
+  .note-brush[data-active="true"] {
+    transform: scaleX(1);
+  }
+
+  /* The annotation rail that pairs with distributed keywords. One row per
+     keyword; the active row opens its detail, the read rows stay quiet. */
+  .t-kw-rail {
+    width: 100%;
+    border-top: 1px solid var(--rule);
+  }
+
+  .t-kw-rail__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+
+  .t-kw-rail__row {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    column-gap: 0.75rem;
+    align-items: baseline;
+    padding: 1rem 0 0.85rem;
+    border-bottom: 1px solid var(--rule-soft);
+    opacity: 0.3;
+    transition: opacity 0.3s ease;
+  }
+
+  .t-kw-rail__row[data-state="read"] {
+    opacity: 0.6;
+  }
+
+  .t-kw-rail__row[data-state="active"] {
+    opacity: 1;
+  }
+
+  .t-kw-rail__no {
+    font-family: var(--t-label);
+    font-size: 0.625rem;
+    letter-spacing: 0.08em;
+    color: var(--t-accent);
+  }
+
+  .t-kw-rail__label {
+    display: block;
+    font-family: var(--t-label);
+    font-size: 0.5rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--t-muted);
+  }
+
+  .t-kw-rail__value {
+    font-family: var(--t-display);
+    font-size: 1.75rem;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--t-ink);
+  }
+
+  .t-kw-rail__detail {
+    grid-column: 2 / -1;
+    max-height: 0;
+    margin-top: 0.35rem;
+    overflow: hidden;
+    font-family: var(--t-text);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--t-ink-soft);
+    transition: max-height 0.35s ease;
+  }
+
+  .t-kw-rail__row[data-state="active"] .t-kw-rail__detail {
+    max-height: 4rem;
+  }
+
+  /* ── Callout note ───────────────────────────────────────────────────
+     The d-desk-report note, for interaction instructions and method
+     asides. A red rule, a mono label, then one sentence. */
+  .t-note--callout {
+    max-width: var(--t-measure);
+    margin: 1.6rem auto 0;
+    padding-left: 0.85rem;
+    border-left: 2px solid var(--t-accent);
+    font-family: var(--t-text);
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    color: var(--t-muted);
+    text-align: left;
+    hyphens: none;
+  }
+
+  .t-note--callout .t-note__label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-family: var(--t-label);
+    font-size: 0.5rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--t-accent);
+  }
+
+  .t-note--callout b {
+    font-weight: 500;
+    color: var(--t-ink);
+  }
+
+  .t-note--method {
+    border-left-color: var(--rule);
+  }
+
+  .t-note--method .t-note__label {
+    color: var(--t-muted);
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

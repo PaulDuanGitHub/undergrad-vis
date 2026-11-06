@@ -6,6 +6,7 @@ import { OrthographicCamera, Html, OrbitControls } from "@react-three/drei";
 import file_summary from "@/data/file_summary.json";
 import term_empty_days from "@/data/term_empty_days.json";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { categoryOf } from "./categories";
 import * as THREE from "three";
 
 // ── Constants ──
@@ -29,11 +30,15 @@ const HEATMAP_SPACING_Z = 15;
 const COURSE_COLORS = ["#7C2A1F", "#f7b538", "#db7c26", "#d8572a", "#c32f27"].map(c => new THREE.Color(c));
 const COLOR_GRAY = new THREE.Color("#94A3B8");
 const COLOR_BRAND = new THREE.Color("#D4442E");
+/** How far the non-selected categories recede under a keyword filter. */
+const DIM_OPACITY = 0.2;
 
 const HEATMAP_EMPTY = new THREE.Color("#F5F5F4"); 
 const HEATMAP_LOW = new THREE.Color("#FBD5CD");   
 const HEATMAP_MID = new THREE.Color("#D4442E");   
 const HEATMAP_HIGH = new THREE.Color("#7C2A1F");  
+/** Empty-day cubes, when the "no saves" filter is on. */
+const COLOR_EMPTY_FOCUS = new THREE.Color("#C9C2B6");
 
 // ── Types ──
 export type FileData = { 
@@ -68,6 +73,8 @@ type ProcessedCube = {
   minHeight: number;
   fullHeight: number;
   currentHeight: number;
+  /** Per-instance alpha used by the keyword filter (1 = opaque). */
+  currentOpacity: number;
 };
 
 interface CubesSceneProps {
@@ -76,6 +83,10 @@ interface CubesSceneProps {
   step: number; 
   compact?: boolean;
   visible?: boolean;
+  /** Act I category selected by the reading keyword. */
+  emphasis?: string | null;
+  /** False on the introduction: cubes are a still image, not an instrument. */
+  interactive?: boolean;
   onTooltipChange?: (payload: { step: number; cube: ProcessedCube } | null) => void;
 }
 
@@ -113,6 +124,7 @@ function createCubeTemplate(overrides: Partial<ProcessedCube>): ProcessedCube {
     currentPos: new THREE.Vector3(),
     colorGray: COLOR_GRAY, colorCourse: COLOR_GRAY, colorHeatmap: HEATMAP_EMPTY, currentColor: COLOR_GRAY.clone(),
     minHeight: MIN_HEIGHT * (0.6 + 0.4 * Math.random()), fullHeight: 0, currentHeight: 0,
+    currentOpacity: 1,
     ...overrides
   };
 }
@@ -216,8 +228,27 @@ function getSceneData(data: FileData[], emptyDaysData: CubesSceneProps['emptyDay
   return { cubeData, termLabels, gridOffset, groupBlocksOffset, heatmapBlocksOffset };
 }
 
-function getCubeTargets(cube: ProcessedCube, step: number, isHovered: boolean) {
+type VersionStats = { max: number; top5: number };
+
+/**
+ * Which cubes a keyword selects. One string protocol interpreted by step:
+ * categories at the opening, terms, courses, revision cut-offs, days.
+ */
+function matchesEmphasis(cube: ProcessedCube, emphasis: string, stats: VersionStats) {
+  if (emphasis === 'all') return true;
+  if (emphasis.startsWith('term:')) return cube.term === emphasis.slice(5);
+  if (emphasis.startsWith('course:')) return cube.course === emphasis.slice(7);
+  if (emphasis === 'versions:top') return !cube.isEmptyCube && cube.totalVersions === stats.max;
+  if (emphasis === 'versions:low') return !cube.isEmptyCube && cube.totalVersions <= 6;
+  if (emphasis === 'versions:top5') return !cube.isEmptyCube && cube.totalVersions >= stats.top5;
+  if (emphasis === 'day:peak') return !cube.isEmptyCube && cube.term === '2022 Winter' && cube.dateStr === 'April 12th';
+  if (emphasis === 'day:empty') return cube.isEmptyCube;
+  return categoryOf(cube.fileName) === emphasis;
+}
+
+function getCubeTargets(cube: ProcessedCube, step: number, isHovered: boolean, emphasis: string | null, stats: VersionStats) {
   let targetPos, targetColor, targetHeight, targetScaleY = 1;
+  let targetOpacity = 1;
 
   if (step === 4) {
     targetPos = cube.heatmapPos;
@@ -230,7 +261,7 @@ function getCubeTargets(cube: ProcessedCube, step: number, isHovered: boolean) {
     targetPos = step === 0 ? cube.gridPos : cube.groupPos;
     
     if (cube.isEmptyCube) {
-      return { targetPos, targetColor: COLOR_GRAY, targetHeight: 0, targetScaleY: 0 };
+      return { targetPos, targetColor: COLOR_GRAY, targetHeight: 0, targetScaleY: 0, targetOpacity: 0 };
     }
 
     targetColor = cube.colorGray;
@@ -240,11 +271,22 @@ function getCubeTargets(cube: ProcessedCube, step: number, isHovered: boolean) {
     targetHeight = (step === 3 || isHovered) ? cube.fullHeight : cube.minHeight;
   }
 
-  return { targetPos, targetColor, targetHeight, targetScaleY };
+  // The keyword filter: the selected marks stay fully opaque, everything else
+  // recedes. Colour and height are left untouched — both already encode data —
+  // so alpha is the only channel used here.
+  if (emphasis) {
+    const selected = matchesEmphasis(cube, emphasis, stats);
+    targetOpacity = selected || isHovered ? 1 : DIM_OPACITY;
+    if (emphasis === 'day:empty' && cube.isEmptyCube) {
+      targetColor = COLOR_EMPTY_FOCUS;
+    }
+  }
+
+  return { targetPos, targetColor, targetHeight, targetScaleY, targetOpacity };
 }
 
 // ── 3D Scene Component ──
-export function CubesScene({ data, emptyDaysData, step, compact = false, visible = true, onTooltipChange }: CubesSceneProps) {
+export function CubesScene({ data, emptyDaysData, step, compact = false, visible = true, emphasis = null, interactive = true, onTooltipChange }: CubesSceneProps) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const groupContainerRef = useRef<THREE.Group>(null);
   const tooltipGroupRef = useRef<THREE.Group>(null);
@@ -272,12 +314,95 @@ export function CubesScene({ data, emptyDaysData, step, compact = false, visible
     setHovered(null);
     setSelected(null);
   }, [visible]);
+
+  // The introduction is a still image: if the reader had a cube pinned before
+  // scrolling back up, drop it when interaction is switched off.
+  useEffect(() => {
+    if (interactive) return;
+    setHovered(null);
+    setSelected(null);
+  }, [interactive]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const { cubeData, termLabels, gridOffset, groupBlocksOffset, heatmapBlocksOffset } = useMemo(
     () => getSceneData(data, emptyDaysData), 
     [data, emptyDaysData]
   );
+
+  /** Cut-offs used by the revision filter on step 3. */
+  const versionStats = useMemo<VersionStats>(() => {
+    const values = cubeData
+      .filter((cube) => !cube.isEmptyCube)
+      .map((cube) => cube.totalVersions)
+      .sort((a, b) => b - a);
+    return { max: values[0] ?? 0, top5: values[4] ?? 0 };
+  }, [cubeData]);
+
+  /** The term(s) holding the busiest day, used to quiet the other labels. */
+  const peakTerms = useMemo(
+    () =>
+      new Set(
+        cubeData
+          .filter((cube) => !cube.isEmptyCube && cube.dailyCount >= 19)
+          .map((cube) => cube.term),
+      ),
+    [cubeData],
+  );
+
+  /**
+   * One instanced draw call with a per-instance alpha attribute. The keyword
+   * filter fades the categories that are not being read; colour (course) and
+   * height (versions) stay untouched.
+   *
+   * A stock InstancedMesh has one material opacity, so the alpha is injected
+   * into the standard shader as an instanced attribute and multiplied into
+   * `diffuseColor.a`. `depthWrite` is off for the transparent pass; the grid
+   * is flat, so the loss of depth sorting is not visible.
+   */
+  const cubeGeometry = useMemo(() => {
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    geometry.setAttribute(
+      'instanceOpacity',
+      new THREE.InstancedBufferAttribute(
+        new Float32Array(cubeData.length).fill(1),
+        1,
+      ),
+    );
+    return geometry;
+  }, [cubeData.length]);
+
+  const cubeMaterial = useMemo(() => {
+    const material = new THREE.MeshStandardMaterial({
+      roughness: 0.8,
+      transparent: true,
+      depthWrite: false,
+    });
+    material.onBeforeCompile = (shader) => {
+      shader.vertexShader = shader.vertexShader
+        .replace(
+          '#include <common>',
+          '#include <common>\nattribute float instanceOpacity;\nvarying float vInstanceOpacity;',
+        )
+        .replace(
+          '#include <begin_vertex>',
+          '#include <begin_vertex>\nvInstanceOpacity = instanceOpacity;',
+        );
+      shader.fragmentShader = shader.fragmentShader
+        .replace(
+          '#include <common>',
+          '#include <common>\nvarying float vInstanceOpacity;',
+        )
+        .replace(
+          '#include <color_fragment>',
+          '#include <color_fragment>\ndiffuseColor.a *= vInstanceOpacity;',
+        );
+    };
+    return material;
+  }, []);
+
+  useEffect(() => {
+    cubeMaterial.roughness = step === 4 ? 1 : 0.8;
+  }, [cubeMaterial, step]);
 
   // The phone tooltip is rendered outside the canvas so it can never be clipped
   // by the visual-area overflow or the cube's screen position.
@@ -288,9 +413,10 @@ export function CubesScene({ data, emptyDaysData, step, compact = false, visible
   const { camera, size } = useThree();
 
   const handlePointerEnter = useCallback((e: ThreeEvent<PointerEvent>) => {
+    if (!interactive) return;
     e.stopPropagation();
     if (isMouseEvent(e) && e.instanceId != null) setHovered({ idx: e.instanceId, step });
-  }, [step]);
+  }, [step, interactive]);
 
   const handlePointerLeave = useCallback((e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation();
@@ -299,6 +425,7 @@ export function CubesScene({ data, emptyDaysData, step, compact = false, visible
 
   // Tap/click pins a cube; tapping it again (or empty space) dismisses it.
   const handleCubeClick = useCallback((e: ThreeEvent<MouseEvent>) => {
+    if (!interactive) return;
     e.stopPropagation();
     const idx = e.instanceId;
     if (idx == null) return;
@@ -307,7 +434,7 @@ export function CubesScene({ data, emptyDaysData, step, compact = false, visible
         ? null
         : { idx, step },
     );
-  }, [step]);
+  }, [step, interactive]);
 
   // Design reference: at 931px canvas width, the current layout fits exactly without clipping
   const BASE_CANVAS_WIDTH = 931;
@@ -354,16 +481,20 @@ export function CubesScene({ data, emptyDaysData, step, compact = false, visible
 
     if (!meshRef.current || !groupContainerRef.current) return;
     const isInteractive = step !== 3;
+    const opacityAttribute = meshRef.current.geometry.getAttribute(
+      'instanceOpacity',
+    ) as THREE.InstancedBufferAttribute | undefined;
 
     // Cubes Lerp
     for (let i = 0; i < cubeData.length; i++) {
       const cube = cubeData[i];
       const isHovered = isInteractive && activeRef.current === i;
       
-      const { targetPos, targetColor, targetHeight, targetScaleY } = getCubeTargets(cube, step, isHovered);
+      const { targetPos, targetColor, targetHeight, targetScaleY, targetOpacity } = getCubeTargets(cube, step, isHovered, emphasis, versionStats);
 
       cube.currentPos.lerp(targetPos, snap ? 1 : d * LERP_SPEED);
       cube.currentHeight += (targetHeight - cube.currentHeight) * (snap ? 1 : Math.min(d * (isHovered ? HOVER_SPEED : LERP_SPEED), 1));
+      cube.currentOpacity += (targetOpacity - cube.currentOpacity) * (snap ? 1 : Math.min(d * LERP_SPEED, 1));
       cube.currentColor.lerp(targetColor, snap ? 1 : d * HOVER_SPEED);
 
       const scaleY = Math.max(cube.currentHeight * targetScaleY, 0.0001); 
@@ -373,10 +504,12 @@ export function CubesScene({ data, emptyDaysData, step, compact = false, visible
       
       meshRef.current.setMatrixAt(i, dummy.matrix);
       meshRef.current.setColorAt(i, cube.currentColor);
+      if (opacityAttribute) opacityAttribute.setX(i, cube.currentOpacity);
     }
 
     meshRef.current.instanceMatrix.needsUpdate = true;
     if (meshRef.current.instanceColor) meshRef.current.instanceColor.needsUpdate = true;
+    if (opacityAttribute) opacityAttribute.needsUpdate = true;
 
     // Container Offset Lerp
     let targetOffset = groupBlocksOffset;
@@ -413,15 +546,12 @@ return (
     <group ref={groupContainerRef}>
       <instancedMesh
         ref={meshRef}
-        args={[undefined, undefined, cubeData.length]}
+        args={[cubeGeometry, cubeMaterial, cubeData.length]}
         onPointerEnter={handlePointerEnter}
         onPointerLeave={handlePointerLeave}
         onClick={handleCubeClick}
         onPointerMissed={() => setSelected(null)}
-      >
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial roughness={step === 4 ? 1 : 0.8} />
-      </instancedMesh>
+      />
 
       {/* --- Tooltip (desktop hover) --- */}
       <group ref={tooltipGroupRef}>
@@ -453,7 +583,17 @@ return (
       </group>
 
       {/* Term Labels & Y-Axis */}
-      {termLabels.map((label, idx) => (
+      {termLabels.map((label, idx) => {
+        let termOn = true;
+        if (emphasis?.startsWith('term:')) {
+          termOn = label.term === emphasis.slice(5);
+        } else if (emphasis?.startsWith('course:')) {
+          termOn = label.courses.includes(emphasis.slice(7));
+        } else if (emphasis === 'day:peak') {
+          termOn = peakTerms.has(label.term);
+        }
+
+        return (
         <group key={idx} ref={(el) => { labelGroupRefs.current[idx] = el; }}>
           
           {/* Term heading & course legend */}
@@ -465,14 +605,16 @@ return (
           >
             {/* 3x Supersampling: render at triple resolution then CSS-scale down for sharper CSS3D */}
             <div style={{ transform: 'scale(0.333)', transformOrigin: 'center center' }}>
-              <div className="absolute pr-12 right-0 text-right flex flex-col items-end w-max -translate-y-12" style={{ top: (step === 4) ? '-240px' : '240px' }}>
+              <div className="absolute pr-12 right-0 text-right flex flex-col items-end w-max -translate-y-12" style={{ top: (step === 4) ? '-240px' : '240px', opacity: termOn ? 1 : 0.15, transition: 'opacity 0.3s ease' }}>
                 <span className="font-light text-slate-900 mb-3" style={{ fontSize: compact ? '18rem' : '13rem', lineHeight: '1' }}>{label.term}</span>
                 {/* 34 rotated course names are illegible on a phone; the term
-                    headings and the cube colours carry the stage instead. */}
+                    headings and the cube colours carry the stage instead.
+                    The list is only useful on the colour step; at height and
+                    calendar steps it would compete with the data. */}
                 {!compact && (
-                  <div className="flex flex-col items-end gap-8 overflow-hidden transition-all duration-700" style={{ maxHeight: (step === 2 || step === 3) ? '900px' : '0px', opacity: (step === 2 || step === 3) ? 1 : 0 }}>
+                  <div className="flex flex-col items-end gap-8 overflow-hidden transition-all duration-700" style={{ maxHeight: step === 2 ? '900px' : '0px', opacity: step === 2 ? 1 : 0 }}>
                     {label.courses.map((course: string, cIdx: number) => (
-                      <div key={course} className="flex items-center gap-6" style={{ fontSize: '2.625rem', color: '#475569' }}>
+                      <div key={course} className="flex items-center gap-6" style={{ fontSize: '2.625rem', color: '#475569', opacity: !emphasis || !emphasis.startsWith('course:') || course === emphasis.slice(7) ? 1 : 0.15, transition: 'opacity 0.3s ease' }}>
                         <span style={{ fontSize: '9rem', lineHeight: '1' }}>{course}</span>
                         <span className="rounded-full" style={{ width: '72px', height: '72px', backgroundColor: `#${COURSE_COLORS[cIdx % COURSE_COLORS.length].getHexString()}` }} />
                       </div>
@@ -511,7 +653,8 @@ return (
           )}
 
         </group>
-      ))}
+        );
+      })}
     </group>
   );
 }
@@ -522,7 +665,7 @@ return (
 // opacity-0 wrapper for the whole of Act 2 and Act 3, competing with whatever
 // transition is playing. `preserveDrawingBuffer` keeps the last frame on screen
 // while paused, so the wrapper's cross-fade still has something to fade.
-export default function Act1Visual({ step, isActive = true, compact = false, visible = true }: { step: number; isActive?: boolean; compact?: boolean; visible?: boolean }) {
+export default function Act1Visual({ step, isActive = true, compact = false, visible = true, emphasis = null, interactive = true }: { step: number; isActive?: boolean; compact?: boolean; visible?: boolean; emphasis?: string | null; interactive?: boolean }) {
   const [isContextLost, setIsContextLost] = useState(false);
   const [tooltip, setTooltip] = useState<{ step: number; cube: ProcessedCube } | null>(null);
 
@@ -567,7 +710,7 @@ export default function Act1Visual({ step, isActive = true, compact = false, vis
         <OrthographicCamera makeDefault zoom={14} near={0.1} far={1000} />
         <ambientLight intensity={0.6} />
         <directionalLight position={[10, 20, 10]} intensity={2} castShadow />
-        <CubesScene data={file_summary as FileData[]} emptyDaysData={term_empty_days} step={step} compact={compact} visible={visible} onTooltipChange={compact ? setTooltip : undefined} />
+        <CubesScene data={file_summary as FileData[]} emptyDaysData={term_empty_days} step={step} compact={compact} visible={visible} emphasis={emphasis} interactive={interactive} onTooltipChange={compact ? setTooltip : undefined} />
       </Canvas>
 
       {/* Phone tooltip: a clamped card, outside the canvas and its overflow. */}

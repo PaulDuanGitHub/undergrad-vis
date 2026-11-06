@@ -15,6 +15,8 @@ interface Act3VisualProps {
   compact?: boolean;
   /** Height of the visual pane; compact charts use it to avoid letterboxing. */
   availableHeight?: number;
+  /** Keyword focus: `band:0.5`, `punch:evening`, `punch:weekend`, or `all`. */
+  emphasis?: string | null;
 }
 
 const ASPECT_RATIO = 650 / 900; // height / width
@@ -29,11 +31,12 @@ const W_TRACK_RATIO = 600 / 900; // track width ratio
  *
  * `alpha` is set by hand rather than by stacking translucent layers: stacked
  * alpha saturates, so the two innermost steps kept landing within ~0.05 of each
- * other whatever the layer value was, and the five strips never read as five.
+ * other whatever the layer value was, and the six strips never read as six.
  */
 const BAND_TIERS = [
   { d: 0.5, label: '12h', phrase: '12 hours', alpha: 0.85 },
   { d: 1, label: '1d', phrase: '24 hours', alpha: 0.58 },
+  { d: 2, label: '2d', phrase: '2 days', alpha: 0.47 },
   { d: 3, label: '3d', phrase: '3 days', alpha: 0.38 },
   { d: 7, label: '1w', phrase: 'week', alpha: 0.23 },
   { d: 14, label: '2w', phrase: '2 weeks', alpha: 0.12 },
@@ -42,7 +45,7 @@ const BAND_TIERS = [
 /** Height of the band strip, which hangs BELOW the axis line. */
 const STRIP_H = 6;
 
-export default function Act3Visual({ step, isActive, compact = false, availableHeight }: Act3VisualProps) {
+export default function Act3Visual({ step, isActive, compact = false, availableHeight, emphasis = null }: Act3VisualProps) {
   const { ref: svgRef, width: svgWidth, height: containerHeight } = useContainerDim<HTMLDivElement>(900);
   const svgHeight = Math.min(
     compact ? Math.round(svgWidth * 0.9) : Math.round(svgWidth * ASPECT_RATIO),
@@ -82,6 +85,24 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
   useEffect(() => {
     setHoveredBand(null);
   }, [step]);
+
+  /**
+   * The keyword focus, expressed like the band hover so the two can share the
+   * strip, the key, the readout and the bubbles. A pointer hover temporarily
+   * overrides the keyword; releasing it returns to the keyword's window.
+   */
+  const focusBand = useMemo(() => {
+    if (!emphasis || !emphasis.startsWith('band:')) return null;
+    const value = Number(emphasis.slice(5));
+    return Number.isFinite(value) ? value : null;
+  }, [emphasis]);
+  const effectiveBand = hoveredBand ?? focusBand;
+  const punchFocus =
+    emphasis === 'punch:evening'
+      ? 'evening'
+      : emphasis === 'punch:weekend'
+        ? 'weekend'
+        : null;
   // ── Data computation ──
 
   const { processedData, axes } = useMemo(() => {
@@ -287,14 +308,14 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
   });
 
   /**
-   * The five bands, painted as five adjoining strips hanging UNDER the axis line
+   * The six bands, painted as six adjoining strips hanging UNDER the axis line
    * (the line is the top edge of the strip). Each tier owns the span between its
-   * own cut-off and the previous one, with a hand-set tone so the five read
+   * own cut-off and the previous one, with a hand-set tone so the six read
    * apart. Hovering a tier flattens its whole cumulative window to that tier's
    * tone, leaving one flat colour from the deadline back to the hovered cut-off.
    */
   const printBands = (toX: (t: number) => number) => {
-    const hoveredIdx = hoveredBand === null ? -1 : BAND_TIERS.findIndex((t) => t.d === hoveredBand);
+    const hoveredIdx = effectiveBand === null ? -1 : BAND_TIERS.findIndex((t) => t.d === effectiveBand);
 
     return (
       <g className="band-strip">
@@ -315,7 +336,7 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
             />
           );
         })}
-        {/* Hit zones: the same five strips, each one selecting its cumulative
+        {/* Hit zones: the same six strips, each one selecting its cumulative
             window (2 weeks, 1 week, 3 days, 24 h, 12 h). */}
         {BAND_TIERS.map((tier, i) => {
           const lo = i === 0 ? 0 : BAND_TIERS[i - 1].d;
@@ -354,7 +375,7 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
       <g className="band-key">
         {BAND_TIERS.map((tier, i) => {
           const x = deadlineX - (i + 1) * slot;
-          const on = hoveredBand === tier.d;
+          const on = effectiveBand === tier.d;
           return (
             <g
               key={`band-key-${tier.d}`}
@@ -385,7 +406,7 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
    * top margin of the chart, where nothing else is drawn.
    */
   const printBandReadout = (axisY: number, w: number, shares: number[]) => {
-    const idx = hoveredBand === null ? -1 : BAND_TIERS.findIndex((t) => t.d === hoveredBand);
+    const idx = effectiveBand === null ? -1 : BAND_TIERS.findIndex((t) => t.d === effectiveBand);
     return (
       <g
         className="band-readout"
@@ -402,14 +423,14 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
           {idx >= 0 && (compact ? (
             <>
               <tspan x={w / 2}>
-                <tspan className="fill-brand font-semibold">{Math.round(shares[idx] * 100)}%</tspan>
+                <tspan className="fill-brand font-semibold">{Math.floor(shares[idx] * 100)}%</tspan>
                 {` of commits landed in the last ${BAND_TIERS[idx].phrase}`}
               </tspan>
               <tspan x={w / 2} dy="1.35em">before the deadline</tspan>
             </>
           ) : (
             <>
-              <tspan className="fill-brand font-semibold">{Math.round(shares[idx] * 100)}%</tspan>
+              <tspan className="fill-brand font-semibold">{Math.floor(shares[idx] * 100)}%</tspan>
               {` of commits landed in the last ${BAND_TIERS[idx].phrase} before the deadline`}
             </>
           ))}
@@ -442,7 +463,7 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
   return (
     <div
       ref={svgRef}
-      className="w-full flex items-center justify-center"
+      className="relative w-full h-full flex items-center justify-center"
       onTouchStart={markTouch}
     >
       <svg
@@ -450,7 +471,7 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
         height={svgHeight}
         className="overflow-visible"
         role="img"
-        aria-label="File saves across five deadline bands, drawn as tracks of bubbles with a punchcard heatmap. Tap a band or a punchcard cell to see how many files landed in that window."
+        aria-label="File saves across six deadline bands, drawn as tracks of bubbles with a punchcard heatmap. Tap a band or a punchcard cell to see how many files landed in that window."
       >
         <g>
           {processedData.map((d) => {
@@ -476,8 +497,8 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
                 <g>
                   {d.bubbles.map((b, idx) => {
                     // A hovered band keeps only the bubbles inside its window.
-                    const inBand = hoveredBand !== null && b.day <= hoveredBand;
-                    const isFaded = hoveredBand !== null && !inBand;
+                    const inBand = effectiveBand !== null && b.day <= effectiveBand;
+                    const isFaded = effectiveBand !== null && !inBand;
 
                     return (
                       <circle
@@ -504,7 +525,7 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
       </svg>
 
       <div ref={punchRef} className="punchcard-container w-full h-full flex items-center justify-center absolute top-0 left-0 opacity-0">
-        <PunchcardHeatmap data={day_hour_counts} width={svgWidth} height={punchChartHeight} flip={compact} />
+        <PunchcardHeatmap data={day_hour_counts} width={svgWidth} height={punchChartHeight} flip={compact} focus={punchFocus} />
       </div>
     </div>
   );

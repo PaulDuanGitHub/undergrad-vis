@@ -17,6 +17,8 @@ interface PunchcardProps {
   /** Available height of the chart box; the grid is scaled to fit instead of clipping. */
   height?: number;
   flip?: boolean;
+  /** Keyword focus: weekend rows or evening columns. */
+  focus?: '8pm' | 'evening' | 'weekend' | null;
 }
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -33,6 +35,7 @@ export default function PunchcardHeatmap({
   width = 800,
   height,
   flip = false,
+  focus = null,
 }: PunchcardProps) {
   const flipped = flip;
   const [hoveredData, setHoveredData] = useState<PunchcardData | null>(null);
@@ -164,6 +167,9 @@ export default function PunchcardHeatmap({
             const cy = getCY(d);
             const r = radiusScale(d.count);
             const opacity = 0.2 + (d.count / maxCount) * 0.8;
+            const inFocus =
+              !focus ||
+              (focus === 'weekend' ? d.day_of_week >= 5 : focus === '8pm' ? d.hour === 20 : d.hour >= 18);
 
             return (
               <circle
@@ -172,7 +178,7 @@ export default function PunchcardHeatmap({
                 cy={cy}
                 r={r}
                 fill={COLOR_BRAND}
-                opacity={d.count === 0 ? 0 : opacity}
+                opacity={d.count === 0 ? 0 : focus && !inFocus ? 0.08 : opacity}
                 className="transition-all duration-300 hover:fill-brand-700 cursor-pointer"
                 style={{ pointerEvents: d.count === 0 ? 'none' : 'auto' }}
                 onMouseEnter={() => { if (!fromTouch()) setHoveredData(d); }}

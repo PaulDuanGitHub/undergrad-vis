@@ -15,51 +15,51 @@ export default function Footer({ onExit, compact = false }: FooterProps) {
                     <div className={`grid grid-cols-1 md:grid-cols-2 ${compact ? 'gap-8' : 'gap-12'}`}>
                         {/* Methodology */}
                         <div>
-                            <h3 className="text-sm tracking-widest text-text-secondary uppercase mb-6">Data Methodology</h3>
-                            <p className="text-sm leading-relaxed text-text-primary/80 mb-4">
+                            <h3 className="t-subhead mb-6">Data Methodology</h3>
+                            <p className="t-note mb-4">
                                 The dataset was sourced organically from my school account's OneDrive version history spanning Fall 2021 to Winter 2026.
                                 Files are filtered and only keeps "workfile" types as shown in Act 2.
                             </p>
-                            <p className="text-sm leading-relaxed text-text-primary/80 mb-4">
+                            <p className="t-note mb-4">
                                 A single "commit" or "version" represents an autosave snapshot triggered by OneDrive file modifications.
                                 For each single file, OneDrive only keeps the latest <b>500</b> versions, however, these files don't occupy major of the dataset.
                                 While minor sync discrepancies exist, they preserve the true macroscopic rhythm of my academic journey.
                             </p>
-                            <p className="text-sm leading-relaxed text-text-primary/80 mb-4">
+                            <p className="t-note mb-4">
                                 In Act 3, an assignment is represented by a bunch of files' version history that grouped manually.
                                 And all assignments displayed here are considered "major assignment" which means they have over <b>100</b> versions
                                 in total. The deadline is determined by the latest version's creation time of that assignment's files.
                                 Manual data correction was made to handle obvious errors,
                                 such as when an assignment is opened after the deadline and a new version is created.
                             </p>
-                            <p className="text-sm leading-relaxed text-text-primary/80" >
+                            <p className="t-note" >
                                 This dataset collected don't represent my full undergraduate academic journey as not every course and project is stored by OneDrive.
                             </p>
                         </div>
 
                         {/* Colophon & Tech Stack */}
                         <div>
-                            <h3 className="text-sm tracking-widest text-text-secondary uppercase mb-6">Colophon</h3>
-                            <p className="text-sm leading-relaxed text-text-primary/80 mb-4">
+                            <h3 className="t-subhead mb-6">Colophon</h3>
+                            <p className="t-note mb-4">
                                 Designed and developed with <b>React</b> and <b>Next.js</b>.
                                 The 3D environment is rendered using <b>Three.js</b> and <b>React Three Fiber</b>.
                                 The original Landing scene was modeled using <b>Blender</b> and textures were baked by <b>Cycles</b> - Blender's ray-trace based production render engine.
                             </p>
-                            <p className="text-sm leading-relaxed text-text-primary/80 mb-4">
+                            <p className="t-note mb-4">
                                 Data processing and vector visualizations were mathematically generated via <b>D3.js</b>,
                                 while complex state transitions and morphing animations were strictly orchestrated by <b>GSAP</b>.
-                                Typography is set in Roboto Serif.
+                                Typography is set in Instrument Serif and Newsreader, with Geist Mono for labels.
                             </p>
-                            <p className="text-sm leading-relaxed text-text-primary/80 mb-6">
+                            <p className="t-note mb-6">
                                 You are welcome to check out the <a href="https://github.com/PaulDuanGitHub/undergrad-vis" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">GitHub Repo</a> for this website.
                                 Also <a href="https://paulduangithub.github.io/blog/2026/07/23/From-3D-to-D3-Visualizing-550-Files-and-5-Years-of-University/" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">the Epilogue on my BLOG</a>!
                                 Don't hesitate to star if you like this project!
                             </p>
                             <div>
-                                <h3 className="text-sm tracking-widest text-text-secondary uppercase mb-6">
+                                <h3 className="t-subhead mb-6">
                                     Assets & Credits
                                 </h3>
-                                <p className="text-sm leading-relaxed text-text-primary/80 mb-2">
+                                <p className="t-note mb-2">
                                     The following 3D models from <strong>SketchFab</strong> are used in the landing scene
                                     under <a
                                         href="https://creativecommons.org/licenses/by/4.0/"
@@ -70,7 +70,7 @@ export default function Footer({ onExit, compact = false }: FooterProps) {
                                         CC BY 4.0
                                     </a>:
                                 </p>
-                                <ul className="text-sm leading-relaxed text-text-primary/80 list-disc list-inside space-y-1">
+                                <ul className="t-note list-disc list-inside space-y-1">
                                     <li>
                                         "<strong>Minimalist Desk</strong>" by <a href="https://sketchfab.com/3d-models/minimalist-desk-escritorio-minimalista-447da0bd6e244a849730305aab9605bc" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">ElOsitoAzul</a>
                                         (adapted)
@@ -88,7 +88,7 @@ export default function Footer({ onExit, compact = false }: FooterProps) {
                                         (modified)
                                     </li>
                                 </ul>
-                                <p className="text-sm leading-relaxed text-text-primary/80 mt-4">
+                                <p className="t-note mt-4">
                                     The McMaster University logo and shield are trademarks of{" "}
                                     <a
                                         href="https://www.mcmaster.ca/"
@@ -111,11 +111,11 @@ export default function Footer({ onExit, compact = false }: FooterProps) {
                     <div className="flex flex-col items-center justify-center text-center">
                         <button
                             onClick={onExit}
-                            className="px-8 py-3 border border-brand text-brand rounded hover:bg-brand hover:text-surface transition-colors duration-300 tracking-widest text-sm uppercase"
+                            className="px-8 py-3.5 border border-brand text-brand hover:bg-brand hover:text-surface transition-colors duration-300 font-mono text-[11px] tracking-[0.22em] uppercase"
                         >
                             Return to Desk
                         </button>
-                        <p className="mt-8 text-xs text-text-secondary">
+                        <p className="t-byline mt-8">
                             © {new Date().getFullYear()} <a href="https://www.xianzhaoduan.com" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">Paul Duan</a>. All rights reserved.
                         </p>
                     </div>
