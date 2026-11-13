@@ -58,10 +58,10 @@ export const ACT1SUBSTEPS: { step: number; text: ReactNode; note?: string }[] = 
   },
 ];
 
-export default function Act1Narrative() {
+export default function Act1Narrative({ compact = false }: { compact?: boolean }) {
   return (
     <>
-      <ActOpener act={1} />
+      <ActOpener act={1} compact={compact} />
       {ACT1_STEPS.map((step, index) => (
         <PinnedReading
           key={step.fig}
@@ -70,6 +70,7 @@ export default function Act1Narrative() {
           text={step.text}
           keywords={step.keywords}
           note={step.note}
+          compact={compact}
         />
       ))}
 

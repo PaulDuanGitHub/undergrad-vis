@@ -13,6 +13,7 @@ import { min, max } from 'd3-array';
 import gsap from 'gsap';
 import { useGSAPStateMachine } from '@/hooks/useGSAPStateMachine';
 import { useContainerDim } from '@/hooks/useContainerDim';
+import { useIsomorphicLayoutEffect } from '@/hooks/useIsomorphicLayoutEffect';
 import term_extensions from '@/data/term_extensions.json';
 import ext_courses from '@/data/ext_courses.json';
 import { extension } from '@/constants/extension';
@@ -35,9 +36,9 @@ interface Act2VisualProps {
   availableHeight?: number;
   /** Keyword focus: `format:.tex`, `course:NLP`, or `all`. */
   emphasis?: string | null;
+  /** Mobile scroll prototype: finish the step morph faster than the desktop. */
+  fast?: boolean;
 }
-
-const ASPECT_RATIO = 550 / 850; // height / width
 
 /** The shared label layer's mode for each Act 2 substep. */
 const MODES = ['glossary', 'parallel', 'bars', 'legend'] as const;
@@ -76,11 +77,15 @@ export default function Act2Visual({
   compact = false,
   availableHeight,
   emphasis = null,
+  fast = false,
 }: Act2VisualProps) {
-  const { ref: svgRef, width: svgWidth, height: containerHeight } = useContainerDim<HTMLDivElement>(850);
-  const aspectHeight = Math.round(svgWidth * ASPECT_RATIO);
+  const { ref: svgRef, width: svgWidth, height: containerHeight, measured } =
+    useContainerDim<HTMLDivElement>(850);
+  // Desktop Act 2 uses the full height the FigureFrame leaves between its
+  // header and notes. The old 550/850 aspect cap wasted a large vertical band
+  // that the glossary, parallel sets, bars and stream can all use.
   const svgHeight = Math.min(
-    compact ? Math.round(svgWidth * 1.08) : aspectHeight,
+    compact ? Math.round(svgWidth * 1.08) : Infinity,
     // Only the bar/stream steps draw semester ticks below the SVG; reserve room
     // for them there so the ticks stay inside the visual pane. The glossary and
     // parallel steps use the full pane.
@@ -886,9 +891,45 @@ export default function Act2Visual({
     });
   };
 
+  // ── Re-seat when the pane is measured / resized ──
+  // The labels are placed by GSAP from pixel offsets derived from `layout`,
+  // while React owns their base box and the description rows. Both must come
+  // from the SAME measurement: the figure is first rendered on the fallback
+  // 850×552 box, and without this re-seat the chips keep those offsets while
+  // React re-renders the descriptions in the measured (phone) one — the suffix
+  // chips end up left of their descriptions and the glossary overflows the
+  // sticky pane. Any later resize (orientation, address bar) has the same
+  // failure mode, so the measured geometry, not the step, is the trigger.
+  const geometryKey = `${Math.round(svgWidth)}x${Math.round(svgHeight)}x${compact ? 'c' : 'f'}`;
+  const lastGeometry = useRef<string | null>(null);
+  useIsomorphicLayoutEffect(() => {
+    // Before the pane is measured there is nothing to repair: the state machine
+    // is held back until `measured` (see below), so its first seat already uses
+    // the real box.
+    if (!measured) return;
+    if (lastGeometry.current === null) {
+      lastGeometry.current = geometryKey;
+      return;
+    }
+    if (lastGeometry.current === geometryKey) return;
+    lastGeometry.current = geometryKey;
+    if (!isActive) return;
+    // Tweens in flight still target the old pixel offsets.
+    killAll();
+    // Seat the current mode at the measured box. Deliberately not the entrance
+    // timeline: the same re-seat also runs when a phone's URL bar changes 58dvh
+    // mid-scroll, and replaying the intro there would read as a flicker.
+    states[step]?.();
+    // Intentionally keyed on the geometry alone: `step`/`isActive` flips are
+    // the state machine's job, this effect only repairs a stale measurement.
+  }, [geometryKey, measured, isActive, step]);
+
   useGSAPStateMachine({
     step,
-    isActive,
+    // Hold the entrance until the pane has a real size: an entrance seated on
+    // the 850px fallback would have to be re-played (or snapped) a frame later.
+    isActive: isActive && measured,
+    speed: fast ? 1.6 : 1,
 
     onInactive: () => {
       // Nothing VISIBLE is reset here: DetailView cross-fades the whole
@@ -963,7 +1004,7 @@ export default function Act2Visual({
                     className={`desc-text font-normal whitespace-nowrap overflow-hidden text-ellipsis ${
                       compact ? 'leading-snug' : 'leading-relaxed'
                     }`}
-                    style={{ fontSize: compact ? (layout.rowH < 17 ? 10.5 : 11) : 12 }}
+                    style={{ fontSize: compact || layout.rowH < 17 ? (layout.rowH < 17 ? 10.5 : 11) : 12 }}
                   >
                     {extension[key as keyof typeof extension]?.description}
                   </p>

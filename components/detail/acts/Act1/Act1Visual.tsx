@@ -33,6 +33,12 @@ const COLOR_BRAND = new THREE.Color("#D4442E");
 /** How far the non-selected categories recede under a keyword filter. */
 const DIM_OPACITY = 0.2;
 
+/** The introduction's one-time build: the whole field assembles in ~1.9s. */
+const INTRO_STAGGER = 1.15;
+const INTRO_APPEAR = 0.14;
+const INTRO_FALL = 0.62;
+const INTRO_LIFT = 5;
+
 const HEATMAP_EMPTY = new THREE.Color("#F5F5F4"); 
 const HEATMAP_LOW = new THREE.Color("#FBD5CD");   
 const HEATMAP_MID = new THREE.Color("#D4442E");   
@@ -87,6 +93,8 @@ interface CubesSceneProps {
   emphasis?: string | null;
   /** False on the introduction: cubes are a still image, not an instrument. */
   interactive?: boolean;
+  /** Play the one-time block-by-block build on the introduction. */
+  intro?: boolean;
   onTooltipChange?: (payload: { step: number; cube: ProcessedCube } | null) => void;
 }
 
@@ -286,10 +294,12 @@ function getCubeTargets(cube: ProcessedCube, step: number, isHovered: boolean, e
 }
 
 // ── 3D Scene Component ──
-export function CubesScene({ data, emptyDaysData, step, compact = false, visible = true, emphasis = null, interactive = true, onTooltipChange }: CubesSceneProps) {
+export function CubesScene({ data, emptyDaysData, step, compact = false, visible = true, emphasis = null, interactive = true, intro = false, onTooltipChange }: CubesSceneProps) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const groupContainerRef = useRef<THREE.Group>(null);
   const tooltipGroupRef = useRef<THREE.Group>(null);
+  /** The camera and grid start at their step-0 targets; no entrance slide. */
+  const firstFrameRef = useRef(true);
   const labelGroupRefs = useRef<(THREE.Group | null)[]>([]);
   
   const dummy = useMemo(() => new THREE.Object3D(), []);
@@ -348,6 +358,36 @@ export function CubesScene({ data, emptyDaysData, step, compact = false, visible
       ),
     [cubeData],
   );
+
+  /**
+   * The introduction's build order: the delay follows the grid's diagonal, so
+   * the field assembles from one corner instead of every cube starting at once.
+   */
+  const introDelays = useMemo(() => {
+    const visibleCubes = cubeData.filter((cube) => !cube.isEmptyCube);
+    const xs = visibleCubes.map((cube) => cube.gridPos.x);
+    const zs = visibleCubes.map((cube) => cube.gridPos.z);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minZ = Math.min(...zs);
+    const maxZ = Math.max(...zs);
+    const spanX = maxX - minX || 1;
+    const spanZ = maxZ - minZ || 1;
+    return cubeData.map((cube) => {
+      if (cube.isEmptyCube) return 0;
+      const nx = (cube.gridPos.x - minX) / spanX;
+      const nz = (cube.gridPos.z - minZ) / spanZ;
+      return ((nx + nz) / 2) * INTRO_STAGGER;
+    });
+  }, [cubeData]);
+
+  const introStartRef = useRef(0);
+  const introPlayedRef = useRef(false);
+  useEffect(() => {
+    if (!intro || !visible || reducedMotion || introPlayedRef.current) return;
+    introPlayedRef.current = true;
+    introStartRef.current = performance.now();
+  }, [intro, visible, reducedMotion]);
 
   /**
    * One instanced draw call with a per-instance alpha attribute. The keyword
@@ -438,6 +478,12 @@ export function CubesScene({ data, emptyDaysData, step, compact = false, visible
 
   // Design reference: at 931px canvas width, the current layout fits exactly without clipping
   const BASE_CANVAS_WIDTH = 931;
+  // Aim below the cube plane so the field sits higher in the frame: the tall
+  // revision bars and the calendar's bottom row were crowding the notes, leaving
+  // too much empty space above the cubes. The top-down calendar needs a larger
+  // offset because its 2×4 block grid sits lower in world space.
+  const CAMERA_LOOK_AT_Y = -10;
+  const CAMERA_LOOK_AT_Y_STEP4 = -30;
 
   const getBaseZoom = (s: number) => {
     switch (s) {
@@ -469,21 +515,31 @@ export function CubesScene({ data, emptyDaysData, step, compact = false, visible
     // Reduced motion: every eased approach below becomes a jump, so a step
     // change lands the cubes where they belong instead of sliding them there.
     const snap = reducedMotion;
+    const settle = snap || firstFrameRef.current;
 
     const orthoCam = camera as THREE.OrthographicCamera;
     const targetCamPos = getTargetCameraPos();
     const targetZoom = getTargetCameraZoom(); 
     
-    orthoCam.position.lerp(targetCamPos, snap ? 1 : d * LERP_SPEED * 0.8);
-    orthoCam.zoom += (targetZoom - orthoCam.zoom) * (snap ? 1 : d * LERP_SPEED * 0.8);
+    orthoCam.position.lerp(targetCamPos, settle ? 1 : d * LERP_SPEED * 0.8);
+    orthoCam.zoom += (targetZoom - orthoCam.zoom) * (settle ? 1 : d * LERP_SPEED * 0.8);
     orthoCam.updateProjectionMatrix();
-    orthoCam.lookAt(0, 0, 0);
+    orthoCam.lookAt(0, step === 4 ? CAMERA_LOOK_AT_Y_STEP4 : CAMERA_LOOK_AT_Y, 0);
 
     if (!meshRef.current || !groupContainerRef.current) return;
     const isInteractive = step !== 3;
     const opacityAttribute = meshRef.current.geometry.getAttribute(
       'instanceOpacity',
     ) as THREE.InstancedBufferAttribute | undefined;
+
+    // The introduction build is an overlay on the normal targets: the cube's
+    // grid position is its landing spot, the drop is a temporary y offset.
+    const introActive = intro && !reducedMotion;
+    const introClock = introActive
+      ? introPlayedRef.current
+        ? (performance.now() - introStartRef.current) / 1000
+        : -1
+      : Number.POSITIVE_INFINITY;
 
     // Cubes Lerp
     for (let i = 0; i < cubeData.length; i++) {
@@ -497,14 +553,31 @@ export function CubesScene({ data, emptyDaysData, step, compact = false, visible
       cube.currentOpacity += (targetOpacity - cube.currentOpacity) * (snap ? 1 : Math.min(d * LERP_SPEED, 1));
       cube.currentColor.lerp(targetColor, snap ? 1 : d * HOVER_SPEED);
 
+      let introAlpha = 1;
+      let introDrop = 0;
+      if (introActive) {
+        const local = introClock - introDelays[i];
+        if (local < 0) {
+          introAlpha = 0;
+          introDrop = INTRO_LIFT;
+        } else {
+          const appear = Math.min(1, local / INTRO_APPEAR);
+          const fall = Math.max(0, local - INTRO_APPEAR);
+          const p = Math.min(1, fall / INTRO_FALL);
+          const eased = p * p * (3 - 2 * p);
+          introAlpha = appear;
+          introDrop = INTRO_LIFT * (1 - eased);
+        }
+      }
+
       const scaleY = Math.max(cube.currentHeight * targetScaleY, 0.0001); 
-      dummy.position.set(cube.currentPos.x, scaleY / 2, cube.currentPos.z);
+      dummy.position.set(cube.currentPos.x, scaleY / 2 + introDrop, cube.currentPos.z);
       dummy.scale.set(targetScaleY > 0 ? 1 : 0.001, scaleY, targetScaleY > 0 ? 1 : 0.001);
       dummy.updateMatrix();
       
       meshRef.current.setMatrixAt(i, dummy.matrix);
       meshRef.current.setColorAt(i, cube.currentColor);
-      if (opacityAttribute) opacityAttribute.setX(i, cube.currentOpacity);
+      if (opacityAttribute) opacityAttribute.setX(i, cube.currentOpacity * introAlpha);
     }
 
     meshRef.current.instanceMatrix.needsUpdate = true;
@@ -515,7 +588,7 @@ export function CubesScene({ data, emptyDaysData, step, compact = false, visible
     let targetOffset = groupBlocksOffset;
     if (step === 0) targetOffset = gridOffset;
     if (step === 4) targetOffset = heatmapBlocksOffset;
-    groupContainerRef.current.position.lerp(targetOffset, snap ? 1 : d * LERP_SPEED);
+    groupContainerRef.current.position.lerp(targetOffset, settle ? 1 : d * LERP_SPEED);
 
     // Label position tracking
     for (let i = 0; i < termLabels.length; i++) {
@@ -538,6 +611,8 @@ export function CubesScene({ data, emptyDaysData, step, compact = false, visible
       tooltipGroupRef.current.position.copy(activeCube.currentPos);
       tooltipGroupRef.current.position.y = activeCube.currentHeight + 1.5; 
     }
+
+    firstFrameRef.current = false;
   });
 
   const tooltipData = activeIdx !== -1 ? cubeData[activeIdx] : null;
@@ -665,7 +740,7 @@ return (
 // opacity-0 wrapper for the whole of Act 2 and Act 3, competing with whatever
 // transition is playing. `preserveDrawingBuffer` keeps the last frame on screen
 // while paused, so the wrapper's cross-fade still has something to fade.
-export default function Act1Visual({ step, isActive = true, compact = false, visible = true, emphasis = null, interactive = true }: { step: number; isActive?: boolean; compact?: boolean; visible?: boolean; emphasis?: string | null; interactive?: boolean }) {
+export default function Act1Visual({ step, isActive = true, compact = false, visible = true, emphasis = null, interactive = true, intro = false }: { step: number; isActive?: boolean; compact?: boolean; visible?: boolean; emphasis?: string | null; interactive?: boolean; intro?: boolean }) {
   const [isContextLost, setIsContextLost] = useState(false);
   const [tooltip, setTooltip] = useState<{ step: number; cube: ProcessedCube } | null>(null);
 
@@ -710,7 +785,7 @@ export default function Act1Visual({ step, isActive = true, compact = false, vis
         <OrthographicCamera makeDefault zoom={14} near={0.1} far={1000} />
         <ambientLight intensity={0.6} />
         <directionalLight position={[10, 20, 10]} intensity={2} castShadow />
-        <CubesScene data={file_summary as FileData[]} emptyDaysData={term_empty_days} step={step} compact={compact} visible={visible} emphasis={emphasis} interactive={interactive} onTooltipChange={compact ? setTooltip : undefined} />
+        <CubesScene data={file_summary as FileData[]} emptyDaysData={term_empty_days} step={step} compact={compact} visible={visible} emphasis={emphasis} interactive={interactive} intro={intro} onTooltipChange={compact ? setTooltip : undefined} />
       </Canvas>
 
       {/* Phone tooltip: a clamped card, outside the canvas and its overflow. */}

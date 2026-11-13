@@ -57,19 +57,27 @@ export default function FigureFrame({
   const pad = (value: number) => String(value).padStart(2, '0');
 
   return (
-    <div className="relative h-full w-full">
-      <div className="absolute inset-0">{children}</div>
+    <div className="detail-figure relative h-full w-full">
+      <div className="detail-figure-visual absolute inset-0">{children}</div>
 
-      {chrome && (
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-baseline justify-between gap-4 bg-gradient-to-b from-surface via-surface/85 to-transparent px-2 pb-8 pt-1">
-          <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-text-secondary">
-            Fig. {fig} — {title}
-          </span>
-        </div>
-      )}
+      <div
+        className={`detail-figure-header pointer-events-none absolute inset-x-0 top-0 z-10 flex items-baseline justify-between gap-4 bg-gradient-to-b from-surface via-surface/85 to-transparent px-2 pb-8 pt-1 transition-[opacity,transform] duration-500 ease-out motion-reduce:transition-none ${
+          chrome ? 'translate-y-0 opacity-100' : '-translate-y-1 opacity-0'
+        }`}
+        aria-hidden={!chrome}
+      >
+        <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-text-secondary">
+          Fig. {fig} — {title}
+        </span>
+      </div>
 
-      {chrome && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-surface via-surface/95 to-transparent px-2 pb-3 pt-16">
+      <div
+        className={`detail-figure-notes pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-surface via-surface/95 to-transparent px-2 pb-3 pt-6 transition-[opacity,transform] duration-500 ease-out motion-reduce:transition-none ${
+          chrome ? 'translate-y-0 opacity-100' : 'translate-y-1.5 opacity-0'
+        }`}
+        aria-hidden={!chrome}
+        inert={!chrome}
+      >
         <div
           className={`pointer-events-auto grid gap-3 ${
             notes.length === 2 ? 'grid-cols-2' : 'grid-cols-3'
@@ -104,7 +112,7 @@ export default function FigureFrame({
                       {note.index}
                     </span>
                     <span
-                      className={`text-[30px] leading-none tracking-[-0.015em] transition-colors ${
+                      className={`figure-note-lead text-[30px] leading-none tracking-[-0.015em] transition-colors ${
                         on ? 'text-white' : 'text-text-primary'
                       }`}
                       style={{ fontFamily: 'var(--t-display)' }}
@@ -113,7 +121,7 @@ export default function FigureFrame({
                     </span>
                   </div>
                   <p
-                    className={`mt-1 text-[14px] leading-snug transition-colors ${
+                    className={`figure-note-text mt-1 text-[14px] leading-snug transition-colors ${
                       on ? 'text-white/85' : 'text-text-primary/70'
                     }`}
                     style={{ fontFamily: 'var(--t-text)' }}
@@ -126,7 +134,6 @@ export default function FigureFrame({
           })}
         </div>
       </div>
-      )}
     </div>
   );
 }

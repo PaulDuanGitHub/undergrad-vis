@@ -1,9 +1,10 @@
 "use client";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { scaleLinear } from "d3-scale";
+import React, { useMemo, useRef } from "react";
+import { scalePow } from "d3-scale";
 import gsap from "gsap";
 import { useGSAPStateMachine } from "@/hooks/useGSAPStateMachine";
 import { useContainerDim } from "@/hooks/useContainerDim";
+import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
 import heavy_assignments_commits from "@/data/heavy_assignment_commits.json";
 import PunchcardHeatmap from "@/components/detail/acts/Act3/PunchcardHeatmap";
 import day_hour_counts from "@/data/day_hour_counts.json";
@@ -17,6 +18,8 @@ interface Act3VisualProps {
   availableHeight?: number;
   /** Keyword focus: `band:0.5`, `punch:evening`, `punch:weekend`, or `all`. */
   emphasis?: string | null;
+  /** Mobile scroll prototype: finish step transitions faster. */
+  fast?: boolean;
 }
 
 const ASPECT_RATIO = 650 / 900; // height / width
@@ -33,6 +36,29 @@ const W_TRACK_RATIO = 600 / 900; // track width ratio
  * alpha saturates, so the two innermost steps kept landing within ~0.05 of each
  * other whatever the layer value was, and the six strips never read as six.
  */
+const TERM_ORDER = [
+  '2021 Fall',
+  '2022 Winter',
+  '2022 Fall',
+  '2023 Winter',
+  '2023 Fall',
+  '2024 Winter',
+  '2025 Fall',
+  '2026 Winter',
+] as const;
+
+const AXIS_TICKS = [
+  { d: 0, label: '0' },
+  { d: 0.5, label: '12h' },
+  { d: 1, label: '1d' },
+  { d: 2, label: '2d' },
+  { d: 3, label: '3d' },
+  { d: 7, label: '1w' },
+  { d: 14, label: '2w' },
+  { d: 21, label: '3w' },
+  { d: 28, label: '4w' },
+] as const;
+
 const BAND_TIERS = [
   { d: 0.5, label: '12h', phrase: '12 hours', alpha: 0.85 },
   { d: 1, label: '1d', phrase: '24 hours', alpha: 0.58 },
@@ -45,8 +71,9 @@ const BAND_TIERS = [
 /** Height of the band strip, which hangs BELOW the axis line. */
 const STRIP_H = 6;
 
-export default function Act3Visual({ step, isActive, compact = false, availableHeight, emphasis = null }: Act3VisualProps) {
-  const { ref: svgRef, width: svgWidth, height: containerHeight } = useContainerDim<HTMLDivElement>(900);
+export default function Act3Visual({ step, isActive, compact = false, availableHeight, emphasis = null, fast = false }: Act3VisualProps) {
+  const { ref: svgRef, width: svgWidth, height: containerHeight, measured } =
+    useContainerDim<HTMLDivElement>(900);
   const svgHeight = Math.min(
     compact ? Math.round(svgWidth * 0.9) : Math.round(svgWidth * ASPECT_RATIO),
     availableHeight ?? Infinity,
@@ -61,42 +88,26 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
   const COLOR_GRAY = useThemeVariable("--color-brand-light");
   const COLOR_BRAND = useThemeVariable("--color-brand");
 
-  /** Cut-off (axis units, days) of the hovered deadline band; null = none. */
-  const [hoveredBand, setHoveredBand] = useState<number | null>(null);
-
-  // Touch taps are followed by emulated mouse events; ignore hover for a beat
-  // and let the click handle pinning (tap the same band again to clear).
-  const touchRef = useRef(false);
-  const markTouch = () => {
-    touchRef.current = true;
-    window.setTimeout(() => { touchRef.current = false; }, 700);
-  };
-  const fromTouch = () => touchRef.current;
-  const handleBandHover = (d: number | null) => {
-    if (!fromTouch()) setHoveredBand(d);
-  };
-  const selectBand = (d: number) => {
-    const toggle = fromTouch();
-    setHoveredBand((prev) => (toggle ? (prev === d ? null : d) : d));
-  };
-
-  // Changing substep drops the hover: the strip under the pointer disappears
-  // with its axis, so we never get the matching mouseleave.
-  useEffect(() => {
-    setHoveredBand(null);
-  }, [step]);
-
   /**
-   * The keyword focus, expressed like the band hover so the two can share the
-   * strip, the key, the readout and the bubbles. A pointer hover temporarily
-   * overrides the keyword; releasing it returns to the keyword's window.
+   * The keyword focus. There are no interactive bands any more: the readout
+   * and the shading are driven only by the keyword / note that is focused.
    */
   const focusBand = useMemo(() => {
     if (!emphasis || !emphasis.startsWith('band:')) return null;
     const value = Number(emphasis.slice(5));
     return Number.isFinite(value) ? value : null;
   }, [emphasis]);
-  const effectiveBand = hoveredBand ?? focusBand;
+  const effectiveBand = focusBand;
+  /** A slice (not a cumulative band), e.g. the 12–24h window. */
+  const focusSlice = useMemo(() => {
+    if (!emphasis || !emphasis.startsWith('slice:')) return null;
+    const [lo, hi] = emphasis.slice(6).split('-').map(Number);
+    return Number.isFinite(lo) && Number.isFinite(hi) && hi > lo
+      ? { lo, hi }
+      : null;
+  }, [emphasis]);
+  const focusWindow =
+    focusSlice ?? (effectiveBand !== null ? { lo: 0, hi: effectiveBand } : null);
   const punchFocus =
     emphasis === 'punch:evening'
       ? 'evening'
@@ -105,7 +116,7 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
         : null;
   // ── Data computation ──
 
-  const { processedData, axes } = useMemo(() => {
+  const { processedData, axes, allGroupLabels, trackX, trackWidth, timeScale } = useMemo(() => {
     const allData = heavy_assignments_commits;
 
     const isFreshman = (term: string) => ["2021 Fall", "2022 Winter"].includes(term);
@@ -114,28 +125,89 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
     const freshData = allData.filter((d) => isFreshman(d.term));
     const senData = allData.filter((d) => isSenior(d.term));
 
-    const maxFresh = Math.max(...freshData.flatMap(d => d.commits.map(c => c[0])), 1);
-    const maxSen = Math.max(...senData.flatMap(d => d.commits.map(c => c[0])), 1);
-    const maxAll = Math.max(...allData.flatMap(d => d.commits.map(c => c[0])), 1);
-
     const W_TRACK = Math.round(svgWidth * W_TRACK_RATIO);
+    const maxTime = Math.max(...allData.flatMap((d) => d.commits.map((c) => c[0])), 1);
+    const maxCount = Math.max(...allData.flatMap((d) => d.commits.map((c) => c[1])), 1);
 
-    const scaleFresh = scaleLinear().domain([maxFresh, 0]).range([0, W_TRACK]);
-    const scaleSen = scaleLinear().domain([maxSen, 0]).range([0, W_TRACK]);
-    const scaleAll = scaleLinear().domain([maxAll, 0]).range([0, W_TRACK]);
+    // One domain for every step, with a square-root scale: the last 12 hours
+    // get more room than the long tail, while Freshman, Senior and All keep the
+    // same deadline geometry.
+    const scale = scalePow().exponent(0.5).domain([0, maxTime]).range([W_TRACK, 0]);
+    const radiusFocus = scalePow()
+      .exponent(0.5)
+      .domain([0, maxCount])
+      .range([1, 9]);
+    const radiusAll = scalePow()
+      .exponent(0.5)
+      .domain([0, maxCount])
+      .range([0.8, 5]);
 
     const ROW_H_FOCUS = compact ? 18 : 30;
-    // The "all" step stacks every term (58 tracks). On compact screens a 7px
-    // pitch overflowed the chart, so tighten it to 5px (4px gaps) to fit all of
-    // them inside the pane.
-    const ROW_H_GRID = compact ? 5 : 9;
+    // The focused steps (freshman / senior) have different track counts, so a
+    // fixed 30px pitch makes the busier year overflow the chart pane. Cap the
+    // pitch per step at what the measured height can actually hold.
+    const focusAxisReserve = compact ? 38 : 54;
+    const freshRowH = Math.min(
+      ROW_H_FOCUS,
+      (svgHeight - focusAxisReserve) / Math.max(freshData.length, 1),
+    );
+    const senRowH = Math.min(
+      ROW_H_FOCUS,
+      (svgHeight - focusAxisReserve) / Math.max(senData.length, 1),
+    );
+    // The all-assignments step has to fit inside the chart pane at the
+    // two-column minimum (960×640, where the SVG is ~386px tall). Derive the
+    // row pitch from the measured height instead of assuming a tall desktop.
+    const ALL_GROUP_GAP = compact ? 5 : 6;
+    const ALL_ROW_H = compact
+      ? Math.max(
+          3.8,
+          Math.min(
+            5,
+            (svgHeight - 80 - (TERM_ORDER.length - 1) * ALL_GROUP_GAP) /
+              allData.length,
+          ),
+        )
+      : Math.max(
+          4.4,
+          Math.min(
+            8,
+            (svgHeight - 90 - (TERM_ORDER.length - 1) * ALL_GROUP_GAP) /
+              allData.length,
+          ),
+        );
 
-    const freshStartY = (svgHeight - freshData.length * ROW_H_FOCUS) / 2;
-    const senStartY = (svgHeight - senData.length * ROW_H_FOCUS) / 2;
-
-    const allStartY = (svgHeight - allData.length * ROW_H_GRID) / 2;
-
+    const freshStartY = (svgHeight - freshData.length * freshRowH) / 2;
+    const senStartY = (svgHeight - senData.length * senRowH) / 2;
     const TRACK_X = (svgWidth - W_TRACK) / 2;
+
+    // The all-assignments step is grouped by term instead of one flat stack.
+    const allGroups = TERM_ORDER.map((term) => ({
+      term,
+      rows: allData.filter((d) => d.term === term),
+    }));
+    const allLocalIndex = new Map<(typeof allData)[number], number>();
+    allGroups.forEach((group) =>
+      group.rows.forEach((row, i) => allLocalIndex.set(row, i)),
+    );
+    const allTotalH =
+      allData.length * ALL_ROW_H + (allGroups.length - 1) * ALL_GROUP_GAP;
+    const allStartY = (svgHeight - allTotalH) / 2;
+    const allGroupStart = new Map<string, number>();
+    const allGroupLabels: { term: string; y: number; top: number; bottom: number }[] = [];
+    let allCursor = allStartY;
+    allGroups.forEach((group) => {
+      const groupTop = allCursor;
+      const groupBottom = groupTop + group.rows.length * ALL_ROW_H;
+      allGroupStart.set(group.term, allCursor);
+      allGroupLabels.push({
+        term: group.term,
+        y: (groupTop + groupBottom) / 2,
+        top: groupTop,
+        bottom: groupBottom,
+      });
+      allCursor += group.rows.length * ALL_ROW_H + ALL_GROUP_GAP;
+    });
 
     const pData = allData.map((d, i) => {
       const isF = isFreshman(d.term);
@@ -145,35 +217,39 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
 
       const t0 = {
         x: TRACK_X,
-        y: isF ? freshStartY + fIdx * ROW_H_FOCUS : (isS ? -100 : 800),
+        y: isF ? freshStartY + fIdx * freshRowH : (isS ? -100 : 800),
         w: W_TRACK, op: isF ? 1 : 0
       };
 
       const t1 = {
         x: TRACK_X,
-        y: isS ? senStartY + sIdx * ROW_H_FOCUS : (isF ? 800 : 800),
+        y: isS ? senStartY + sIdx * senRowH : (isF ? 800 : 800),
         w: W_TRACK, op: isS ? 1 : 0
       };
 
       const t2 = {
         x: TRACK_X,
-        y: allStartY + i * ROW_H_GRID,
+        y:
+          (allGroupStart.get(d.term) ?? allStartY) +
+          (allLocalIndex.get(d) ?? 0) * ALL_ROW_H,
         w: W_TRACK, op: 1
       };
 
       const bubbles = d.commits.map((c) => ({
         day: c[0],
         count: c[1],
-        radius: Math.max(1, Math.sqrt(c[1]) * 1.5),
-        cx0: scaleFresh(c[0]),
-        cx1: scaleSen(c[0]),
-        cx2: scaleAll(c[0])
+        r0: radiusFocus(c[1]),
+        r1: radiusFocus(c[1]),
+        r2: radiusAll(c[1]),
+        cx0: scale(c[0]),
+        cx1: scale(c[0]),
+        cx2: scale(c[0]),
       }));
 
-      const maxDay = Math.max(...d.commits.map(c => c[0]), 0);
-      const lx0 = scaleFresh(maxDay);
-      const lx1 = scaleSen(maxDay);
-      const lx2 = scaleAll(maxDay);
+      const maxDay = Math.max(...d.commits.map((c) => c[0]), 0);
+      const lx0 = scale(maxDay);
+      const lx1 = scale(maxDay);
+      const lx2 = scale(maxDay);
 
       return { ...d, id: `${d.term}_${i}`, isF, isS, t0, t1, t2, bubbles, lx0, lx1, lx2 };
     });
@@ -196,12 +272,19 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
       BAND_TIERS.map((tier) => cumulativeShare(rows, tier.d));
 
     const axes = {
-      fresh: { scale: scaleFresh, x: TRACK_X, y: freshStartY + freshData.length * ROW_H_FOCUS + 10, w: W_TRACK, shares: sharesOf(freshData) },
-      sen: { scale: scaleSen, x: TRACK_X, y: senStartY + senData.length * ROW_H_FOCUS + 10, w: W_TRACK, shares: sharesOf(senData) },
-      all: { scale: scaleAll, x: TRACK_X, y: allStartY + allData.length * ROW_H_GRID + 10, w: W_TRACK, shares: sharesOf(allData) }
+      fresh: { scale, x: TRACK_X, y: freshStartY + freshData.length * freshRowH + 10, w: W_TRACK, shares: sharesOf(freshData) },
+      sen: { scale, x: TRACK_X, y: senStartY + senData.length * senRowH + 10, w: W_TRACK, shares: sharesOf(senData) },
+      all: { scale, x: TRACK_X, y: allStartY + allTotalH + 10, w: W_TRACK, shares: sharesOf(allData) }
     };
 
-    return { processedData: pData, axes };
+    return {
+      processedData: pData,
+      axes,
+      allGroupLabels,
+      trackX: TRACK_X,
+      trackWidth: W_TRACK,
+      timeScale: scale,
+    };
   }, [svgWidth, svgHeight, compact]);
 
   // ── GSAP animation state machine ──
@@ -218,11 +301,17 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
     gsap.set(".track-line", {
       attr: { x2: (i, el) => el.dataset[`w${s}`], x1: (i, el) => el.dataset[`lx${s}`] },
     });
-    gsap.set(".commit-bubble", { attr: { cx: (i, el) => el.dataset[`cx${s}`] } });
+    gsap.set(".commit-bubble", {
+      attr: {
+        cx: (i, el) => el.dataset[`cx${s}`],
+        r: (i, el) => el.dataset[`r${s}`],
+      },
+    });
     gsap.set(".punchcard-container", { opacity: 0, zIndex: -1 });
     gsap.set(".axis-0", { opacity: s === 0 ? 1 : 0 });
     gsap.set(".axis-1", { opacity: s === 1 ? 1 : 0 });
     gsap.set(".axis-2", { opacity: s === 2 ? 1 : 0 });
+    gsap.set(".all-group-label-layer", { opacity: s === 2 ? 1 : 0 });
   };
 
   /** Animate bubbles and tracks to step (0/1/2) */
@@ -242,13 +331,20 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
       ease,
     });
     gsap.to(".commit-bubble", {
-      attr: { cx: (i, el) => el.dataset[`cx${s}`] },
+      attr: {
+        cx: (i, el) => el.dataset[`cx${s}`],
+        r: (i, el) => Number(el.dataset[`r${s}`]),
+      },
       duration: dur,
       ease,
     });
     gsap.to(".axis-0", { opacity: s === 0 ? 1 : 0, duration: 0.5 });
     gsap.to(".axis-1", { opacity: s === 1 ? 1 : 0, duration: 0.5 });
     gsap.to(".axis-2", { opacity: s === 2 ? 1 : 0, duration: 0.5 });
+    gsap.to(".all-group-label-layer", {
+      opacity: s === 2 ? 1 : 0,
+      duration: 0.5,
+    });
   };
 
   // ── Non-adjacent jump (fast scrub crossing several substeps at once) ──
@@ -257,15 +353,15 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
     1: () => setTrackStep(1),
     2: () => setTrackStep(2),
     3: () => {
-      gsap.set(".track-group, .axis-group", { opacity: 0 });
+      gsap.set(".track-group, .axis-group, .all-group-label-layer", { opacity: 0 });
       gsap.set(".punchcard-container", { opacity: 1, zIndex: 10 });
     },
   };
 
   const onJump = (from: number, to: number) => {
     if (to === 3) {
-      gsap.killTweensOf(".track-group, .axis-group, .track-line, .commit-bubble, .axis-0, .axis-1, .axis-2");
-      gsap.to(".track-group, .axis-group", { opacity: 0, duration: 0.4 });
+      gsap.killTweensOf(".track-group, .axis-group, .track-line, .commit-bubble, .axis-0, .axis-1, .axis-2, .all-group-label-layer");
+      gsap.to(".track-group, .axis-group, .all-group-label-layer", { opacity: 0, duration: 0.4 });
       gsap.fromTo(
         ".punchcard-container",
         { opacity: 0 },
@@ -279,13 +375,44 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
     if (from === 3) gsap.set(".punchcard-container", { zIndex: -1 });
   };
 
+  // ── Re-seat when the pane is measured / resized ──
+  // Tracks, bubbles and the axis are placed by GSAP from pixel offsets derived
+  // from `svgWidth`/`svgHeight`. The figure is first rendered on the fallback
+  // 900×585 box, so without this the tracks keep their old x offset while the
+  // SVG shrinks to the phone width — the whole track stack slides off the right
+  // edge (the step-0 "tracks pushed right" bug). A later resize has the same
+  // failure mode, so the measured geometry is the trigger, not the step.
+  const geometryKey = `${Math.round(svgWidth)}x${Math.round(svgHeight)}x${compact ? 'c' : 'f'}`;
+  const lastGeometry = useRef<string | null>(null);
+  useIsomorphicLayoutEffect(() => {
+    // Before measurement the state machine is held back (see below), so its
+    // first seat already uses the real box; there is nothing to repair yet.
+    if (!measured) return;
+    if (lastGeometry.current === null) {
+      lastGeometry.current = geometryKey;
+      return;
+    }
+    if (lastGeometry.current === geometryKey) return;
+    lastGeometry.current = geometryKey;
+    if (!isActive) return;
+    gsap.killTweensOf(
+      ".track-group, .axis-group, .track-line, .commit-bubble, .axis-0, .axis-1, .axis-2, .all-group-label-layer, .punchcard-container",
+    );
+    states[step]?.();
+    // Intentionally keyed on the geometry alone: `step`/`isActive` flips are
+    // the state machine's job, this effect only repairs a stale measurement.
+  }, [geometryKey, measured, isActive, step]);
+
   useGSAPStateMachine({
     step,
-    isActive,
+    // Hold the first seat until the pane has a real size (see Act2Visual).
+    isActive: isActive && measured,
+    speed: fast ? 1.6 : 1,
 
     onInactive: () => {
       gsap.set(".track-group", { opacity: 0 });
       gsap.set(".axis-group", { opacity: 0 });
+      gsap.set(".all-group-label-layer", { opacity: 0 });
       gsap.set(".punchcard-container", { opacity: 0, zIndex: -1 });
     },
 
@@ -299,106 +426,13 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
       "1->2": () => animateToTrackStep(2),
       "2->1": () => animateToTrackStep(1),
       "2->3": () => {
-        gsap.killTweensOf(".track-group, .axis-group, .track-line, .commit-bubble, .axis-0, .axis-1, .axis-2");
-        gsap.to(".track-group, .axis-group", { opacity: 0, duration: 0.5 });
+        gsap.killTweensOf(".track-group, .axis-group, .track-line, .commit-bubble, .axis-0, .axis-1, .axis-2, .all-group-label-layer");
+        gsap.to(".track-group, .axis-group, .all-group-label-layer", { opacity: 0, duration: 0.5 });
         gsap.to(".punchcard-container", { opacity: 1, zIndex: 10, duration: 0.5 });
       },
       "3->2": () => animateToTrackStep(2),
     },
   });
-
-  /**
-   * The six bands, painted as six adjoining strips hanging UNDER the axis line
-   * (the line is the top edge of the strip). Each tier owns the span between its
-   * own cut-off and the previous one, with a hand-set tone so the six read
-   * apart. Hovering a tier flattens its whole cumulative window to that tier's
-   * tone, leaving one flat colour from the deadline back to the hovered cut-off.
-   */
-  const printBands = (toX: (t: number) => number) => {
-    const hoveredIdx = effectiveBand === null ? -1 : BAND_TIERS.findIndex((t) => t.d === effectiveBand);
-
-    return (
-      <g className="band-strip">
-        {BAND_TIERS.map((tier, i) => {
-          const bx = toX(tier.d);
-          const px = toX(i === 0 ? 0 : BAND_TIERS[i - 1].d);
-          const alpha = i <= hoveredIdx ? BAND_TIERS[hoveredIdx].alpha : tier.alpha;
-          return (
-            <rect
-              key={`band-${tier.d}`}
-              x={bx}
-              y={0}
-              width={Math.max(0, px - bx)}
-              height={STRIP_H}
-              fill={COLOR_BRAND}
-              fillOpacity={alpha}
-              style={{ transition: 'fill-opacity 200ms ease' }}
-            />
-          );
-        })}
-        {/* Hit zones: the same six strips, each one selecting its cumulative
-            window (2 weeks, 1 week, 3 days, 24 h, 12 h). */}
-        {BAND_TIERS.map((tier, i) => {
-          const lo = i === 0 ? 0 : BAND_TIERS[i - 1].d;
-          const bx = toX(tier.d);
-          const px = toX(lo);
-          return (
-            <rect
-              key={`band-hit-${tier.d}`}
-              x={bx}
-              y={0}
-              width={Math.max(0, px - bx)}
-              height={STRIP_H + 5}
-              fill="transparent"
-              className="cursor-pointer"
-              onMouseEnter={() => handleBandHover(tier.d)}
-              onMouseLeave={() => handleBandHover(null)}
-              onClick={() => selectBand(tier.d)}
-            />
-          );
-        })}
-      </g>
-    );
-  };
-
-  /**
-   * Horizontal key sitting under the axis. It is right-aligned to the deadline
-   * edge and ordered the same way as the strip (2 weeks on the left, the last
-   * 12 h on the right), so the swatches can be matched to the strip by tone. It
-   * doubles as the hover target: the 12 h strip is only a few pixels wide on the
-   * senior/all axes, so picking a band must not depend on hitting it.
-   */
-  const printBandKey = (deadlineX: number) => {
-    const slot = 44;
-    const rowY = STRIP_H + 11;
-    return (
-      <g className="band-key">
-        {BAND_TIERS.map((tier, i) => {
-          const x = deadlineX - (i + 1) * slot;
-          const on = effectiveBand === tier.d;
-          return (
-            <g
-              key={`band-key-${tier.d}`}
-              className="cursor-pointer"
-              onMouseEnter={() => handleBandHover(tier.d)}
-              onMouseLeave={() => handleBandHover(null)}
-              onClick={() => selectBand(tier.d)}
-            >
-              <rect x={x - 4} y={rowY - 16} width={slot} height={26} fill="transparent" />
-              <rect x={x} y={rowY - 8} width={8} height={7} fill={COLOR_BRAND} fillOpacity={tier.alpha} />
-              <text
-                x={x + 12}
-                y={rowY}
-                className={`font-mono text-[10px] uppercase tracking-[0.1em] ${on ? 'fill-brand-700' : 'fill-slate-500'}`}
-              >
-                {tier.label}
-              </text>
-            </g>
-          );
-        })}
-      </g>
-    );
-  };
 
   /**
    * The percentages, as a sentence. Rendered inside the axis group (so it fades
@@ -407,10 +441,23 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
    */
   const printBandReadout = (axisY: number, w: number, shares: number[]) => {
     const idx = effectiveBand === null ? -1 : BAND_TIERS.findIndex((t) => t.d === effectiveBand);
+    const active = focusSlice !== null || idx >= 0;
+    const value = focusSlice
+      ? Math.max(0, (shares[1] ?? 0) - (shares[0] ?? 0))
+      : idx >= 0
+        ? shares[idx]
+        : 0;
+    const lead =
+      focusSlice !== null
+        ? ' of commits landed in the 12–24 hour window'
+        : idx >= 0
+          ? ` of commits landed in the last ${BAND_TIERS[idx].phrase}`
+          : '';
+
     return (
       <g
         className="band-readout"
-        opacity={idx >= 0 ? 1 : 0}
+        opacity={active ? 1 : 0}
         style={{ transition: 'opacity 200ms ease' }}
         pointerEvents="none"
       >
@@ -420,18 +467,18 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
           textAnchor="middle"
           className={`font-serif fill-slate-900 ${compact ? 'text-[11px] tracking-wide' : 'text-[13px] tracking-widest'}`}
         >
-          {idx >= 0 && (compact ? (
+          {active && (compact ? (
             <>
               <tspan x={w / 2}>
-                <tspan className="fill-brand font-semibold">{Math.floor(shares[idx] * 100)}%</tspan>
-                {` of commits landed in the last ${BAND_TIERS[idx].phrase}`}
+                <tspan className="fill-brand font-semibold">{Math.floor(value * 100)}%</tspan>
+                {lead}
               </tspan>
               <tspan x={w / 2} dy="1.35em">before the deadline</tspan>
             </>
           ) : (
             <>
-              <tspan className="fill-brand font-semibold">{Math.floor(shares[idx] * 100)}%</tspan>
-              {` of commits landed in the last ${BAND_TIERS[idx].phrase} before the deadline`}
+              <tspan className="fill-brand font-semibold">{Math.floor(value * 100)}%</tspan>
+              {`${lead} before the deadline`}
             </>
           ))}
         </text>
@@ -443,18 +490,39 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
     const isVisible = Array.isArray(stepIndex) ? stepIndex.includes(step) : step === stepIndex;
     const { scale, x, y, w, shares } = axisDef;
     const toX = (t: number) => Math.max(0, Math.min(w, scale(t)));
-    const deadlineX = toX(0);
+    const ticks = AXIS_TICKS;
 
     return (
       <g
         className={`axis-group ${className}`}
         transform={`translate(${x}, ${y})`}
         opacity={isVisible ? 1 : 0}
-        pointerEvents={isVisible ? 'auto' : 'none'}
+        pointerEvents="none"
       >
         <line x1={0} x2={w} y1={0} y2={0} stroke={COLOR_BRAND} strokeOpacity={0.3} />
-        {printBands(toX)}
-        {printBandKey(deadlineX)}
+        {ticks.map(({ d, label }, index) => {
+          const tx = toX(d);
+          return (
+            <g key={d} transform={`translate(${tx}, 0)`}>
+              <line y1={0} y2={5} stroke="#94A3B8" strokeWidth={0.75} />
+              <text
+                y={17 + (index % 2) * 12}
+                textAnchor="middle"
+                className="fill-slate-500 font-mono text-[9px] tracking-[0.08em]"
+              >
+                {label}
+              </text>
+            </g>
+          );
+        })}
+        <text
+          x={0}
+          y={46}
+          textAnchor="start"
+          className="fill-slate-500 font-mono text-[9px] uppercase tracking-[0.12em]"
+        >
+          time before deadline · √ scale
+        </text>
         {printBandReadout(y, w, shares)}
       </g>
     );
@@ -464,15 +532,63 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
     <div
       ref={svgRef}
       className="relative w-full h-full flex items-center justify-center"
-      onTouchStart={markTouch}
     >
       <svg
         width={svgWidth}
         height={svgHeight}
         className="overflow-visible"
         role="img"
-        aria-label="File saves across six deadline bands, drawn as tracks of bubbles with a punchcard heatmap. Tap a band or a punchcard cell to see how many files landed in that window."
+        aria-label="File saves across time before each deadline, drawn as tracks of bubbles with a punchcard heatmap. The shading marks the focused deadline window; tap a punchcard cell to see how many files landed in that hour."
       >
+        <g className="axis-grid" opacity={step < 3 ? 1 : 0} pointerEvents="none">
+          {AXIS_TICKS.map(({ d }) => {
+            const gx = trackX + timeScale(d);
+            return (
+              <line
+                key={d}
+                x1={gx}
+                x2={gx}
+                y1={0}
+                y2={svgHeight}
+                stroke="#E2E8F0"
+                strokeWidth={0.5}
+                strokeOpacity={0.8}
+              />
+            );
+          })}
+        </g>
+        {focusWindow !== null && step !== 3 && (
+          <g
+            key={`${focusWindow.lo}-${focusWindow.hi}`}
+            className="twelve-hour-shade"
+            pointerEvents="none"
+          >
+            <rect
+              x={trackX + timeScale(focusWindow.hi)}
+              y={0}
+              width={Math.max(
+                0,
+                timeScale(focusWindow.lo) - timeScale(focusWindow.hi),
+              )}
+              height={svgHeight}
+              fill={COLOR_BRAND}
+              fillOpacity={0.07}
+            />
+            {[focusWindow.lo, focusWindow.hi].map((edge) => (
+              <line
+                key={edge}
+                x1={trackX + timeScale(edge)}
+                x2={trackX + timeScale(edge)}
+                y1={0}
+                y2={svgHeight}
+                stroke={COLOR_BRAND}
+                strokeOpacity={0.2}
+                strokeDasharray="2 4"
+              />
+            ))}
+          </g>
+        )}
+
         <g>
           {processedData.map((d) => {
             return (
@@ -496,17 +612,24 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
 
                 <g>
                   {d.bubbles.map((b, idx) => {
-                    // A hovered band keeps only the bubbles inside its window.
-                    const inBand = effectiveBand !== null && b.day <= effectiveBand;
-                    const isFaded = effectiveBand !== null && !inBand;
+                    // A focused window keeps only the bubbles inside it. A
+                    // slice (12–24h) excludes its near edge, so the boundary
+                    // dots stay with the preceding 12h window.
+                    const inBand =
+                      focusWindow !== null &&
+                      (focusSlice
+                        ? b.day > focusWindow.lo && b.day <= focusWindow.hi
+                        : b.day <= focusWindow.hi);
+                    const isFaded = focusWindow !== null && !inBand;
 
                     return (
                       <circle
                         key={idx}
                         className="commit-bubble transition-opacity duration-300"
                         data-cx0={b.cx0} data-cx1={b.cx1} data-cx2={b.cx2}
+                        data-r0={b.r0} data-r1={b.r1} data-r2={b.r2}
                         cy={0}
-                        r={b.radius}
+                        r={b.r0}
                         fill={inBand ? COLOR_BRAND : COLOR_GRAY}
                         opacity={isFaded ? 0.1 : 0.8}
                       />
@@ -516,6 +639,32 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
               </g>
             );
           })}
+        </g>
+
+        <g className="all-group-label-layer" aria-hidden="true">
+          {allGroupLabels.map(({ term, y, top, bottom }) => (
+            <g key={term}>
+              <line
+                x1={trackX - 5}
+                x2={trackX - 5}
+                y1={top}
+                y2={bottom}
+                stroke="#CBD5E1"
+                strokeWidth={1}
+                strokeOpacity={0.75}
+              />
+              <text
+                x={trackX - 12}
+                y={y}
+                textAnchor="end"
+                dominantBaseline="central"
+                className="fill-slate-600 font-serif uppercase tracking-widest"
+                style={{ fontSize: compact ? 8 : 10 }}
+              >
+                {term}
+              </text>
+            </g>
+          ))}
         </g>
 
         {renderAxis(axes.fresh, 0, "axis-0")}

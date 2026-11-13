@@ -21,7 +21,7 @@ export const ACT3_STEPS: Act3Step[] = [
     fig: '10',
     title: 'Freshman year',
     text: 'Freshman year: each track is an assignment with more than 100 versions, and each bubble is a burst of file saves. Notice how the bubbles cluster at the right edge — the deadline. 61% of all edits happen within the last 12 hours, and 22% with 12–24 hours left. The classic pattern of a beginner: all panic, no pacing.',
-    note: 'Hover a band to read its share; click to pin it.',
+    note: 'The shading marks the deadline window while a keyword is focused.',
     keywords: [
       {
         phrase: '100',
@@ -40,7 +40,7 @@ export const ACT3_STEPS: Act3Step[] = [
       {
         phrase: '22%',
         index: '03',
-        emphasis: 'all',
+        emphasis: 'slice:0.5-1',
         noteLead: '22%',
         noteText: 'of edits in the 12–24 hour window',
       },
@@ -70,13 +70,13 @@ export const ACT3_STEPS: Act3Step[] = [
   {
     fig: '12',
     title: 'All assignments',
-    text: 'Now all 59 major assignments compress into a single dense grid. Five years, near 24,000 commits, squeezed into one view. I am, and apparently always have been, a deadline-driven student. 54% of all edits were made within the last 12 hours. 73% within the last 2 days.',
+    text: 'Now all 58 major assignments compress into a single dense grid. Five years, near 24,000 commits, squeezed into one view. I am, and apparently always have been, a deadline-driven student. 54% of all edits were made within the last 12 hours. 73% within the last 2 days.',
     keywords: [
       {
-        phrase: '59',
+        phrase: '58',
         index: '01',
         emphasis: 'all',
-        noteLead: '59',
+        noteLead: '58',
         noteText: 'major assignments',
       },
       {

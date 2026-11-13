@@ -56,6 +56,7 @@ export default function Act1Figure({
         visible={visible}
         emphasis={emphasis}
         interactive={started}
+        intro={!started}
       />
     </FigureFrame>
   );

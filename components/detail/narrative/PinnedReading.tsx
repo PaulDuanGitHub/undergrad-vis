@@ -9,6 +9,8 @@ import { tokenizeReadingText } from './readingVariants';
 
 /** Scroll runway per word. 34px is roughly one wheel notch every two words. */
 const PX_PER_WORD = 34;
+/** The mobile scroll prototype uses a shorter runway and a 60/40 chart stage. */
+const PX_PER_WORD_MOBILE = 22;
 
 type TokenStyle = 'block' | 'caret';
 
@@ -38,6 +40,8 @@ interface PinnedReadingProps {
   keywords: ReadingKeyword[];
   /** Interaction note shown under the copy, in the margin voice. */
   note?: string;
+  /** Mobile scroll prototype: shorter word runway, smaller pinned stage. */
+  compact?: boolean;
 }
 
 /**
@@ -59,6 +63,7 @@ export default function PinnedReading({
   text,
   keywords,
   note,
+  compact = false,
 }: PinnedReadingProps) {
   const tokens = useMemo(() => tokenizeReadingText(text), [text]);
   const ranges = useMemo(
@@ -223,8 +228,12 @@ export default function PinnedReading({
     <section
       ref={sectionRef}
       {...stepAttr}
-      className={`act${act}-substep narrative-step--pinned`}
-      style={{ height: `calc(100svh + ${tokens.length * PX_PER_WORD}px)` }}
+      className={`act${act}-substep narrative-step--pinned${
+        compact ? ' pinned-reading--mobile' : ''
+      }`}
+      style={{
+        height: `calc(100svh + ${tokens.length * (compact ? PX_PER_WORD_MOBILE : PX_PER_WORD)}px)`,
+      }}
     >
       <div className="pinned-stage">
         <div className="w-full max-w-[var(--t-measure)]">

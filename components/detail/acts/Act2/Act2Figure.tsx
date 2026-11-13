@@ -15,9 +15,14 @@ import { ACT2_STEPS } from './act2Steps';
 export default function Act2Figure({
   step,
   isActive,
+  fast = false,
+  compact = false,
 }: {
   step: number;
   isActive: boolean;
+  fast?: boolean;
+  /** Mobile layouts: tighter chips, two-line semester ticks, thinner bars. */
+  compact?: boolean;
 }) {
   const { active, setHover } = useEmphasis();
   const current =
@@ -42,11 +47,13 @@ export default function Act2Figure({
       }
       onNoteLeave={() => setHover(null)}
     >
-      <div className="h-full w-full pb-[150px] pt-10">
+      <div className="figure-chart-body h-full w-full pb-[144px] pt-10">
         <Act2Visual
           step={step}
           isActive={isActive}
           emphasis={current?.emphasis ?? null}
+          fast={fast}
+          compact={compact}
         />
       </div>
     </FigureFrame>

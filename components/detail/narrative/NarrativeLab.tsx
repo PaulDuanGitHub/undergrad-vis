@@ -28,12 +28,12 @@ const READ_WINDOW_END = 0.25;
 /** Pinned runway per word: the reading head's scroll budget. */
 const PINNED_PX_PER_WORD = 44;
 
-interface LabStep {
+export interface LabStep {
   id: string;
   text: string;
 }
 
-const LAB_STEPS: readonly LabStep[] = [
+export const LAB_STEPS: readonly LabStep[] = [
   {
     id: '01',
     text: `Here lies every single workfile I’ve created across five years of undergraduate courses. In total there are 567 files, each one a cube in this 3D space, and each one an assignment, a report, or a piece of code. Hover over a cube to take a glance at what it holds.`,
