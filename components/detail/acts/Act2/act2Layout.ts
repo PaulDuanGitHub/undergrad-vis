@@ -59,16 +59,19 @@ export function buildLabelLayout(
   const glossW = Math.min(0.9 * svgWidth, 896);
   const badgeX = (svgWidth - glossW) / 2;
 
-  // On compact screens the 16 descriptions have to fit the visual pane; keep
-  // the designed 19.5px rows where there is room and tighten the row/group gaps,
-  // shrinking the row height only as much as the pane requires.
+  // The two-column minimum (960×640) gives Act 2 only ~330px of SVG height.
+  // The desktop 19.5px row + 10/24px gaps need 504px, so below 500px the
+  // glossary switches to the compact gap rhythm and fits its 16 rows.
+  const fit = compact || svgHeight < 500;
   const groupCount = groupedExtensions.length;
-  const rowGap = compact ? 5 : ROW_GAP;
-  const groupGap = compact ? 14 : GROUP_GAP;
-  const fitPad = compact ? 16 : 0;
+  const rowGap = fit ? 5 : ROW_GAP;
+  const groupGap = fit ? 14 : GROUP_GAP;
+  const fitPad = fit ? 16 : 0;
   const fitRowH =
     (svgHeight - fitPad - (N - groupCount) * rowGap - (groupCount - 1) * groupGap) / N;
-  const rowH = compact ? Math.max(12, Math.min(ROW_H, fitRowH)) : ROW_H;
+  const rowH = fit
+    ? Math.max(compact ? 12 : 14, Math.min(ROW_H, fitRowH))
+    : ROW_H;
   const glossH = N * rowH + (N - groupCount) * rowGap + (groupCount - 1) * groupGap;
 
   const flowY: Record<string, number> = {};
@@ -82,7 +85,7 @@ export function buildLabelLayout(
   });
 
   // ── the even grid (steps 1-3) ──
-  const PAD_Y = compact ? 20 : 30;
+  const PAD_Y = fit ? 20 : 30;
   const INNER_H = Math.max(80, svgHeight - PAD_Y * 2);
   const evenCenterY = (i: number) => PAD_Y + (i * INNER_H) / Math.max(1, N - 1);
 

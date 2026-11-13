@@ -23,7 +23,7 @@ const GY = Math.sin(THETA) * Math.SQRT1_2 * ZOOM; // 0.6124 at 45°
 const UZ = Math.cos(THETA) * ZOOM; // 0.8660 at 45° — vertical foreshortening
 
 const S = 120; // top-face edge, in world units
-const H = S; // extrusion — a true cube
+const H = 80; // extrusion
 const W = 2 * GX * S; // stage width — exactly the width of the top rhombus
 const RH = 2 * GY * S; // rendered height of the top rhombus
 const UZS = UZ * H; // rendered height of the cube's vertical edge

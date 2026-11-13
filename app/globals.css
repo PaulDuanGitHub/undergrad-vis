@@ -108,7 +108,7 @@
 }
 
 /* Compact scale: the narrative pane on phones. Same roles, one step down. */
-@media (max-width: 1023px) {
+@media (max-width: 959px) {
   :root {
     --t-size-masthead: 2.5rem;
     --t-size-act: 1.5rem;
@@ -471,6 +471,13 @@
     margin-top: 0.7rem;
   }
 
+  /* The statement opener's 72svh is a desktop chapter break. In the phone
+     pane the compact opener must be content-sized, otherwise its centered
+     copy lands below the 35dvh narrative viewport. */
+  .narrative-act--compact.narrative-act--statement {
+    min-height: 0;
+  }
+
   .t-deck--left {
     max-width: 30ch;
     margin-inline: 0;
@@ -554,6 +561,16 @@
 
   .note-brush[data-active="true"] {
     transform: scaleX(1);
+  }
+
+  /* The focused deadline window fades in over the track chart. */
+  .twelve-hour-shade {
+    animation: shade-in 260ms ease-out both;
+  }
+
+  @keyframes shade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   /* The annotation rail that pairs with distributed keywords. One row per
@@ -670,6 +687,267 @@
   .t-note--method .t-note__label {
     color: var(--t-muted);
   }
+}
+
+/* ── Two-column minimum stage ─────────────────────────────────────────
+   The stage stops shrinking at 640px tall. Below that the chart column stays
+   sticky and the detail scroller grows a vertical bar; the visual never
+   scrolls out of view. The detail scroller reserves its gutter so crossing
+   the 640px height does not flicker the layout width. */
+.detail-column--visual {
+  position: sticky;
+  top: max(0px, calc((100dvh - 920px) / 2));
+  height: min(100dvh, 920px);
+  min-height: 640px;
+}
+
+
+/* ── Mobile scroll story ──────────────────────────────────────────────
+   The chart is sticky under a 44px top bar; the PinnedReading stage sits in
+   the remaining viewport and reads with a 22px/word runway. The colophon is
+   the last block in the scroller and rides over the sticky figure. */
+.mobile-story {
+  --ms-topbar: 44px;
+  --ms-chart: 58dvh;
+  --ms-text: 42dvh;
+}
+
+/* Landscape phones read as a two-column spread only when a real phone lies
+   sideways. A narrow, short window (e.g. 362×335) would split 199/163px, so
+   below the `sm` width it stays stacked. Note the desktop/two-column story
+   takes over at 640px wide in landscape anyway. */
+@media (orientation: landscape) and (min-width: 480px) and (max-height: 500px) {
+  /* Landscape is a 55/45 two-column spread, not a short stacked chart. */
+  .mobile-story {
+    --ms-chart: 100dvh;
+    --ms-text: 100dvh;
+  }
+
+  .mobile-scroll {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .mobile-scroll-visual {
+    width: 55%;
+    min-width: 0;
+    height: 100dvh;
+    border-right: 1px solid #f1f5f9;
+    border-bottom: 0;
+  }
+
+  .mobile-scroll-body {
+    width: 45%;
+    min-width: 0;
+  }
+
+  .mobile-scroll .pinned-reading--mobile .pinned-stage {
+    top: 0;
+    height: 100dvh;
+  }
+
+  /* At 390px tall the notes rail would leave the chart ~50px. Drop it in
+     landscape; the copy still carries the same annotation values. */
+  .mobile-story .detail-figure-notes {
+    display: none;
+  }
+
+  .mobile-story .detail-figure-visual > div {
+    padding-bottom: 0.5rem;
+  }
+}
+
+/* The story's top bar carries the figure number/title itself. */
+.mobile-story .detail-figure-header {
+  display: none;
+}
+
+/* Portrait: the notes would eat the 42dvh narrative stage; hide them so the
+   58dvh chart can use the full visual. */
+.mobile-story .detail-figure-notes {
+  display: none;
+}
+
+.mobile-story .figure-chart-body {
+  /* Room for the semester ticks that hang below the bars / stream: they are
+     drawn under the SVG, so without this they spill past the sticky pane. */
+  padding-bottom: 2.5rem;
+  /* The story hides the FigureFrame header, so the 40px `pt-10` the frame
+     reserves for it is dead space above the sticky chart. Reclaim it. */
+  padding-top: 0.25rem;
+}
+
+.mobile-scroll {
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-scroll .pinned-reading--mobile .pinned-stage {
+  top: var(--ms-chart);
+  height: var(--ms-text);
+  padding-block: 1rem;
+  overflow-y: auto;
+}
+
+.mobile-scroll .pinned-reading--mobile .pinned-stage > div {
+  max-width: 100%;
+}
+
+.mobile-scroll .narrative-act--compact {
+  /* A chapter page owns the reading band while it is in it: content-sized
+     openers sat against the sticky chart's edge, so the kicker arrived
+     half-clipped. Centred in the 42dvh band it reads as a page. */
+  min-height: var(--ms-text);
+  padding-block: 1rem;
+  margin-bottom: 0.6rem;
+}
+
+/* The colophon's first line clears the fixed top bar and the home indicator. */
+.mobile-scroll-footer {
+  padding-top: calc(var(--ms-topbar) + env(safe-area-inset-top) + 1.5rem);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@media (orientation: landscape) and (max-width: 959px) {
+  .detail-column--visual {
+    min-height: 360px;
+  }
+
+  /* 667×375 has only ~400px for the visual. Give it back the padding and
+     vertical chrome that the desktop notes were taking. */
+  .detail-column--narrative {
+    padding-inline: 1rem;
+    padding-top: 6rem;
+  }
+
+  .detail-column--visual {
+    padding: 1rem;
+  }
+
+  .detail-figure-header {
+    padding-bottom: 1rem;
+  }
+
+  .detail-figure-notes {
+    display: none;
+  }
+
+  .detail-figure-notes > div {
+    gap: 0.5rem;
+  }
+
+  .t-statement {
+    font-size: 2rem;
+  }
+
+  .figure-note-lead {
+    font-size: 20px;
+  }
+
+  .figure-note-text {
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+
+  .figure-chart-body {
+    padding-bottom: 0.5rem;
+    padding-top: 0.5rem;
+  }
+
+  :root {
+    --t-size-lede: 0.9375rem;
+    --t-size-body: 0.9375rem;
+    --t-size-deck: 1rem;
+  }
+}
+
+/* Small-laptop / pad-landscape two-column: a narrower narrative and less
+   padding give Act 1's 3D field, Act 2's labels and Act 3's tracks more
+   horizontal room, while the step copy steps up one size. */
+@media (min-width: 960px) and (max-width: 1199px) {
+  :root {
+    --t-size-lede: 1.125rem;
+    --t-size-body: 1.125rem;
+    --t-size-deck: 1.25rem;
+  }
+
+  .detail-column--narrative {
+    width: 37%;
+    padding-inline: 1.5rem;
+  }
+
+  .detail-column--visual {
+    width: 63%;
+    padding: 1.5rem;
+  }
+}
+
+[data-detail-scroller],
+.detail-narrative {
+  scrollbar-gutter: stable;
+}
+
+/* ── Responsive boundary overlay (dev only) ───────────────────────────
+   Toggle with ?boxes=1, the BOXES button, or Shift+D. Outlines only:
+   no layout, no paint order, no production markup. */
+.debug-boxes .detail-stage,
+.debug-boxes .detail-shell {
+  outline: 2px solid rgba(236, 72, 153, 0.75);
+  outline-offset: -2px;
+}
+
+.debug-boxes .detail-column--narrative,
+.debug-boxes .detail-narrative-pane,
+.debug-boxes .detail-narrative {
+  outline: 1px dashed rgba(37, 99, 235, 0.8);
+  outline-offset: -1px;
+}
+
+.debug-boxes .detail-column--visual,
+.debug-boxes .detail-visual-pane {
+  outline: 1px dashed rgba(5, 150, 105, 0.8);
+  outline-offset: -1px;
+}
+
+.debug-boxes .detail-chart-pane {
+  outline: 1px dotted rgba(217, 119, 6, 0.85);
+  outline-offset: -1px;
+}
+
+.debug-boxes .detail-chart-layer {
+  outline: 1px dashed rgba(217, 119, 6, 0.65);
+  outline-offset: -3px;
+}
+
+.debug-boxes .detail-figure {
+  outline: 1px solid rgba(124, 58, 237, 0.8);
+  outline-offset: -1px;
+}
+
+.debug-boxes .detail-figure-header,
+.debug-boxes .detail-figure-notes {
+  outline: 1px dashed rgba(219, 39, 119, 0.8);
+  outline-offset: -2px;
+}
+
+.debug-boxes .narrative-act {
+  outline: 1px dotted rgba(100, 116, 139, 0.7);
+  outline-offset: 0;
+}
+
+.debug-boxes .narrative-step--pinned {
+  outline: 1px dashed rgba(14, 165, 233, 0.65);
+  outline-offset: -2px;
+}
+
+.debug-boxes .pinned-stage {
+  outline: 1px dotted rgba(14, 165, 233, 0.9);
+  outline-offset: -2px;
+}
+
+.debug-boxes .detail-nav {
+  outline: 1px dotted rgba(217, 119, 6, 0.8);
+  outline-offset: -1px;
 }
 
 body {

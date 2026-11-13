@@ -13,9 +13,13 @@ import { ACT3_STEPS } from './act3Steps';
 export default function Act3Figure({
   step,
   isActive,
+  fast = false,
+  compact = false,
 }: {
   step: number;
   isActive: boolean;
+  fast?: boolean;
+  compact?: boolean;
 }) {
   const { active, setHover } = useEmphasis();
   const current =
@@ -40,11 +44,13 @@ export default function Act3Figure({
       }
       onNoteLeave={() => setHover(null)}
     >
-      <div className="h-full w-full pb-[150px] pt-10">
+      <div className="figure-chart-body h-full w-full pb-[144px] pt-10">
         <Act3Visual
           step={step}
           isActive={isActive}
           emphasis={current?.emphasis ?? null}
+          fast={fast}
+          compact={compact}
         />
       </div>
     </FigureFrame>

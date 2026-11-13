@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 
@@ -24,6 +25,14 @@ interface StateMachineConfig {
    * to `states[step]`; the layer wrapper's own fade covers that case.
    */
   onJump?: (from: number, to: number) => void;
+
+  /**
+   * Optional multiplier for named step transitions. Mobile scroll prototypes
+   * use this to finish the chart's morph within the scroll handoff instead of
+   * lagging a beat behind the incoming copy. The multiplier is applied to the
+   * global timeline only for the transition window, then restored.
+   */
+  speed?: number;
 }
 
 export function useGSAPStateMachine({
@@ -33,6 +42,7 @@ export function useGSAPStateMachine({
   states,
   transitions,
   onJump,
+  speed = 1,
 }: StateMachineConfig) {
   const prevStep = useRef(step);
   const reducedMotion = useReducedMotion();
@@ -57,7 +67,16 @@ export function useGSAPStateMachine({
     }
     // If a named transition exists, play it
     else if (transitions[transitionKey]) {
-      transitions[transitionKey]();
+      if (speed !== 1) {
+        const previous = gsap.globalTimeline.timeScale();
+        gsap.globalTimeline.timeScale(previous * speed);
+        transitions[transitionKey]();
+        gsap.delayedCall(2.2 / speed, () => {
+          gsap.globalTimeline.timeScale(previous);
+        });
+      } else {
+        transitions[transitionKey]();
+      }
     }
     // Otherwise, animate a non-adjacent jump if the act knows how
     else if (from !== step && onJump) {

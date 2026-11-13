@@ -12,10 +12,17 @@ import Act2Narrative from '@/components/detail/acts/Act2/Act2Narrative';
 import Act2Figure from '@/components/detail/acts/Act2/Act2Figure';
 import Act3Narrative from '@/components/detail/acts/Act3/Act3Narrative';
 import Act3Figure from '@/components/detail/acts/Act3/Act3Figure';
-import DetailViewMd from '@/components/detail/DetailViewMd';
 import { Kicker } from '@/components/detail/narrative/ReportType';
 import { EmphasisProvider } from '@/components/detail/narrative/EmphasisContext';
 import Footer from './Footer';
+import ResponsiveDebug from './ResponsiveDebug';
+import MobileScrollStory from './mobile/MobileScrollStory';
+import {
+  LANDSCAPE_MIN_HEIGHT,
+  TWO_COLUMN_MAX_WIDTH,
+  TWO_COLUMN_MIN_HEIGHT,
+  TWO_COLUMN_QUERY,
+} from './responsive';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -137,12 +144,21 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
 
   // ── Breakpoint detection ──
   const [isMdDown, setIsMdDown] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(false);
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 1023px)');
-    const update = () => setIsMdDown(mq.matches);
+    const mq = window.matchMedia(TWO_COLUMN_QUERY);
+    const orientation = window.matchMedia('(orientation: landscape)');
+    const update = () => {
+      setIsMdDown(!mq.matches);
+      setIsLandscape(orientation.matches);
+    };
     update();
     mq.addEventListener('change', update);
-    return () => mq.removeEventListener('change', update);
+    orientation.addEventListener('change', update);
+    return () => {
+      mq.removeEventListener('change', update);
+      orientation.removeEventListener('change', update);
+    };
   }, []);
 
   // ── Pull-to-exit state & logic ──
@@ -262,7 +278,7 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
     // in, so every act/substep trigger still lands on the copy it belongs to.
     document.fonts?.ready.then(() => ScrollTrigger.refresh());
 
-  }, { scope: scrollRef });
+  }, { scope: scrollRef, dependencies: [isMdDown] });
 
   // ── Keyboard: focus the scroller so ↑/↓, PageUp/PageDown, Home/End scroll the
   // story natively (the browser owns the step distances; ScrollTrigger follows
@@ -272,9 +288,29 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
     scrollRef.current?.focus({ preventScroll: true });
   }, [isDetailVisible, isMdDown, scrollRef]);
 
-  // ── sm / md: use DetailViewMd ──
+  // The story owns the viewport while open. Locking the page keeps the
+  // browser's document scrollbar from competing with the detail scroller —
+  // the most visible cause of the short-viewport scrollbar flicker.
+  useEffect(() => {
+    if (!isDetailVisible) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [isDetailVisible]);
+
+  // ── sm / md: the scroll story ──
+  // Below the two-column minimum the same story is read as one continuous
+  // scroll (sticky chart over a pinned reading band), not as a stepper.
   if (isMdDown) {
-    return isDetailMounted ? <DetailViewMd isDetailVisible={isDetailVisible} initialAct={initialAct} onExit={onExit} /> : null;
+    return isDetailMounted ? (
+      <MobileScrollStory
+        isDetailVisible={isDetailVisible}
+        initialAct={initialAct}
+        onExit={onExit}
+      />
+    ) : null;
   }
 
   // The step the reader is actually in. Only this step may publish a reading
@@ -302,7 +338,7 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
       tabIndex={-1}
       data-detail-scroller
       data-report
-      className={`absolute inset-0 overflow-y-auto overscroll-contain scroll-smooth transition-opacity ease-out ${
+      className={`absolute inset-0 overflow-y-auto overscroll-contain scroll-smooth bg-surface transition-opacity ease-out ${
         isDetailVisible
           ? "duration-1000 opacity-100 pointer-events-auto z-10"
           : "duration-200 opacity-0 pointer-events-none"
@@ -329,10 +365,20 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
         </svg>
       </div>
 
-      <div ref={contentRef} className="flex relative bg-surface text-text-primary h-fit">
+      <div
+        ref={contentRef}
+        className="detail-stage relative flex bg-surface text-text-primary"
+        style={{
+          minHeight: isLandscape
+            ? LANDSCAPE_MIN_HEIGHT
+            : TWO_COLUMN_MIN_HEIGHT,
+          maxWidth: TWO_COLUMN_MAX_WIDTH,
+          marginInline: 'auto',
+        }}
+      >
 
         {/* Left: scrollable narrative text, set like a printed report */}
-        <div className="w-[35%] flex flex-col items-center pt-40 px-8 select-text">
+        <div className="detail-column detail-column--narrative w-[40%] flex flex-col items-center pt-40 px-8 select-text">
           <div className="w-full flex flex-col items-center">
             {/* Masthead — the report's title block. */}
             <header className="narrative-act narrative-act--statement narrative-intro">
@@ -353,16 +399,17 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
         </div>
 
         {/* Right: pinned chart layers */}
-        <div className="w-[65%] h-dvh sticky top-0 flex items-center justify-center p-8">
-          <div ref={rightChartRef} className="relative w-full h-full flex items-center justify-center">
-            <div className="chart-layer absolute inset-0 flex items-center justify-center"><Act1Figure step={act1Step} isActive={activeAct === 1} visible={isDetailVisible} started={act1Started} /></div>
-            <div className="chart-layer absolute inset-0 flex items-center justify-center"><Act2Figure isActive={activeAct === 2} step={act2Step} /></div>
-            <div className="chart-layer absolute inset-0 flex items-center justify-center"><Act3Figure isActive={activeAct === 3} step={act3Step} /></div>
+        <div className="detail-column detail-column--visual w-[60%] flex items-center justify-center p-8">
+          <div ref={rightChartRef} className="detail-chart-pane relative w-full h-full flex items-center justify-center">
+            <div className="chart-layer detail-chart-layer absolute inset-0 flex items-center justify-center"><Act1Figure step={act1Step} isActive={activeAct === 1} visible={isDetailVisible} started={act1Started} /></div>
+            <div className="chart-layer detail-chart-layer absolute inset-0 flex items-center justify-center"><Act2Figure isActive={activeAct === 2} step={act2Step} /></div>
+            <div className="chart-layer detail-chart-layer absolute inset-0 flex items-center justify-center"><Act3Figure isActive={activeAct === 3} step={act3Step} /></div>
           </div>
         </div>
       </div>
 
       <Footer onExit={onExit}/>
+      <ResponsiveDebug />
     </div>
     </EmphasisProvider>
   );

@@ -25,7 +25,7 @@ export const ACT3SUBSTEPS: { step: number; text: ReactNode; note?: string }[] = 
           <b>all panic, no pacing</b>.
         </p>
       </>,
-    note: 'Hover a band to read its share; click to pin it.',
+    note: 'The shading marks the deadline window while a keyword is focused.',
   },
   {
     step: 1,
@@ -41,7 +41,7 @@ export const ACT3SUBSTEPS: { step: number; text: ReactNode; note?: string }[] = 
     step: 2,
     text:
       <>
-        Now all <b>59</b> major assignments compress into a single dense grid. Five years,
+        Now all <b>58</b> major assignments compress into a single dense grid. Five years,
         near <b>24,000</b> commits, squeezed into one view. I am, and apparently always
         have been, a deadline-driven student. <b>54%</b> of all edits were made within the
         last <b>12</b> hours. <b>73%</b> within the last <b>2</b> days.
@@ -61,10 +61,10 @@ export const ACT3SUBSTEPS: { step: number; text: ReactNode; note?: string }[] = 
   },
 ];
 
-export default function Act3Narrative() {
+export default function Act3Narrative({ compact = false }: { compact?: boolean }) {
   return (
     <>
-      <ActOpener act={3} />
+      <ActOpener act={3} compact={compact} />
       {ACT3_STEPS.map((step, index) => (
         <PinnedReading
           key={step.fig}
@@ -73,6 +73,7 @@ export default function Act3Narrative() {
           text={step.text}
           keywords={step.keywords}
           note={step.note}
+          compact={compact}
         />
       ))}
     </>
