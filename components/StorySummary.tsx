@@ -60,7 +60,7 @@ export default function StorySummary() {
         </a>
         , the build process is written up in{" "}
         <a
-          href="https://paulduangithub.github.io/blog/2026/07/23/From-3D-to-D3-Visualizing-550-Files-and-5-Years-of-University/"
+          href="https://xianzhaoduan.com/blog/2026/07/23/From-3D-to-D3-Visualizing-550-Files-and-5-Years-of-University/"
           tabIndex={-1}
         >
           an epilogue blog post

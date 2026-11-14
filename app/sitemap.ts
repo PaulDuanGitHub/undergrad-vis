@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-const SITE_URL = 'https://paulduangithub.github.io/undergrad-vis/';
+const SITE_URL = 'https://xianzhaoduan.com/undergrad-vis/';
 /** Content was last revised with the focus + metadata pass. */
 const LAST_MODIFIED = '2026-11-13';
 
