@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Environment } from "@react-three/drei";
@@ -45,18 +45,19 @@ export default function Landing() {
   const [isCopyOut, setIsCopyOut] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isDetailVisible, setIsDetailVisible] = useState(false);
+  /**
+   * The story owns the viewport: the landing layer (hero copy, hint, scene)
+   * leaves both the Tab order and the accessibility tree. Without this, a
+   * keyboard user can Shift+Tab into the clipped author line, or Tab past the
+   * story's footer into the visually hidden `StorySummary`.
+   */
+  const isLandingHidden = isCopyOut || isDetailOpen;
   /** Keyboard focus on the scene layer — drives the entry hint's focus cue. */
   const [isSceneFocused, setIsSceneFocused] = useState(false);
   const reducedMotion = useReducedMotion();
-  /** `#act2` (any `#actN`) opens the story on that act; `#story` opens it at the top. */
-  const [entryAct, setEntryAct] = useState<1 | 2 | 3 | null>(() => {
-    if (typeof window === "undefined") return null;
-    const match = /^#act([123])$/.exec(window.location.hash);
-    return match ? (Number(match[1]) as 1 | 2 | 3) : null;
-  });
-  /** A deep link was in the URL at load time; open once the intro has finished. */
+  /** `#story` was in the URL at load time; open it once the intro has finished. */
   const [hashEntryPending, setHashEntryPending] = useState(
-    () => typeof window !== "undefined" && /^#(story|act[123])$/.test(window.location.hash)
+    () => typeof window !== "undefined" && window.location.hash === "#story"
   );
   const leftScrollRef = useRef<HTMLDivElement>(null);
   /** The full-screen scene layer: the mouse/touch/keyboard entry point. */
@@ -107,8 +108,6 @@ export default function Landing() {
     if (active && active !== document.body && !sceneRef.current?.contains(active)) {
       active.blur();
     }
-    // A deep link only seeds the first visit; reopening starts at the top.
-    setEntryAct(null);
     setIsDetailVisible(false);
     after(DETAIL_FADE_LEAD, () => setIsDetailOpen(false));
     // A close that never got past its lead (double-clicked during the retract)
@@ -124,8 +123,8 @@ export default function Landing() {
       if (window.history.state?.ugvisDetail) {
         window.history.back();
       } else if (window.location.hash) {
-        // Arrived straight on `#story` / `#act2`: there is no previous entry to
-        // go back to, so drop the hash in place rather than leaving the page.
+        // Arrived straight on `#story`: there is no previous entry to go back
+        // to, so drop the hash in place rather than leaving the page.
         window.history.replaceState(null, "", window.location.pathname + window.location.search);
       }
     }
@@ -135,10 +134,16 @@ export default function Landing() {
   const openDetail = useCallback(() => {
     closingRef.current = false;
     // The scene is about to become `inert` + `aria-hidden`; focus must leave it
-    // first. The panel takes focus itself once it has finished opening.
+    // first. The panel takes focus itself once it has finished opening. The
+    // same applies to the hero copy (the author link): it is hidden with the
+    // scene, and hiding a subtree that still holds focus is invalid.
     sceneRef.current?.blur();
+    const active = document.activeElement as HTMLElement | null;
+    if (active && active !== document.body && !sceneRef.current?.contains(active)) {
+      active.blur();
+    }
     if (typeof window !== "undefined") {
-      const hasStoryHash = /^#(story|act[123])$/.test(window.location.hash);
+      const hasStoryHash = window.location.hash === "#story";
       if (window.history.state?.ugvisDetail !== true && !hasStoryHash) {
         // `#story` makes the open state restorable, shareable and back-button
         // safe: the entry below it is the landing view.
@@ -168,17 +173,10 @@ export default function Landing() {
 
   useEffect(() => {
     const onPopState = () => {
-      const hash = window.location.hash;
-      const actMatch = /^#act([123])$/.exec(hash);
-      // The hash is the source of truth for history moves: back INTO `#story`
-      // reopens the story, back OUT of it closes it.
-      if (hash === "#story" || actMatch) {
-        const act = actMatch ? (Number(actMatch[1]) as 1 | 2 | 3) : null;
-        if (isCopyOutRef.current || isDetailOpenRef.current) {
-          if (act) setEntryAct(act);
-          return;
-        }
-        setEntryAct(act);
+      // `#story` is the only URL state: back INTO it reopens the story, back
+      // OUT of it closes the story.
+      if (window.location.hash === "#story") {
+        if (isCopyOutRef.current || isDetailOpenRef.current) return;
         openDetail();
         return;
       }
@@ -228,25 +226,12 @@ export default function Landing() {
     isCopyOut || isDetailOpen ? closeDetail() : openDetail();
   };
 
-  // Opening always starts at the top of the story — unless a `#actN` deep link
-  // asked for a specific act, in which case land on that act's opener.
+  // Opening always starts at the top of the story. The panel keeps its scroll
+  // position while it is closed, so reopening has to reset it explicitly.
   useEffect(() => {
-    if (!isDetailOpen || !leftScrollRef.current) return;
-    const scroller = leftScrollRef.current;
-    const target = entryAct
-      ? scroller.querySelectorAll<HTMLElement>(".narrative-text")[entryAct - 1]
-      : null;
-    if (!target) {
-      scroller.scrollTo({ top: 0, behavior: "instant" });
-      return;
-    }
-    const top =
-      target.getBoundingClientRect().top -
-      scroller.getBoundingClientRect().top +
-      scroller.scrollTop -
-      120;
-    scroller.scrollTo({ top: Math.max(top, 0), behavior: "instant" });
-  }, [isDetailOpen, entryAct]);
+    if (!isDetailOpen) return;
+    leftScrollRef.current?.scrollTo({ top: 0, behavior: "instant" });
+  }, [isDetailOpen]);
 
   // ── Touch swipe: up → enter detail, down → exit detail ──
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -403,85 +388,91 @@ export default function Landing() {
     >
       <LoadingOverlay onLoaded={handleLoaded} />
 
-      {/* The copy block itself never fades or slides — the per-line clip wipe
-          below is the only motion, in both directions. */}
+      {/* The cover. Set in the report's own voices — Instrument Serif
+          masthead, Newsreader standfirst, mono labels — so the first screen
+          and the story read as one artifact. The per-line clip wipe below is
+          still the only motion. */}
       <div
         ref={introTextRef}
-        className="fixed top-0 flex flex-col flex-1 items-center justify-start pointer-events-none z-10"
+        inert={isLandingHidden}
+        aria-hidden={isLandingHidden}
+        className="fixed inset-x-0 top-0 flex flex-col items-center pointer-events-none z-10"
       >
-        {/* Kicker: a mono label (the site's second voice — the counters and the
-            charts already speak it) opened by the first stroke of the wipe. */}
-        <div className="mt-6 sm:mt-10 flex items-center gap-3 sm:gap-4 font-mono text-[10px] sm:text-xs uppercase tracking-[0.3em] text-text-secondary">
-          <span data-rule aria-hidden className="block h-px w-6 sm:w-10 shrink-0 bg-text-secondary/50" />
-          <span data-reveal>My&nbsp;2021&ndash;2026</span>
-        </div>
+        <div className="cover-block mt-7 sm:mt-10 flex w-full max-w-[52rem] flex-col items-center px-6">
+          {/* The overline opens the cover with the same stroke as the wipe. */}
+          <div data-reveal className="flex items-center gap-3">
+            <span data-rule aria-hidden className="block h-px w-8 shrink-0 bg-brand/50" />
+            <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-brand">
+              A report in three acts
+            </span>
+          </div>
 
-        {/* Marker band instead of a hairline: `kraft` at full opacity — a
-            material (manila/paper, the family the desk and its baked shadows
-            already live in) rather than a brand accent, so it warms the hero
-            without adding a hue the 3D scene can't support. Ink is warmed to
-            `ink-warm` to match the wood; ink-on-kraft measures 10.8:1, where
-            the same band in opaque brand would be 3.4:1 (dark) / 1.6:1
-            (brand-900) and force white ink, i.e. the poster variant.
-            Height/offset are em-based and the top edge sits mid x-height, so it
-            "invades" the lower part of the type at every breakpoint.
-            `isolate` on the h1 makes the band paint behind the text (a `-z-*`
-            child without it can fall behind the page background). */}
-        <h1
-          data-reveal
-          className="relative isolate my-4 sm:my-6 text-4xl sm:text-5xl md:text-6xl text-ink-warm tracking-tight"
-        >
-          Productivity
-          <span
-            data-rule
-            aria-hidden
-            className="absolute left-0 -z-10 h-[0.46em] w-full -bottom-[0.055em] bg-kraft"
-          />
-        </h1>
+          <h1 data-reveal className="cover-masthead mt-4 sm:mt-5">
+            Productivity
+          </h1>
 
-        <div data-reveal className="italic text-center px-4 text-text-secondary text-sm sm:text-base">
-          A <span className="font-bold">visualization</span> of{" "}
-          <span className="font-mono not-italic tabular-nums text-ink-warm">567</span> workfiles created during my undergraduate.
-        </div>
-        <div data-reveal className="mt-4 sm:mt-6 pointer-events-auto">
-          By <a href="https://www.xianzhaoduan.com" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">Paul Duan</a>
+          <p data-reveal className="cover-deck mt-4 sm:mt-5">
+            Five years of coursework, read from{" "}
+            <span className="t-figure">567</span> files&rsquo; version history.
+          </p>
+
+          <p data-reveal className="mt-5 font-mono text-[10px] uppercase tracking-[0.24em] text-text-secondary">
+            BY <a
+              href="https://www.xianzhaoduan.com"
+              target="_blank"
+              rel="noreferrer"
+              className="pointer-events-auto underline decoration-text-secondary/30 underline-offset-[0.35em] transition-colors hover:text-brand"
+            >
+              Paul Duan
+            </a>
+          </p>
+
+          <button
+            data-reveal
+            type="button"
+            onClick={toggleView}
+            className="cover-open group pointer-events-auto mt-6 inline-flex items-center gap-3"
+          >
+            <span className="font-mono text-[10px] uppercase tracking-[0.26em]">
+              Open the report
+            </span>
+            <span
+              aria-hidden
+              className="text-brand transition-transform duration-300 group-hover:translate-x-1"
+            >
+              →
+            </span>
+          </button>
         </div>
       </div>
 
-      {/* The desk is the entry point; without a cue neither the tap nor the
-          swipe-up exists on a phone. The pill is also the scene's focus cue:
-          the scene layer fills the window, so it can't wear a ring of its own. */}
+      {/* The desk is still the entry point, but the cover now names the
+          affordance. This line only explains the 3D gesture — and doubles as
+          the scene's keyboard focus cue, since the scene fills the window and
+          cannot wear a ring of its own. */}
       <div
-        className={`pointer-events-none fixed left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 rounded-full px-5 py-2 transition-opacity duration-700 ${
+        aria-hidden={isLandingHidden}
+        className={`cover-hint pointer-events-none fixed inset-x-0 z-20 flex justify-center transition-opacity duration-700 ${
           isCopyReady && !isCopyOut ? "opacity-100" : "opacity-0"
-        } ${isSceneFocused ? "ring-1 ring-brand/60" : ""}`}
-        style={{ bottom: "calc(1.25rem + env(safe-area-inset-bottom))" }}
+        }`}
+        style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
       >
         <span
-          className={`font-mono text-[10px] uppercase tracking-[0.3em] ${
-            isSceneFocused ? "text-brand" : "text-text-secondary"
+          className={`font-mono text-[9px] uppercase tracking-[0.32em] transition-colors duration-300 ${
+            isSceneFocused ? "text-brand" : "text-text-secondary/70"
           }`}
         >
-          <span className="sm:hidden">Tap or swipe up</span>
-          <span className="hidden sm:inline">Click, scroll or press Enter</span>
+          <span className="sm:hidden">Tap the desk or swipe up</span>
+          <span className="hidden sm:inline">
+            Click the desk, scroll, or press Enter
+          </span>
         </span>
-        <svg
-          width="14"
-          height="9"
-          viewBox="0 0 14 9"
-          fill="none"
-          aria-hidden="true"
-          className={isSceneFocused ? "text-brand/70" : "text-text-secondary/70"}
-        >
-          <path d="M1 7.5L7 1.5L13 7.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
       </div>
 
       <DetailView
         scrollRef={leftScrollRef}
         isDetailVisible={isDetailVisible}
         isDetailMounted={isCopyOut || isDetailVisible}
-        initialAct={entryAct}
         onExit={closeDetail}
       />
 
@@ -489,24 +480,35 @@ export default function Landing() {
         ref={sceneRef}
         role="button"
         data-scene
-        tabIndex={isCopyOut || isDetailOpen ? -1 : 0}
+        tabIndex={isLandingHidden ? -1 : 0}
         aria-label="The desk scene. Open the data story: 567 workfiles, 34 courses, five years."
         aria-expanded={isDetailOpen}
-        aria-hidden={isCopyOut || isDetailOpen}
-        inert={isCopyOut || isDetailOpen}
+        aria-hidden={isLandingHidden}
+        inert={isLandingHidden}
         className={`absolute inset-0 z-0 ${isLoaded ? "cursor-pointer" : "cursor-wait"}`}
         onClick={toggleView}
         onKeyDown={handleSceneKeyDown}
-        onFocus={() => setIsSceneFocused(true)}
+        onFocus={() =>
+          // The cue is a *keyboard* focus cue. Closing the story puts focus back
+          // here for keyboard users, but a pointer close would otherwise leave
+          // the hint ringed and red as if it had been tabbed to.
+          setIsSceneFocused(sceneRef.current?.matches(':focus-visible') ?? false)
+        }
         onBlur={() => setIsSceneFocused(false)}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         data-touch-lock
       >
+        {/* The paper animation owns the frames until it has covered the desk.
+            Once `isDetailVisible` flips, the story panel is opaque and the
+            landing canvas is pure background: stop the loop so the hidden
+            scene is not still drawing at 60 fps behind it. Closing flips it
+            back before the paper starts reversing. */}
         <Canvas
           role="img"
           aria-label="A wooden desk in warm light, seen from above: a sheet of paper filling the centre, with a mug, a pencil and a small plant around it. The paper becomes the story."
           dpr={[1, 1.75]}
+          frameloop={isDetailVisible ? "never" : "always"}
           gl={{ toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.0, alpha: true, antialias: true }}
           camera={{ fov: 45, position: INTRO_CAMERA_POSITION.toArray() }}
         >
@@ -522,4 +524,4 @@ export default function Landing() {
 }
 
 // Preload the 3D model
-useGLTF.preload("./model/desk_web_3_baked_animation.glb");
+useGLTF.preload("./model/desk_web_4_baked_animation.glb");

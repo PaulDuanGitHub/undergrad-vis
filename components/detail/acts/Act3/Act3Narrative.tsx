@@ -16,8 +16,8 @@ export const ACT3SUBSTEPS: { step: number; text: ReactNode; note?: string }[] = 
       <>
         <p>
           Freshman year: each track is an assignment with more than <b>100</b> versions,
-          and each bubble is a burst of file saves. Notice how the bubbles cluster at
-          the right edge — the deadline. <b>61%</b> of all edits happen within the last{' '}
+          and each dot is a burst of file saves. Notice how the dots cluster at
+          the right edge — the deadline. <b>61%</b> of all versions happen within the last{' '}
           <b>12</b> hours, and <b>22%</b> with <b>12–24</b> hours left. The classic
           pattern of a beginner:
         </p>
@@ -32,9 +32,9 @@ export const ACT3SUBSTEPS: { step: number; text: ReactNode; note?: string }[] = 
     text:
       <>
         Four years later: the last year. The courses are harder — machine learning, NLP
-        — and the projects are larger. But look at the bubble distribution. The right
+        — and the projects are larger. But look at the distribution. The right
         edge still dominates. The tools improved; the habits didn’t. <b>37%</b> of all
-        edits happened within the last <b>12</b> hours.
+        versions happened within the last <b>12</b> hours.
       </>,
   },
   {
@@ -42,8 +42,8 @@ export const ACT3SUBSTEPS: { step: number; text: ReactNode; note?: string }[] = 
     text:
       <>
         Now all <b>58</b> major assignments compress into a single dense grid. Five years,
-        near <b>24,000</b> commits, squeezed into one view. I am, and apparently always
-        have been, a deadline-driven student. <b>54%</b> of all edits were made within the
+        near <b>24,000</b> versions, squeezed into one view. I am, and apparently always
+        have been, a deadline-driven student. <b>54%</b> of all versions were made within the
         last <b>12</b> hours. <b>73%</b> within the last <b>2</b> days.
       </>,
   },
@@ -51,13 +51,13 @@ export const ACT3SUBSTEPS: { step: number; text: ReactNode; note?: string }[] = 
     step: 3,
     text:
       <>
-        When exactly does the work happen? This heatmap maps <b>~43,000</b> file edits
+        When exactly does the work happen? This heatmap maps <b>~43,000</b> versions
         across days of the week and hours of the day. Weekend evenings burn brightest.{' '}
         <b>8pm</b>, the undisputed peak of productivity. Weekends are not spared: a full
-        third of all edits happen on <b>Saturday and Sunday</b>. Mornings, by contrast,
+        third of all versions happen on <b>Saturday and Sunday</b>. Mornings, by contrast,
         are almost wasted.
       </>,
-    note: 'Tap a cell to read that hour’s file count.',
+    note: 'Tap a cell to read that hour’s version count.',
   },
 ];
 

@@ -988,7 +988,7 @@ export default function Act2Visual({
                   top: gSpot.y - layout.rowH / 2,
                   left: layout.badgeX + BADGE_W,
                   height: layout.rowH,
-                  opacity: isDimmed ? 0.2 : 1,
+                  opacity: isDimmed ? 0.4 : 1,
                   transition: 'opacity 0.3s ease',
                 }}
                 onMouseEnter={() => handleHover(key)}
@@ -1064,7 +1064,7 @@ export default function Act2Visual({
             {PS.rightNodeData.map(({ course, y }) => {
               const isCourseHighlighted = highlightedCourses.has(course);
               const anyHovered = effectiveKey !== null;
-              const opacity = !anyHovered ? 0.8 : isCourseHighlighted ? 1 : 0.2;
+              const opacity = !anyHovered ? 0.9 : isCourseHighlighted ? 1 : 0.4;
 
               return (
                 <g
@@ -1089,7 +1089,7 @@ export default function Act2Visual({
                     <text
                       textAnchor="start"
                       dominantBaseline="central"
-                      className={`font-serif tracking-wide ${compact ? 'text-[9px]' : 'text-[10px]'}`}
+                      className={`font-serif tracking-wide ${compact ? 'text-[10px]' : 'text-[11px]'}`}
                       fill={isCourseHighlighted ? brand600 : '#64748B'}
                     >
                       {course}
@@ -1139,7 +1139,7 @@ export default function Act2Visual({
                   data-dstream={pathStream}
                   d={pathBar}
                   fill={isHovered ? brand500 : color}
-                  opacity={isFaded ? 0.25 : 0.95}
+                  opacity={isFaded ? 0.4 : 1}
                   onMouseEnter={() => handleHover(key)}
                   onMouseLeave={() => handleHover(null)}
                   onClick={() => selectKey(key)}
@@ -1168,7 +1168,7 @@ export default function Act2Visual({
               />
             ))}
           </g>
-          <g className={`font-serif fill-slate-500 uppercase tracking-widest ${compact ? 'text-[9px]' : 'text-[10px]'}`}>
+          <g className={`font-serif fill-slate-500 uppercase tracking-widest ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
             {data.map((d) => {
               const parts = String(d.term).split(' ');
               return (

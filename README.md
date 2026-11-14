@@ -7,10 +7,15 @@ An interactive 3D data story visualizing **567 workfiles** created across five y
 
 ## Overview
 
-The experience unfolds in two layers:
+A five-year report read from the version history of a university OneDrive account: **567 workfiles**, **34 courses**, **8 terms**, and **23,906 versions** across 58 major assignments.
 
-- **Landing** — A full-screen 3D scene built with [React Three Fiber](https://docs.pmnd.rs/react-three-fiber).
-- **Detail View** — A scroll-driven narrative divided into three acts, paired with live D3 visualizations (punchcard heatmaps, line charts, etc.) on the right panel.
+The experience has three layers:
+
+- **Cover** — a full-screen 3D desk built with [React Three Fiber](https://docs.pmnd.rs/react-three-fiber). The report's printed cover sits on the paper; the HTML cover is set in the report's own voices and opens the story.
+- **Story** — a scroll-driven report in three acts. The reading pane is pinned and read word by word; each highlighted phrase publishes an emphasis that focuses the figure on the right. The reverse also holds: hovering a figure note focuses its phrase in the copy.
+- **Plates** — thirteen numbered figures: a 3D cube field (React Three Fiber), a Sankey, a bar-to-stream morph, deadline tracks, and a punchcard (D3 + SVG).
+
+The story is set as a printed report: Instrument Serif for display, Newsreader for running copy, Geist Mono for labels and figures, with justified and hyphenated text, a plate header (figure number and title), and a three-stat rail per step. The phone layout is a scroll story rather than a shrunken spread: a sticky 58dvh figure over a 42dvh reading band.
 
 ## Tech Stack
 
@@ -46,50 +51,52 @@ All visualization data lives in `data/` as pre-computed JSON:
 | File | Description |
 |------|-------------|
 | `file_summary.json` | Per-file metadata: name, version count, term, course, date, weekday |
-| `day_hour_counts.json` | Hourly commit density per day of week |
+| `day_hour_counts.json` | Hourly version density per day of week |
 | `hour_version_counts.json` | Aggregate version counts by hour |
 | `ext_courses.json` | Extension requests grouped by course |
 | `term_extensions.json` | Extensions per term |
 | `term_duration_density.json` | Assignment duration distributions per term |
 | `term_empty_days.json` | Days with zero file activity per term |
-| `heavy_assignment_commits.json` | High-commit-count assignments |
+| `heavy_assignment_commits.json` | Assignments with more than 100 versions |
 
 ## Responsive Behavior
 
-The 3D camera adapts to three viewport breakpoints:
+The story has two real layouts, not a shrunken desktop:
 
-| Breakpoint | Width | Behavior |
-|-----------|-------|----------|
-| `lg` | ≥ 1024px | Side-by-side narrative + chart panels |
-| `md` | 768–1023px | Stacked layout, adjusted camera |
-| `sm` | < 768px | Full-width stacked, touch-swipe navigation |
+| Layout | When | Behavior |
+|--------|------|----------|
+| Two-column | ≥ 960px wide, or landscape with ≥ 640×360 | Narrative column + sticky figure column, capped at 1600×920 |
+| Scroll story | phones and portrait tablets | 58dvh sticky figure over a 42dvh reading band; top bar carries the figure title, step count and close |
+| Landscape phone | landscape below 960px | 55/45 spread: figure beside the reading band |
 
-Camera positions are defined in `constants/camera.ts` and selected at runtime based on `window.innerWidth`.
+The 3D camera poses live in `constants/camera.ts` and are selected at runtime; the two-column minimum is `components/detail/responsive.ts`.
 
 ## Accessibility & Motion
 
 The whole story is operable without a pointer:
 
-| Input | Landing | Detail view |
-|-------|---------|-------------|
-| `Tab` | Focuses the scene, then the author link | Focuses the story panel; tab order follows the controls |
+| Input | Cover | Story |
+|-------|-------|-------|
+| `Tab` | Focuses Open the report, the scene, then the author link | Focuses the story panel; the progress segments and keywords are tab stops |
 | `Enter` / `Space` | Opens the story | Activates the focused control |
 | `Esc` | — | Closes the story and returns focus to the scene |
 | `↓` / `PageDown` | — | Next passage (desktop: scrolls; phone: next step) |
 | `↑` / `PageUp` | — | Previous passage |
 | `Home` / `End` | — | First / last passage |
 
-`prefers-reduced-motion: reduce` is honoured throughout: the loader and the hero wipe snap to their final state, the camera cuts instead of flying, pointer parallax is off, and the charts land on their target state instead of tweening. Deep links are supported — `/#story` opens the story, `/#act2` opens it on Act 2 — and the back button closes the story rather than leaving the site.
+The top bar is also a table of contents: each of the three segments is a button that jumps to its act, and a fixed **Return to desk** control is available from any scroll position. On phones the top bar carries a close button instead.
+
+`prefers-reduced-motion: reduce` is honoured throughout: the loader and the cover wipe snap to their final state, the camera cuts instead of flying, pointer parallax is off, and the charts land on their target state instead of tweening. `/#story` opens the story — and the back button closes it rather than leaving the site.
 
 ## Metadata
 
-`app/layout.tsx` owns the Open Graph / Twitter metadata (canonical URL, theme colour, social card). The social card is the committed `public/og.png` at 1600×1200 — deliberately a 4:3 static PNG rather than a generated metadata route, because GitHub Pages serves extensionless files as `application/octet-stream`. `app/sitemap.ts` and `app/robots.ts` are static exports for the same reason.
+`app/layout.tsx` owns the Open Graph / Twitter metadata (canonical URL, theme colour, social card). The social card is the committed `public/og.png` at 1600×1200 — a typographic cover set in the report's own typefaces, deliberately a 4:3 static PNG rather than a generated metadata route, because GitHub Pages serves extensionless files as `application/octet-stream`. `app/sitemap.ts` and `app/robots.ts` are static exports for the same reason.
 
 The narrative copy is also rendered as a visually hidden `StorySummary` section so the text and numbers exist in the initial HTML for crawlers and screen readers.
 
 ## Build & Deploy
 
-The project is configured for deployment on [Vercel](https://vercel.com). Production builds include Google Analytics (ID `G-KNPEXFEH64`). Ensure environment variables are set appropriately for your deployment target.
+The site is deployed to GitHub Pages by `.github/workflows/nextjs.yml` on every push to `main`. Production builds include Google Analytics (ID `G-KNPEXFEH64`).
 
 ```bash
 npm run build   # outputs to .next/

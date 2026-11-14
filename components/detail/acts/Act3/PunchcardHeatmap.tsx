@@ -26,7 +26,7 @@ const HOURS = 24;
 const DAYS_COUNT = 7;
 const HOUR_TICKS = [0, 6, 12, 18, 23];
 
-const ASPECT_LANDSCAPE = 300 / 800;
+const ASPECT_LANDSCAPE = 380 / 800;
 const FLIPPED_CELL_W = 30;
 const FLIPPED_CELL_H = 20;
 
@@ -112,7 +112,7 @@ export default function PunchcardHeatmap({
         {hoveredData && hoveredData.count > 0 ? (
           <div>
             <span className="text-brand">{`${hoveredData.count}`}</span>{' '}
-            {` file edits at ${hoveredData.hour}:00 on ${DAYS[hoveredData.day_of_week]}`}
+            {` versions at ${hoveredData.hour}:00 on ${DAYS[hoveredData.day_of_week]}`}
           </div>
         ) : (
           ' '
@@ -128,7 +128,7 @@ export default function PunchcardHeatmap({
               y={pos * cellH + cellH / 2}
               dominantBaseline="central"
               textAnchor="end"
-              className="fill-slate-500 font-serif text-[9px] sm:text-[10px] tracking-widest"
+              className="fill-slate-500 font-serif text-[10px] sm:text-[11px] tracking-widest"
             >
               {label}
             </text>
@@ -145,7 +145,7 @@ export default function PunchcardHeatmap({
                   ? `rotate(-45, ${pos * cellW + cellW / 2}, ${innerH + 20})`
                   : undefined
               }
-              className="fill-slate-500 font-serif text-[9px] sm:text-[10px] tracking-widest"
+              className="fill-slate-500 font-serif text-[10px] sm:text-[11px] tracking-widest"
             >
               {label}
             </text>
@@ -177,8 +177,8 @@ export default function PunchcardHeatmap({
                 cx={cx}
                 cy={cy}
                 r={r}
-                fill={COLOR_BRAND}
-                opacity={d.count === 0 ? 0 : focus && !inFocus ? 0.08 : opacity}
+                fill={focus && !inFocus ? '#CBD5E1' : COLOR_BRAND}
+                opacity={d.count === 0 ? 0 : focus && !inFocus ? 0.55 : Math.max(0.3, opacity)}
                 className="transition-all duration-300 hover:fill-brand-700 cursor-pointer"
                 style={{ pointerEvents: d.count === 0 ? 'none' : 'auto' }}
                 onMouseEnter={() => { if (!fromTouch()) setHoveredData(d); }}

@@ -38,13 +38,13 @@ export const ACT_META = {
   },
   3: {
     numeral: 'III',
-    title: 'The Bubbles',
+    title: 'The Rush',
     statement: (
       <>
-        Most edits happen in the <em>last 12 hours</em>.
+        Most of the work happens in the <em>last 12 hours</em>.
       </>
     ),
-    deck: '23,906 edits, one deadline-shaped habit.',
+    deck: '23,906 versions, one deadline-shaped habit.',
   },
 } as const;
 
@@ -57,6 +57,12 @@ interface KickerProps {
   /** Red label, for act numbers and plate numbers. */
   accent?: boolean;
   className?: string;
+  /**
+   * The element the label renders as. Act openers pass `h2`: the kicker carries
+   * the act's number and name, so it is the act's heading even though it is
+   * styled as an overline.
+   */
+  as?: 'p' | 'h2' | 'h3';
 }
 
 export function Kicker({
@@ -64,6 +70,7 @@ export function Kicker({
   rule = true,
   accent = false,
   className = '',
+  as: Tag = 'p',
 }: KickerProps) {
   const classes = [
     't-kicker',
@@ -74,10 +81,10 @@ export function Kicker({
     .join(' ');
 
   return (
-    <p className={classes}>
+    <Tag className={classes}>
       {rule && <span aria-hidden className="t-kicker__rule" />}
       <span className="t-kicker__text">{children}</span>
-    </p>
+    </Tag>
   );
 }
 
@@ -108,7 +115,7 @@ export function ActOpener({
         hasStatement ? ' narrative-act--statement' : ''
       }`}
     >
-      <Kicker accent>
+      <Kicker accent as={hasStatement ? 'h2' : 'p'}>
         Act {numeral} — {title}
       </Kicker>
       {hasStatement ? (
@@ -176,11 +183,8 @@ export function Keyword({
   state?: 'unread' | 'read' | 'active';
 }) {
   return (
-    <span className="t-kw" data-state={state}>
+    <span className="t-kw" data-state={state} data-kw-index={index}>
       {children}
-      <span className="t-kw__index" aria-hidden>
-        {index}
-      </span>
     </span>
   );
 }

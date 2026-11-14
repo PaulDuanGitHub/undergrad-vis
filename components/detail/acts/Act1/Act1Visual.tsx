@@ -31,7 +31,7 @@ const COURSE_COLORS = ["#7C2A1F", "#f7b538", "#db7c26", "#d8572a", "#c32f27"].ma
 const COLOR_GRAY = new THREE.Color("#94A3B8");
 const COLOR_BRAND = new THREE.Color("#D4442E");
 /** How far the non-selected categories recede under a keyword filter. */
-const DIM_OPACITY = 0.2;
+const DIM_OPACITY = 0.4;
 
 /** The introduction's one-time build: the whole field assembles in ~1.9s. */
 const INTRO_STAGGER = 1.15;
@@ -39,7 +39,7 @@ const INTRO_APPEAR = 0.14;
 const INTRO_FALL = 0.62;
 const INTRO_LIFT = 5;
 
-const HEATMAP_EMPTY = new THREE.Color("#F5F5F4"); 
+const HEATMAP_EMPTY = new THREE.Color("#EFEDE8");
 const HEATMAP_LOW = new THREE.Color("#FBD5CD");   
 const HEATMAP_MID = new THREE.Color("#D4442E");   
 const HEATMAP_HIGH = new THREE.Color("#7C2A1F");  
@@ -263,7 +263,7 @@ function getCubeTargets(cube: ProcessedCube, step: number, isHovered: boolean, e
     targetColor = cube.colorHeatmap.clone();
     if (isHovered) targetColor.lerp(new THREE.Color("white"), 0.3);
 
-    targetHeight = cube.isEmptyCube ? 0.2 : 0.4;
+    targetHeight = cube.isEmptyCube ? 0.14 : 0.4;
     targetScaleY = cube.isEmptyCube ? 1 : (cube.isPrimaryHeatmap ? 1 : 0);
   } else {
     targetPos = step === 0 ? cube.gridPos : cube.groupPos;
@@ -680,7 +680,7 @@ return (
           >
             {/* 3x Supersampling: render at triple resolution then CSS-scale down for sharper CSS3D */}
             <div style={{ transform: 'scale(0.333)', transformOrigin: 'center center' }}>
-              <div className="absolute pr-12 right-0 text-right flex flex-col items-end w-max -translate-y-12" style={{ top: (step === 4) ? '-240px' : '240px', opacity: termOn ? 1 : 0.15, transition: 'opacity 0.3s ease' }}>
+              <div className="absolute pr-12 right-0 text-right flex flex-col items-end w-max -translate-y-12" style={{ top: (step === 4) ? '-240px' : '240px', opacity: termOn ? 1 : 0.3, transition: 'opacity 0.3s ease' }}>
                 <span className="font-light text-slate-900 mb-3" style={{ fontSize: compact ? '18rem' : '13rem', lineHeight: '1' }}>{label.term}</span>
                 {/* 34 rotated course names are illegible on a phone; the term
                     headings and the cube colours carry the stage instead.
@@ -689,7 +689,7 @@ return (
                 {!compact && (
                   <div className="flex flex-col items-end gap-8 overflow-hidden transition-all duration-700" style={{ maxHeight: step === 2 ? '900px' : '0px', opacity: step === 2 ? 1 : 0 }}>
                     {label.courses.map((course: string, cIdx: number) => (
-                      <div key={course} className="flex items-center gap-6" style={{ fontSize: '2.625rem', color: '#475569', opacity: !emphasis || !emphasis.startsWith('course:') || course === emphasis.slice(7) ? 1 : 0.15, transition: 'opacity 0.3s ease' }}>
+                      <div key={course} className="flex items-center gap-6" style={{ fontSize: '2.625rem', color: '#475569', opacity: !emphasis || !emphasis.startsWith('course:') || course === emphasis.slice(7) ? 1 : 0.32, transition: 'opacity 0.3s ease' }}>
                         <span style={{ fontSize: '9rem', lineHeight: '1' }}>{course}</span>
                         <span className="rounded-full" style={{ width: '72px', height: '72px', backgroundColor: `#${COURSE_COLORS[cIdx % COURSE_COLORS.length].getHexString()}` }} />
                       </div>

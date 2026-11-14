@@ -22,8 +22,8 @@ interface Act3VisualProps {
   fast?: boolean;
 }
 
-const ASPECT_RATIO = 650 / 900; // height / width
-const W_TRACK_RATIO = 600 / 900; // track width ratio
+const ASPECT_RATIO = 720 / 900; // height / width
+const W_TRACK_RATIO = 640 / 900; // track width ratio
 
 /**
  * Cumulative "time left before the deadline" cut-offs in the axis' own unit
@@ -449,9 +449,9 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
         : 0;
     const lead =
       focusSlice !== null
-        ? ' of commits landed in the 12–24 hour window'
+        ? ' of versions landed in the 12–24 hour window'
         : idx >= 0
-          ? ` of commits landed in the last ${BAND_TIERS[idx].phrase}`
+          ? ` of versions landed in the last ${BAND_TIERS[idx].phrase}`
           : '';
 
     return (
@@ -508,7 +508,7 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
               <text
                 y={17 + (index % 2) * 12}
                 textAnchor="middle"
-                className="fill-slate-500 font-mono text-[9px] tracking-[0.08em]"
+                className="fill-slate-500 font-mono text-[11px] tracking-[0.06em]"
               >
                 {label}
               </text>
@@ -519,9 +519,9 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
           x={0}
           y={46}
           textAnchor="start"
-          className="fill-slate-500 font-mono text-[9px] uppercase tracking-[0.12em]"
+          className="fill-slate-500 font-mono text-[10px] uppercase tracking-[0.12em]"
         >
-          time before deadline · √ scale
+          time before deadline (Square-root scale)
         </text>
         {printBandReadout(y, w, shares)}
       </g>
@@ -606,7 +606,7 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
                   data-w1={d.t1.w} data-lx1={d.lx1}
                   data-w2={d.t2.w} data-lx2={d.lx2}
                   stroke={COLOR_BRAND}
-                  strokeOpacity={0.15}
+                  strokeOpacity={0.28}
                   strokeWidth={1}
                 />
 
@@ -630,8 +630,8 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
                         data-r0={b.r0} data-r1={b.r1} data-r2={b.r2}
                         cy={0}
                         r={b.r0}
-                        fill={inBand ? COLOR_BRAND : COLOR_GRAY}
-                        opacity={isFaded ? 0.1 : 0.8}
+                        fill={isFaded ? COLOR_GRAY : COLOR_BRAND}
+                        opacity={isFaded ? 0.35 : 0.9}
                       />
                     );
                   })}
@@ -659,7 +659,7 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
                 textAnchor="end"
                 dominantBaseline="central"
                 className="fill-slate-600 font-serif uppercase tracking-widest"
-                style={{ fontSize: compact ? 8 : 10 }}
+                style={{ fontSize: compact ? 9 : 11 }}
               >
                 {term}
               </text>

@@ -15,6 +15,7 @@ import { ACT1_STEPS } from '@/components/detail/acts/Act1/act1Opening';
 import { ACT2_STEPS } from '@/components/detail/acts/Act2/act2Steps';
 import { ACT3_STEPS } from '@/components/detail/acts/Act3/act3Steps';
 import { EmphasisProvider } from '@/components/detail/narrative/EmphasisContext';
+import StoryProgress from '@/components/detail/StoryProgress';
 import Footer from '@/components/detail/Footer';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useIsomorphicLayoutEffect } from '@/hooks/useIsomorphicLayoutEffect';
@@ -47,20 +48,15 @@ const STEPS_BY_ACT: Record<ScrollAct, typeof ACT1_STEPS | typeof ACT2_STEPS | ty
  */
 export default function MobileScrollStory({
   isDetailVisible,
-  initialAct = null,
   onExit,
 }: {
   isDetailVisible: boolean;
-  /** `#actN` deep link: land on that act's opener instead of the top. */
-  initialAct?: 1 | 2 | 3 | null;
   onExit: () => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const footerRef = useRef<HTMLDivElement>(null);
   const layerRefs = useRef<Array<HTMLDivElement | null>>([]);
-  /** The act the story opens on: a deep link, or Act I. */
-  const entryAct = initialAct ?? 1;
-  const [active, setActive] = useState<Active>(() => ({ act: entryAct, step: 0 }));
+  const [active, setActive] = useState<Active>({ act: 1, step: 0 });
   const [atFooter, setAtFooter] = useState(false);
   const reducedMotion = useReducedMotion();
 
@@ -157,7 +153,7 @@ export default function MobileScrollStory({
   );
 
   // ── Act hand-off: cross-fade the stacked figure layers ──
-  const previousAct = useRef<ScrollAct>(entryAct);
+  const previousAct = useRef<ScrollAct>(1);
   useIsomorphicLayoutEffect(() => {
     const from = previousAct.current;
     if (from === active.act) return;
@@ -201,37 +197,17 @@ export default function MobileScrollStory({
     };
   }, [active.act, reducedMotion]);
 
-  // ── Deep link: open on the requested act's opener ──
-  const didEntryScroll = useRef(false);
+  // The phone story is a scroll container, not a Tab stop, but it must own
+  // focus when it opens: otherwise focus stays on <body>, the arrow keys never
+  // reach it, and Tab starts in the clipped StorySummary. Mirrors the
+  // two-column panel's focus hand-off in DetailView.
   useEffect(() => {
-    if (!isDetailVisible || didEntryScroll.current) return;
-    didEntryScroll.current = true;
-
-    const scroller = scrollRef.current;
-    if (!scroller) return;
-
-    const act = entryAct;
-    if (act === 1) {
-      scroller.scrollTop = 0;
-    } else {
-      const opener = scroller.querySelectorAll<HTMLElement>('.narrative-act')[act - 1];
-      if (opener) {
-        const top =
-          opener.getBoundingClientRect().top +
-          scroller.scrollTop -
-          scroller.clientHeight * 0.58;
-        scroller.scrollTop = Math.max(top, 0);
-      }
-    }
-    // The triggers were measured at the top of the story. The initial `active`
-    // state is already this act, so the scroll only has to place the page.
-    requestAnimationFrame(() => ScrollTrigger.refresh());
-  }, [isDetailVisible, entryAct]);
+    if (!isDetailVisible) return;
+    scrollRef.current?.focus({ preventScroll: true });
+  }, [isDetailVisible]);
 
   return (
     <div
-      role="region"
-      aria-label="Data story"
       aria-hidden={!isDetailVisible}
       inert={!isDetailVisible}
       data-report
@@ -251,6 +227,9 @@ export default function MobileScrollStory({
         <div
           ref={scrollRef}
           data-detail-scroller
+          role="region"
+          aria-label="Data story"
+          tabIndex={-1}
           className="mobile-scroll h-full overflow-y-auto overscroll-contain bg-surface"
         >
           <div
@@ -270,7 +249,7 @@ export default function MobileScrollStory({
                   aria-hidden={active.act !== act}
                   inert={active.act !== act}
                   className={`absolute inset-0 ${
-                    act === entryAct ? '' : 'opacity-0 pointer-events-none'
+                    act === 1 ? '' : 'opacity-0 pointer-events-none'
                   }`}
                 >
                   {act === 1 ? (
@@ -319,7 +298,7 @@ export default function MobileScrollStory({
       </EmphasisProvider>
 
       <div
-        className="mobile-scroll-nav fixed inset-x-0 top-0 z-30 flex items-center justify-between gap-2 border-b border-slate-200/70 bg-surface/95 px-3 backdrop-blur-sm"
+        className="mobile-scroll-nav fixed inset-x-0 top-0 z-30 flex items-center justify-between gap-2 bg-surface/95 px-3 backdrop-blur-sm"
         style={{
           height: 'calc(var(--ms-topbar) + env(safe-area-inset-top))',
           paddingTop: 'env(safe-area-inset-top)',
@@ -345,7 +324,7 @@ export default function MobileScrollStory({
           </svg>
         </button>
 
-        <span className="min-w-0 flex-1 truncate text-center font-mono text-[9px] uppercase tracking-[0.16em] text-slate-500">
+        <span className="min-w-0 flex-1 truncate text-center font-mono text-[10px] uppercase tracking-[0.16em] text-slate-500">
           {atFooter
             ? 'Colophon — method & credits'
             : `Fig. ${config.fig} — ${config.title}`}
@@ -354,6 +333,13 @@ export default function MobileScrollStory({
         <span className="min-w-9 text-right font-mono text-[10px] tabular-nums text-slate-500">
           {atFooter ? '' : `${active.step + 1}/${steps.length}`}
         </span>
+
+        <StoryProgress
+          act={active.act}
+          step={active.step}
+          actSteps={[ACT1_STEPS.length, ACT2_STEPS.length, ACT3_STEPS.length]}
+          className="absolute inset-x-0 bottom-0 h-[3px]"
+        />
       </div>
     </div>
   );

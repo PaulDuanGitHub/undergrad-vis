@@ -12,11 +12,15 @@ import Act2Narrative from '@/components/detail/acts/Act2/Act2Narrative';
 import Act2Figure from '@/components/detail/acts/Act2/Act2Figure';
 import Act3Narrative from '@/components/detail/acts/Act3/Act3Narrative';
 import Act3Figure from '@/components/detail/acts/Act3/Act3Figure';
+import { ACT1_STEPS } from '@/components/detail/acts/Act1/act1Opening';
+import { ACT2_STEPS } from '@/components/detail/acts/Act2/act2Steps';
+import { ACT3_STEPS } from '@/components/detail/acts/Act3/act3Steps';
 import { Kicker } from '@/components/detail/narrative/ReportType';
 import { EmphasisProvider } from '@/components/detail/narrative/EmphasisContext';
 import Footer from './Footer';
 import ResponsiveDebug from './ResponsiveDebug';
 import MobileScrollStory from './mobile/MobileScrollStory';
+import StoryProgress from './StoryProgress';
 import {
   LANDSCAPE_MIN_HEIGHT,
   TWO_COLUMN_MAX_WIDTH,
@@ -40,8 +44,6 @@ interface DetailViewProps {
   isDetailVisible: boolean;
   /** Keep the mobile panel mounted through the open/close transition. */
   isDetailMounted: boolean;
-  /** `#actN` deep link: the act the story should open on (null = act 1). */
-  initialAct?: 1 | 2 | 3 | null;
   onExit: () => void;
 }
 
@@ -66,6 +68,14 @@ function animateActTransition(
   gsap.killTweensOf(texts);
   gsap.set(charts, { pointerEvents: 'none' });
   gsap.set(charts[activeIndex], { pointerEvents: 'auto' });
+  // `pointerEvents` alone is not enough: the figures' notes/labels set their own
+  // `pointer-events: auto`, so an invisible act's note grid still answered a
+  // hover aimed at the visible one. `inert` takes the whole subtree out of
+  // hit-testing (and focus order) without touching the fade.
+  charts.forEach((chart, i) => {
+    if (i === activeIndex) chart.removeAttribute('inert');
+    else chart.setAttribute('inert', '');
+  });
   if (instant) {
     charts.forEach((chart, i) => {
       gsap.set(chart, { opacity: i === activeIndex ? 1 : 0, y: 0 });
@@ -122,7 +132,7 @@ function createSubstepTriggers(cssSelector: string, datasetKey: string, scroller
 }
 
 // ── Component ──
-export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted, initialAct = null, onExit }: DetailViewProps) {
+export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted, onExit }: DetailViewProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const rightChartRef = useRef<HTMLDivElement>(null);
 
@@ -141,6 +151,49 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
   const [activeAct, setActiveAct] = useState(1);
   /** False on the introduction: the Act I plate/notes belong to the act proper. */
   const [act1Started, setAct1Started] = useState(false);
+
+  // ── Every visit starts at Act I, step 0 ──
+  // The chart layers stay mounted for the close choreography, and the landing
+  // only resets the scroll position when it reopens the panel. Without this,
+  // the per-act step state survived a close: re-entering Act II played its
+  // opener against whatever step the previous visit ended on.
+  //
+  // Resetting the React state is not enough: `animateActTransition` writes the
+  // layers' opacity with GSAP, and a close while Act III was open leaves that
+  // layer at opacity 1. The scroll reset alone does not re-fire the act
+  // triggers (it jumps over them while the panel is still hidden), so the
+  // reopened story showed the introduction copy next to the previous act's
+  // figure. Re-seat the layers here, synchronously, before the panel fades in.
+  const wasDetailMounted = useRef(isDetailMounted);
+  useEffect(() => {
+    if (isDetailMounted && !wasDetailMounted.current) {
+      setAct1Step(0);
+      setAct2Step(0);
+      setAct3Step(0);
+      setActiveAct(1);
+      setAct1Started(false);
+
+      const scroller = scrollRef.current;
+      if (scroller) {
+        const charts = gsap.utils.toArray<HTMLElement>('.chart-layer', scroller);
+        const texts = gsap.utils.toArray<HTMLElement>('.narrative-text', scroller);
+        gsap.killTweensOf([...charts, ...texts]);
+        charts.forEach((chart, i) => {
+          gsap.set(chart, { opacity: i === 0 ? 1 : 0, y: 0 });
+          if (i === 0) chart.removeAttribute('inert');
+          else chart.setAttribute('inert', '');
+        });
+        texts.forEach((text, i) => {
+          gsap.set(text, { opacity: i === 0 ? 1 : 0.2 });
+        });
+        // Start at the introduction even if the previous visit ended at the
+        // footer. The landing repeats this when `isDetailOpen` flips; doing it
+        // here as well means the first painted frame is already at the top.
+        scroller.scrollTop = 0;
+      }
+    }
+    wasDetailMounted.current = isDetailMounted;
+  }, [isDetailMounted, scrollRef]);
 
   // ── Breakpoint detection ──
   const [isMdDown, setIsMdDown] = useState(false);
@@ -165,22 +218,34 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
   const [pullProgress, setPullProgress] = useState(0);
   const PULL_THRESHOLD = 800;
   const touchPullStartRef = useRef(0);
+  /**
+   * Synchronous twin of `pullProgress`: wheel events can arrive faster than
+   * React renders, so the accumulator cannot live only in state.
+   */
+  const pullRef = useRef(0);
+  const commitPull = (value: number) => {
+    pullRef.current = value;
+    setPullProgress(value);
+  };
 
   const handleWheel = (e: React.WheelEvent) => {
     if (!scrollRef.current) return;
-    
+
     // Only accumulate progress when at the very top and scrolling upward
     if (scrollRef.current.scrollTop <= 0 && e.deltaY < 0) {
-      setPullProgress((prev) => {
-        const next = prev - e.deltaY;
-        if (next >= PULL_THRESHOLD) {
-          onExit();
-          return 0;
-        }
-        return next;
-      });
+      const next = pullRef.current - e.deltaY;
+      // `onExit` closes the panel, i.e. it updates `Landing`. It must run from
+      // the event handler: a setState UPDATER runs during React's render pass,
+      // and updating another component from there throws React's
+      // "Cannot update a component while rendering a different component".
+      if (next >= PULL_THRESHOLD) {
+        commitPull(0);
+        onExit();
+        return;
+      }
+      commitPull(next);
     } else {
-      setPullProgress(0);
+      commitPull(0);
     }
   };
 
@@ -189,7 +254,7 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
     let timeout: NodeJS.Timeout;
     if (pullProgress > 0 && pullProgress < PULL_THRESHOLD) {
       timeout = setTimeout(() => {
-        setPullProgress(0);
+        commitPull(0);
       }, 1000);
     }
     return () => clearTimeout(timeout);
@@ -201,13 +266,13 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
     const dy = e.touches[0].clientY - touchPullStartRef.current;
     // Only activate when at the very top and pulling down (dy > 0)
     if (scrollRef.current.scrollTop <= 0 && dy > 0) {
-      setPullProgress(dy);
+      commitPull(dy);
       if (dy >= PULL_THRESHOLD) {
+        commitPull(0);
         onExit();
-        setPullProgress(0);
       }
     } else {
-      setPullProgress(0);
+      commitPull(0);
     }
   };
 
@@ -216,13 +281,56 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
   };
 
   const handleTouchEndPull = () => {
-    setPullProgress(0);
+    commitPull(0);
     touchPullStartRef.current = 0;
   };
 
   const radius = 16;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (Math.min(pullProgress / PULL_THRESHOLD, 1) * circumference);
+
+  /**
+   * The progress bar is a real table of contents: clicking a segment lands on
+   * that act's opener, centred the same way the scroll trigger fires it.
+   */
+  const jumpToAct = (target: 1 | 2 | 3) => {
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+    const openers = Array.from(
+      scroller.querySelectorAll<HTMLElement>('.narrative-act'),
+    ).filter((el) => !el.classList.contains('narrative-intro'));
+    const opener = openers[target - 1];
+    if (!opener) return;
+    const top =
+      opener.getBoundingClientRect().top -
+      scroller.getBoundingClientRect().top +
+      scroller.scrollTop -
+      (scroller.clientHeight - opener.offsetHeight) / 2;
+
+    // A section jump is a cut, not a 20,000px scroll. Smooth-scrolling to Act
+    // III plays every act in between — a jump from Act II showed its stream
+    // graph for a second before Act III took over. Land the scroller and
+    // re-seat the target act in the same frame instead.
+    scroller.style.scrollBehavior = 'auto';
+    scroller.scrollTop = Math.max(0, top);
+    scroller.style.scrollBehavior = '';
+
+    // Let ScrollTrigger process the jump first, then re-seat the target: its
+    // onEnter/onLeaveBack callbacks can otherwise leave the act that was
+    // crossed half-active.
+    ScrollTrigger.update();
+
+    setActiveAct(target);
+    setAct1Started(true);
+    setAct1Step(0);
+    setAct2Step(0);
+    setAct3Step(0);
+
+    const texts = gsap.utils.toArray<HTMLElement>('.narrative-text', scroller);
+    const charts = gsap.utils.toArray<HTMLElement>('.chart-layer', scroller);
+    gsap.killTweensOf([...charts, ...texts]);
+    animateActTransition(texts, charts, target - 1, 'forward', true);
+  };
 
   useGSAP(() => {
     const scroller = scrollRef.current;
@@ -239,6 +347,10 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
       .filter((el) => !el.classList.contains('narrative-intro'));
 
     gsap.set(charts.slice(1), { opacity: 0, y: reducedMotionRef.current ? 0 : 20, pointerEvents: 'none' });
+    charts.forEach((chart, i) => {
+      if (i === 0) chart.removeAttribute('inert');
+      else chart.setAttribute('inert', '');
+    });
     gsap.set(texts, { opacity: 0.2 });
     // Act 1 is live from the first frame; its wrapper starts at the Act I opener.
     if (texts[0]) gsap.set(texts[0], { opacity: 1 });
@@ -307,7 +419,6 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
     return isDetailMounted ? (
       <MobileScrollStory
         isDetailVisible={isDetailVisible}
-        initialAct={initialAct}
         onExit={onExit}
       />
     ) : null;
@@ -344,6 +455,44 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
           : "duration-200 opacity-0 pointer-events-none"
       }`}
     >
+      {/* The story's navigation: one bar, split into the three acts. Each
+          segment jumps to its act; the bar is the table of contents as well
+          as the progress readout. */}
+      <StoryProgress
+        act={activeAct as 1 | 2 | 3}
+        step={
+          activeAct === 1 && !act1Started
+            ? -1
+            : activeAct === 1
+              ? act1Step
+              : activeAct === 2
+                ? act2Step
+                : act3Step
+        }
+        actSteps={[
+          ACT1_STEPS.length,
+          ACT2_STEPS.length,
+          ACT3_STEPS.length,
+        ]}
+        onSelect={jumpToAct}
+        className="fixed inset-x-0 top-0 z-40 h-5"
+      />
+
+      {/* The way out, from any scroll position. The phone story carries its
+          own close button in the top bar; this is the desktop equivalent. */}
+      <button
+        type="button"
+        onClick={onExit}
+        aria-label="Close the story and return to the desk"
+        className="group fixed left-5 top-5 z-40 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-text-secondary transition-colors duration-200 hover:text-brand focus-visible:text-brand focus-visible:outline-none"
+      >
+        <span
+          aria-hidden
+          className="block h-px w-4 bg-current transition-[width] duration-300 group-hover:w-6"
+        />
+        Return to desk
+      </button>
+
       {/* Pull-to-Exit Indicator */}
       <div 
         className="fixed top-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center pointer-events-none transition-all duration-300"

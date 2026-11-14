@@ -17,23 +17,22 @@ export default function Footer({ onExit, compact = false }: FooterProps) {
                         <div>
                             <h3 className="t-subhead mb-6">Data Methodology</h3>
                             <p className="t-note mb-4">
-                                The dataset was sourced organically from my school account's OneDrive version history spanning Fall 2021 to Winter 2026.
-                                Files are filtered and only keeps "workfile" types as shown in Act 2.
+                                The dataset was sourced organically from my school account&apos;s OneDrive version history spanning Fall 2021 to Winter 2026.
+                                Files are filtered down to the &ldquo;workfile&rdquo; types shown in Act 2.
                             </p>
                             <p className="t-note mb-4">
-                                A single "commit" or "version" represents an autosave snapshot triggered by OneDrive file modifications.
-                                For each single file, OneDrive only keeps the latest <b>500</b> versions, however, these files don't occupy major of the dataset.
-                                While minor sync discrepancies exist, they preserve the true macroscopic rhythm of my academic journey.
+                                One version is one autosave snapshot triggered by a change to a OneDrive file; the story counts versions, not files.
+                                OneDrive keeps only the latest <b>500</b> versions per file, but those files are a small part of the dataset.
+                                Minor sync discrepancies remain; they do not change the macroscopic rhythm of the five years.
                             </p>
                             <p className="t-note mb-4">
-                                In Act 3, an assignment is represented by a bunch of files' version history that grouped manually.
-                                And all assignments displayed here are considered "major assignment" which means they have over <b>100</b> versions
-                                in total. The deadline is determined by the latest version's creation time of that assignment's files.
-                                Manual data correction was made to handle obvious errors,
-                                such as when an assignment is opened after the deadline and a new version is created.
+                                In Act 3, an assignment is a group of files&apos; version histories, grouped by hand.
+                                Only &ldquo;major assignments&rdquo; appear: those with more than <b>100</b> versions in total.
+                                The deadline is the latest version&apos;s creation time among that assignment&apos;s files.
+                                Obvious errors were corrected by hand, such as a file reopened after the deadline creating a new version.
                             </p>
                             <p className="t-note" >
-                                This dataset collected don't represent my full undergraduate academic journey as not every course and project is stored by OneDrive.
+                                This dataset does not represent my full undergraduate career: not every course and project is stored in OneDrive.
                             </p>
                         </div>
 

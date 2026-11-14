@@ -6,6 +6,10 @@
  * of the content. This block is the static, linear version of the same story:
  * visually hidden, present in the initial HTML, and the only place the numbers
  * are stated in running prose.
+ *
+ * Its links stay readable to a screen reader's virtual cursor but are not Tab
+ * stops: the whole section is clipped, so a focused link would be invisible —
+ * and while the story is open it would sit behind the story panel.
  */
 export default function StorySummary() {
   return (
@@ -30,35 +34,43 @@ export default function StorySummary() {
       <h3>Act 2 — The strips</h3>
       <p>
         Sixteen file formats carry the work: .tex leads with 122 files and
-        appears in 22 courses, while the NLP course drew on 5 different formats.
+        appears in 22 courses, while the NLP course drew on 6 different formats.
         Ranked by volume, the bars then melt into a stream graph semester by
         semester.
       </p>
 
-      <h3>Act 3 — The bubbles</h3>
+      <h3>Act 3 — The rush</h3>
       <p>
-        59 major assignments, each with more than 100 versions, hold close to
-        24,000 commits. About 61% of edits in first year landed in the last 12
+        58 major assignments, each with more than 100 versions, hold close to
+        24,000 versions. About 61% of versions in first year landed in the last 12
         hours before a deadline; across the whole degree about 54% did, and
         about 73% within the last two days. A punchcard heatmap of roughly
-        43,000 edits peaks at 8pm, and a full third of all work happens on
+        43,000 versions peaks at 8pm, and a full third of all work happens on
         Saturday and Sunday.
       </p>
 
       <h3>Method and credits</h3>
       <p>
         The dataset was collected organically from OneDrive version history.
-        <a href="https://github.com/PaulDuanGitHub/undergrad-vis">
+        <a
+          href="https://github.com/PaulDuanGitHub/undergrad-vis"
+          tabIndex={-1}
+        >
           The source code is on GitHub
         </a>
         , the build process is written up in{" "}
-        <a href="https://paulduangithub.github.io/blog/2026/07/23/From-3D-to-D3-Visualizing-550-Files-and-5-Years-of-University/">
+        <a
+          href="https://paulduangithub.github.io/blog/2026/07/23/From-3D-to-D3-Visualizing-550-Files-and-5-Years-of-University/"
+          tabIndex={-1}
+        >
           an epilogue blog post
         </a>
         , and more work by the author is at{" "}
-        <a href="https://www.xianzhaoduan.com">xianzhaoduan.com</a>. The scene
-        uses Three.js, React Three Fiber, D3 and GSAP, and is set in Roboto
-        Serif.
+        <a href="https://www.xianzhaoduan.com" tabIndex={-1}>
+          xianzhaoduan.com
+        </a>
+        . The scene uses Three.js, React Three Fiber, D3 and GSAP, and is set in
+        Instrument Serif and Newsreader.
       </p>
     </section>
   );

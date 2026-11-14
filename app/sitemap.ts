@@ -1,8 +1,8 @@
 import type { MetadataRoute } from 'next';
 
 const SITE_URL = 'https://paulduangithub.github.io/undergrad-vis/';
-/** Content was last revised with the P0 accessibility pass. */
-const LAST_MODIFIED = '2026-10-26';
+/** Content was last revised with the focus + metadata pass. */
+const LAST_MODIFIED = '2026-11-13';
 
 export const dynamic = 'force-static';
 
