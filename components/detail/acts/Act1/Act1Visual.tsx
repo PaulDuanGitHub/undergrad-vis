@@ -1,8 +1,13 @@
 "use client";
 
+/* Three.js objects (instance matrices, materials, camera rigs) are imperative:
+   `useFrame` mutates them in place every frame. The React Compiler rule assumes
+   React state, so it is off for this renderer file. */
+/* eslint-disable react-hooks/immutability */
+
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
-import { OrthographicCamera, Html, OrbitControls } from "@react-three/drei";
+import { OrthographicCamera, Html } from "@react-three/drei";
 import file_summary from "@/data/file_summary.json";
 import term_empty_days from "@/data/term_empty_days.json";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
@@ -47,6 +52,17 @@ const HEATMAP_HIGH = new THREE.Color("#7C2A1F");
 const COLOR_EMPTY_FOCUS = new THREE.Color("#C9C2B6");
 
 // ── Types ──
+/** One term's floating label: its copy, its three layout anchors and the
+ *  interpolated position the scene actually renders. */
+type TermLabel = {
+  term: string;
+  courses: string[];
+  gridLabelPos: THREE.Vector3;
+  groupLabelPos: THREE.Vector3;
+  heatmapLabelPos: THREE.Vector3;
+  currentPos: THREE.Vector3;
+};
+
 export type FileData = { 
   file_name: string;
   total_versions: number;
@@ -59,8 +75,7 @@ export type FileData = {
   is_primary: boolean;
 };
 
-type ProcessedCube = {
-  isEmptyCube: boolean;
+type ProcessedCube = {  isEmptyCube: boolean;
   isPrimaryHeatmap: boolean;
   fileName: string;
   course: string;
@@ -139,7 +154,7 @@ function createCubeTemplate(overrides: Partial<ProcessedCube>): ProcessedCube {
 
 function getSceneData(data: FileData[], emptyDaysData: CubesSceneProps['emptyDaysData']) {
   const cubeData: ProcessedCube[] = [];
-  const termLabels: any[] = [];
+  const termLabels: TermLabel[] = [];
   const termBaseDates = getTermBaseDates(data);
 
   const terms = [

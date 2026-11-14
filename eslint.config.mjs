@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Local review artefacts (screenshots, headless browser profiles) and the
+    // static style explorations are not part of the app.
+    ".tmp/**",
+    "style-demos/**",
   ]),
 ]);
 

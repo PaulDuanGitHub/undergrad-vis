@@ -35,8 +35,6 @@ export default function Act1Figure({
     <FigureFrame
       fig={config.fig}
       title={config.title}
-      step={step + 1}
-      total={13}
       notes={config.keywords.map((keyword) => ({
         index: keyword.index,
         lead: keyword.noteLead,

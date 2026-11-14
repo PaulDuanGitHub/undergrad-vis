@@ -17,8 +17,6 @@ interface FigureFrameProps {
   fig: string;
   /** The figure's own title, not the act title. */
   title: string;
-  step: number;
-  total: number;
   notes: FigureNote[];
   /** Keyword index whose note is focused; null while the head is between keywords. */
   active: string | null;
@@ -45,8 +43,6 @@ interface FigureFrameProps {
 export default function FigureFrame({
   fig,
   title,
-  step,
-  total,
   notes,
   active,
   chrome = true,
@@ -54,8 +50,6 @@ export default function FigureFrame({
   onNoteLeave,
   children,
 }: FigureFrameProps) {
-  const pad = (value: number) => String(value).padStart(2, '0');
-
   return (
     <div className="detail-figure relative h-full w-full">
       <div className="detail-figure-visual absolute inset-0">{children}</div>

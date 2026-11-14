@@ -132,81 +132,23 @@ export function ActOpener({
   );
 }
 
-/** The running head the phone pane shows after the act has opened. */
-export function RunningHead({ act }: { act: ActNumber }) {
-  return (
-    <Kicker rule={false} className="narrative-running-head">
-      Act {ACT_META[act].numeral} — {ACT_META[act].title}
-    </Kicker>
-  );
-}
-
 /**
  * A callout in the report's margin voice: a red rule, a mono label, then
- * one sentence. Used for interaction instructions and method asides.
+ * one sentence. Used for interaction instructions.
  */
 export function Note({
   children,
   label = 'Interaction',
-  variant = 'interaction',
   className = '',
 }: {
   children: ReactNode;
   label?: string;
-  variant?: 'interaction' | 'method';
   className?: string;
 }) {
   return (
-    <aside
-      className={`t-note--callout${
-        variant === 'method' ? ' t-note--method' : ''
-      }${className ? ` ${className}` : ''}`}
-    >
+    <aside className={`t-note--callout${className ? ` ${className}` : ''}`}>
       <span className="t-note__label">{label}</span>
       {children}
     </aside>
-  );
-}
-
-/**
- * An inline keyword: a phrase in running copy that owns an annotation.
- * The superscript index is the pair key; `state` is driven by the reading
- * progress once the substep is wired to pin + scroll.
- */
-export function Keyword({
-  children,
-  index,
-  state = 'read',
-}: {
-  children: ReactNode;
-  index: string;
-  state?: 'unread' | 'read' | 'active';
-}) {
-  return (
-    <span className="t-kw" data-state={state} data-kw-index={index}>
-      {children}
-    </span>
-  );
-}
-
-/**
- * One scrollytelling step. The `data-actN-step` attribute is what
- * `DetailView`'s ScrollTriggers read, and `.narrative-step` gives the block
- * a full viewport so the copy is centred when its trigger fires.
- */
-export function Step({
-  act,
-  step,
-  children,
-}: {
-  act: ActNumber;
-  step: number;
-  children: ReactNode;
-}) {
-  const stepAttr = { [`data-act${act}-step`]: step } as Record<string, number>;
-  return (
-    <div {...stepAttr} className={`act${act}-substep narrative-step`}>
-      {children}
-    </div>
   );
 }

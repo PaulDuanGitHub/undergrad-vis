@@ -39,13 +39,6 @@
   --color-text-primary: var(--color-text-primary);
   --color-text-secondary: var(--color-text-secondary);
 
-  /* Hero marker band + warm ink: the band is a material (kraft/manila, the same
-     family as the desk's paper and the baked shadows) rather than a brand
-     accent, so it adds warmth without introducing a hue the scene can't
-     support. Ink is warmed to match the wood. See components/landing/Landing.tsx. */
-  --color-kraft: #E4D5BC;
-  --color-ink-warm: #2E2118;
-
   --font-sans: var(--font-geist-sans);
   --font-serif: var(--font-roboto-serif);
   --font-mono: var(--font-geist-mono);
@@ -66,13 +59,11 @@
    not.
 
    Hierarchy (match the markup to it):
-     h1 .t-masthead  the report's title            (one per page)
      h2 .t-act       the act title                 (one per act)
      h3 .t-subhead   section label                 (colophon blocks)
-     p  .t-kicker    overline above a title        ("Act I", "My 2021–2026")
-     p  .t-deck      italic standfirst             (under the masthead)
+     p  .t-kicker    overline above a title        ("Act I", "2021–2026")
+     p  .t-deck      italic standfirst             (under an act title)
      p  .t-byline    author line
-     p  .t-lede      opening paragraph
      p  .t-body      step copy
      p  .t-note      small print, captions
      p  .t-pull      pull quote
@@ -86,10 +77,8 @@
 
   /* Fixed scale. rem-based so the reader's font-size preference still
      counts, but never tied to the viewport. */
-  --t-size-masthead: 3.5rem; /* 56 */
   --t-size-act: 2rem; /* 32 */
   --t-size-deck: 1.25rem; /* 20 */
-  --t-size-lede: 1.125rem; /* 18 */
   --t-size-body: 1.0625rem; /* 17 */
   --t-size-pull: 1.625rem; /* 26 */
   --t-size-kicker: 0.6875rem; /* 11 */
@@ -110,10 +99,8 @@
 /* Compact scale: the narrative pane on phones. Same roles, one step down. */
 @media (max-width: 959px) {
   :root {
-    --t-size-masthead: 2.5rem;
     --t-size-act: 1.5rem;
     --t-size-deck: 1.0625rem;
-    --t-size-lede: 1rem;
     --t-size-body: 1rem;
     --t-size-pull: 1.375rem;
     --t-measure: 100%;
@@ -121,7 +108,6 @@
 
   /* Justified setting needs a wide measure. On a phone the same rule opens
      rivers between words; switch the reading voice to ragged right. */
-  .t-lede,
   .t-body,
   .t-note {
     text-align: left;
@@ -166,18 +152,7 @@
     color: var(--t-accent);
   }
 
-  /* ── Display: one family, one weight, two sizes ── */
-  .t-masthead {
-    font-family: var(--t-display);
-    font-size: var(--t-size-masthead);
-    font-weight: 400;
-    line-height: 0.98;
-    letter-spacing: -0.02em;
-    color: var(--t-ink);
-    text-align: center;
-    text-wrap: balance;
-  }
-
+  /* ── Display: act titles and pull quotes ── */
   .t-act {
     font-family: var(--t-display);
     font-size: var(--t-size-act);
@@ -219,16 +194,6 @@
     text-wrap: balance;
   }
 
-  .t-lede {
-    max-width: var(--t-measure);
-    margin-inline: auto;
-    font-family: var(--t-text);
-    font-size: var(--t-size-lede);
-    line-height: 1.65;
-    color: var(--t-ink-soft);
-    text-wrap: pretty;
-  }
-
   .t-body {
     max-width: var(--t-measure);
     margin-inline: auto;
@@ -243,7 +208,6 @@
      the word gaps stay even at this measure instead of opening rivers.
      The last line stays ragged at the left, as in print. Headings and
      labels keep their own alignment. */
-  .t-lede,
   .t-body,
   .t-note {
     text-align: justify;
@@ -255,13 +219,11 @@
 
   /* Paragraph breaks inside a step, set by the system rather than by
      one-off margins in the copy. */
-  .t-lede p + p,
   .t-body p + p {
     margin-top: 0.95em;
   }
 
   .t-deck b,
-  .t-lede b,
   .t-body b {
     font-weight: 600;
     color: var(--color-brand-900);
@@ -338,56 +300,17 @@
   /* ── Layout blocks ──────────────────────────────────────────────────
      The scrollytelling rhythm: one viewport per step, so the copy is
      centred in the pane exactly when its ScrollTrigger fires. */
-  .narrative-cover {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    text-align: center;
-  }
-
-  .narrative-cover > .t-masthead {
-    margin-top: 1rem;
-  }
-
-  .narrative-cover > .t-deck {
-    margin-top: 1.4rem;
-  }
-
-  .narrative-cover > .t-byline {
-    margin-top: 1.75rem;
-  }
-
   /* The opening statement and each act opener own a breath of white. */
-  .narrative-lede,
   .narrative-act {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 0.9rem;
     width: 100%;
     min-height: 62svh;
     padding-block: 4rem;
     text-align: center;
-  }
-
-  .narrative-lede {
-    gap: 0;
-  }
-
-  .narrative-act {
-    gap: 0.9rem;
-  }
-
-  .narrative-step {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0;
-    width: 100%;
-    min-height: 100svh;
-    padding-block: 3rem;
   }
 
   /* A pinned substep: the section owns a word-sized runway, the copy stays
@@ -406,17 +329,6 @@
     width: 100%;
     height: 100svh;
     padding-block: 3rem;
-  }
-
-  /* The current word in the 04 word-block treatment. */
-  .word-block {
-    background: var(--color-brand);
-    color: var(--color-surface);
-    padding: 0.12em 0.08em;
-    margin-inline: -0.08em;
-    border-radius: 0.06em;
-    box-decoration-break: clone;
-    -webkit-box-decoration-break: clone;
   }
 
   /* The current token's caret. Absolutely positioned OUTSIDE the line box: an
@@ -465,10 +377,6 @@
     padding-block: 0;
     gap: 0.5rem;
     margin-bottom: 1.1rem;
-  }
-
-  .narrative-running-head {
-    margin-bottom: 0.9rem;
   }
 
   /* ── Chapter statement ──────────────────────────────────────────────
@@ -622,81 +530,6 @@
     to { opacity: 1; }
   }
 
-  /* The annotation rail that pairs with distributed keywords. One row per
-     keyword; the active row opens its detail, the read rows stay quiet. */
-  .t-kw-rail {
-    width: 100%;
-    border-top: 1px solid var(--rule);
-  }
-
-  .t-kw-rail__head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.6rem 0;
-    border-bottom: 1px solid var(--rule-soft);
-  }
-
-  .t-kw-rail__row {
-    display: grid;
-    grid-template-columns: 2rem minmax(0, 1fr) auto;
-    column-gap: 0.75rem;
-    align-items: baseline;
-    padding: 1rem 0 0.85rem;
-    border-bottom: 1px solid var(--rule-soft);
-    opacity: 0.3;
-    transition: opacity 0.3s ease;
-  }
-
-  .t-kw-rail__row[data-state="read"] {
-    opacity: 0.6;
-  }
-
-  .t-kw-rail__row[data-state="active"] {
-    opacity: 1;
-  }
-
-  .t-kw-rail__no {
-    font-family: var(--t-label);
-    font-size: 0.625rem;
-    letter-spacing: 0.08em;
-    color: var(--t-accent);
-  }
-
-  .t-kw-rail__label {
-    display: block;
-    font-family: var(--t-label);
-    font-size: 0.5rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--t-muted);
-  }
-
-  .t-kw-rail__value {
-    font-family: var(--t-display);
-    font-size: 1.75rem;
-    line-height: 1;
-    letter-spacing: -0.01em;
-    color: var(--t-ink);
-  }
-
-  .t-kw-rail__detail {
-    grid-column: 2 / -1;
-    max-height: 0;
-    margin-top: 0.35rem;
-    overflow: hidden;
-    font-family: var(--t-text);
-    font-size: 0.8125rem;
-    line-height: 1.5;
-    color: var(--t-ink-soft);
-    transition: max-height 0.35s ease;
-  }
-
-  .t-kw-rail__row[data-state="active"] .t-kw-rail__detail {
-    max-height: 4rem;
-  }
-
   /* ── Callout note ───────────────────────────────────────────────────
      The d-desk-report note, for interaction instructions and method
      asides. A red rule, a mono label, then one sentence. */
@@ -730,14 +563,6 @@
   .t-note--callout b {
     font-weight: 500;
     color: var(--t-ink);
-  }
-
-  .t-note--method {
-    border-left-color: var(--rule);
-  }
-
-  .t-note--method .t-note__label {
-    color: var(--t-muted);
   }
 
   /* ── Cover ──────────────────────────────────────────────────────────
@@ -1049,7 +874,6 @@
   }
 
   :root {
-    --t-size-lede: 0.9375rem;
     --t-size-body: 0.9375rem;
     --t-size-deck: 1rem;
   }
@@ -1060,7 +884,6 @@
    horizontal room, while the step copy steps up one size. */
 @media (min-width: 960px) and (max-width: 1199px) {
   :root {
-    --t-size-lede: 1.125rem;
     --t-size-body: 1.125rem;
     --t-size-deck: 1.25rem;
   }
@@ -1079,69 +902,6 @@
 [data-detail-scroller],
 .detail-narrative {
   scrollbar-gutter: stable;
-}
-
-/* ── Responsive boundary overlay (dev only) ───────────────────────────
-   Toggle with ?boxes=1, the BOXES button, or Shift+D. Outlines only:
-   no layout, no paint order, no production markup. */
-.debug-boxes .detail-stage,
-.debug-boxes .detail-shell {
-  outline: 2px solid rgba(236, 72, 153, 0.75);
-  outline-offset: -2px;
-}
-
-.debug-boxes .detail-column--narrative,
-.debug-boxes .detail-narrative-pane,
-.debug-boxes .detail-narrative {
-  outline: 1px dashed rgba(37, 99, 235, 0.8);
-  outline-offset: -1px;
-}
-
-.debug-boxes .detail-column--visual,
-.debug-boxes .detail-visual-pane {
-  outline: 1px dashed rgba(5, 150, 105, 0.8);
-  outline-offset: -1px;
-}
-
-.debug-boxes .detail-chart-pane {
-  outline: 1px dotted rgba(217, 119, 6, 0.85);
-  outline-offset: -1px;
-}
-
-.debug-boxes .detail-chart-layer {
-  outline: 1px dashed rgba(217, 119, 6, 0.65);
-  outline-offset: -3px;
-}
-
-.debug-boxes .detail-figure {
-  outline: 1px solid rgba(124, 58, 237, 0.8);
-  outline-offset: -1px;
-}
-
-.debug-boxes .detail-figure-header,
-.debug-boxes .detail-figure-notes {
-  outline: 1px dashed rgba(219, 39, 119, 0.8);
-  outline-offset: -2px;
-}
-
-.debug-boxes .narrative-act {
-  outline: 1px dotted rgba(100, 116, 139, 0.7);
-  outline-offset: 0;
-}
-
-.debug-boxes .narrative-step--pinned {
-  outline: 1px dashed rgba(14, 165, 233, 0.65);
-  outline-offset: -2px;
-}
-
-.debug-boxes .pinned-stage {
-  outline: 1px dotted rgba(14, 165, 233, 0.9);
-  outline-offset: -2px;
-}
-
-.debug-boxes .detail-nav {
-  outline: 1px dotted rgba(217, 119, 6, 0.8);
-  outline-offset: -1px;
 }
 
 body {

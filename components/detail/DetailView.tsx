@@ -18,7 +18,6 @@ import { ACT3_STEPS } from '@/components/detail/acts/Act3/act3Steps';
 import { Kicker } from '@/components/detail/narrative/ReportType';
 import { EmphasisProvider } from '@/components/detail/narrative/EmphasisContext';
 import Footer from './Footer';
-import ResponsiveDebug from './ResponsiveDebug';
 import MobileScrollStory from './mobile/MobileScrollStory';
 import StoryProgress from './StoryProgress';
 import {
@@ -36,8 +35,6 @@ const ACTS = [
   { id: 2, narrative: <Act2Narrative /> },
   { id: 3, narrative: <Act3Narrative /> },
 ] as const;
-
-const isDev = process.env.NODE_ENV === 'development';
 
 interface DetailViewProps {
   scrollRef: RefObject<HTMLDivElement | null>;
@@ -115,7 +112,7 @@ function createSubstepTriggers(cssSelector: string, datasetKey: string, scroller
     if (el.classList.contains('narrative-step--pinned')) {
       ScrollTrigger.create({
         id: `substep-${datasetKey}-${step}`,
-        trigger: el, scroller, start: 'top top', end: 'bottom top', markers: isDev,
+        trigger: el, scroller, start: 'top top', end: 'bottom top',
         onToggle: (self) => {
           if (self.isActive) onStepChange(step);
         },
@@ -125,7 +122,7 @@ function createSubstepTriggers(cssSelector: string, datasetKey: string, scroller
 
     ScrollTrigger.create({
       id: `substep-${datasetKey}-${step}`,
-      trigger: el, scroller, start: 'center center', end: 'center center', markers: isDev,
+      trigger: el, scroller, start: 'center center', end: 'center center',
       onEnter: () => onStepChange(step), onEnterBack: () => onStepChange(step),
     });
   });
@@ -357,7 +354,7 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
 
     openers.forEach((opener, i) => {
       ScrollTrigger.create({
-        id: `act-${i + 1}`, trigger: opener, scroller, markers: isDev, start: 'center center', end: 'center center',
+        id: `act-${i + 1}`, trigger: opener, scroller, start: 'center center', end: 'center center',
         onEnter: () => {
           setActiveAct(i + 1);
           if (i === 0) setAct1Started(true);
@@ -558,7 +555,6 @@ export default function DetailView({ scrollRef, isDetailVisible, isDetailMounted
       </div>
 
       <Footer onExit={onExit}/>
-      <ResponsiveDebug />
     </div>
     </EmphasisProvider>
   );

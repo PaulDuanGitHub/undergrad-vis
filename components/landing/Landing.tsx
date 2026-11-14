@@ -1,7 +1,6 @@
 "use client";
 import React, { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Environment } from "@react-three/drei";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import gsap from "gsap";
@@ -223,7 +222,8 @@ export default function Landing() {
     if (!isIntroDone) return;
     // `isCopyOut` matters here: during the retract lead the model is still on
     // the landing side, but the user's intent has already left it.
-    isCopyOut || isDetailOpen ? closeDetail() : openDetail();
+    if (isCopyOut || isDetailOpen) closeDetail();
+    else openDetail();
   };
 
   // Opening always starts at the top of the story. The panel keeps its scroll

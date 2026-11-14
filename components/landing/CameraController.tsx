@@ -12,7 +12,6 @@ import {
   PARALLAX_AMOUNT,
   INTRO_COPY_AT,
   easeInOut,
-  easeOutQuart,
   getInitialCamera,
   getIntroCurves,
   easeInOutCubic,

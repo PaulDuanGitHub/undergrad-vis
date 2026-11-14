@@ -7,6 +7,7 @@ import {
   stackOrderInsideOut,
   area,
   curveBasis,
+  type SeriesPoint,
 } from 'd3-shape';
 import { scaleLinear } from 'd3-scale';
 import { min, max } from 'd3-array';
@@ -36,7 +37,7 @@ interface Act2VisualProps {
   availableHeight?: number;
   /** Keyword focus: `format:.tex`, `course:NLP`, or `all`. */
   emphasis?: string | null;
-  /** Mobile scroll prototype: finish the step morph faster than the desktop. */
+  /** Phone layout: finish the step morph faster than the desktop column. */
   fast?: boolean;
 }
 
@@ -206,7 +207,7 @@ export default function Act2Visual({
       .domain([yMin * 1.2, yMax * 1.2])
       .range([svgHeight, streamTop]);
 
-    const streamArea = area<any>()
+    const streamArea = area<SeriesPoint<StreamData>>()
       .x((d, i) => streamXScale(i))
       .y0((d) => streamYScale(d[0]))
       .y1((d) => streamYScale(d[1]))
@@ -217,7 +218,7 @@ export default function Act2Visual({
       const barW = barXScale(counts[key]);
       // the bar sits on ITS OWN label row, so label + value + bar are one line
       const yTop = layout.evenCenterY(rankIndex[key]) - barH / 2;
-      const barArea = area<any>()
+      const barArea = area<SeriesPoint<StreamData>>()
         .x((d, i) => layout.chartX0 + (i / (N - 1)) * barW)
         .y0(yTop + barH)
         .y1(yTop)
@@ -330,7 +331,7 @@ export default function Act2Visual({
     }
 
     return empty;
-  }, [effectiveKey, courseToExtsMapping, extToCoursesMapping]);
+  }, [effectiveKey, courseToExtsMapping]);
 
   // ── GSAP State Machine ──
 
