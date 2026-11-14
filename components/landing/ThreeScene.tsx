@@ -44,7 +44,7 @@ export default function ThreeScene({
   onPaperCovered,
 }: ThreeSceneProps) {
   const { scene, animations } = useGLTF(
-    './model/desk_web_3_baked_animation.glb'
+    './model/desk_web_4_baked_animation.glb'
   );
   const mixer = useMemo(
     () => (animations.length ? new THREE.AnimationMixer(scene) : null),

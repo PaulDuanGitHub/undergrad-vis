@@ -118,6 +118,15 @@
     --t-size-pull: 1.375rem;
     --t-measure: 100%;
   }
+
+  /* Justified setting needs a wide measure. On a phone the same rule opens
+     rivers between words; switch the reading voice to ragged right. */
+  .t-lede,
+  .t-body,
+  .t-note {
+    text-align: left;
+    text-align-last: left;
+  }
 }
 
 @layer components {
@@ -410,15 +419,44 @@
     -webkit-box-decoration-break: clone;
   }
 
-  /* The current token's post-word caret, centred on the word. */
-  .token-caret {
-    display: inline-block;
+  /* The current token's caret. Absolutely positioned OUTSIDE the line box: an
+     inline caret re-measures the line on every word, which re-wraps the last
+     word of a line and makes the copy twitch around keywords and punctuation. */
+  .token-current {
+    position: relative;
+  }
+
+  .token-current::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
     width: 3px;
     height: 0.95em;
-    margin-left: 0.22em;
-    vertical-align: middle;
+    transform: translateY(-50%);
     background: var(--color-brand);
     border-radius: 1px;
+    pointer-events: none;
+  }
+
+  /* The reading head after a keyboard-focused keyword: the caret is drawn at
+     the start of the next token, the same gap the current-word caret sits in,
+     so the phrase's red block ends exactly where the caret begins. */
+  .token-focus-caret {
+    position: relative;
+  }
+
+  .token-focus-caret::before {
+    content: '';
+    position: absolute;
+    left: -2px;
+    top: 50%;
+    width: 2px;
+    height: 0.95em;
+    transform: translateY(-50%);
+    background: var(--color-brand);
+    border-radius: 1px;
+    pointer-events: none;
   }
 
   /* The phone pane has no room for a full-height chapter break. */
@@ -492,6 +530,10 @@
      to a red block with white type, and the block wipes in from the left
      — the same "focus on" gesture as the figure statements. */
   .t-kw {
+    /* A keyword and its red block are one annotation: letting the phrase wrap
+       splits the block over two lines and reads as a typo. Every phrase is
+       short enough to fit the measure. */
+    white-space: nowrap;
     background-image:
       linear-gradient(var(--color-brand), var(--color-brand)),
       linear-gradient(var(--color-brand), var(--color-brand));
@@ -510,7 +552,7 @@
   }
 
   .t-kw[data-state="unread"] {
-    opacity: 0.42;
+    opacity: 0.5;
   }
 
   .t-kw[data-state="read"] {
@@ -546,6 +588,13 @@
     outline: 2px solid var(--color-brand);
     outline-offset: 2px;
     border-radius: 1px;
+  }
+
+  /* The active keyword's red block is already a strong focus cue. The outline
+     would sit exactly where the reading caret lands, so it is dropped while
+     the block is up — the caret takes over as the position marker. */
+  .t-kw[data-state="active"]:focus-visible {
+    outline: none;
   }
 
   /* The red block behind a focused figure note. */
@@ -657,18 +706,21 @@
     padding-left: 0.85rem;
     border-left: 2px solid var(--t-accent);
     font-family: var(--t-text);
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
     line-height: 1.55;
     color: var(--t-muted);
     text-align: left;
     hyphens: none;
+    /* A one-word last line ("count.") reads as an orphan now that the note is
+       larger; let the browser balance the break instead. */
+    text-wrap: pretty;
   }
 
   .t-note--callout .t-note__label {
     display: block;
     margin-bottom: 0.3rem;
     font-family: var(--t-label);
-    font-size: 0.5rem;
+    font-size: 0.5625rem;
     font-weight: 500;
     letter-spacing: 0.2em;
     text-transform: uppercase;
@@ -687,6 +739,63 @@
   .t-note--method .t-note__label {
     color: var(--t-muted);
   }
+
+  /* ── Cover ──────────────────────────────────────────────────────────
+     The landing is the report's front matter: the same three voices as the
+     story, one display size larger. The desk supplies the material; the
+     type supplies the title page. */
+  .cover-masthead {
+    font-family: var(--t-display);
+    font-size: clamp(3rem, 5.4vw, 4.75rem);
+    font-weight: 400;
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    color: var(--t-ink);
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  .cover-deck {
+    max-width: 30rem;
+    font-family: var(--t-text);
+    font-size: 1.125rem;
+    font-style: italic;
+    line-height: 1.5;
+    color: var(--t-ink-soft);
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  .cover-open {
+    color: var(--t-ink);
+    transition: color 0.2s ease;
+  }
+
+  .cover-open:hover {
+    color: var(--t-accent);
+  }
+
+  .cover-open > span:first-child {
+    border-bottom: 1px solid rgba(212, 68, 46, 0.35);
+    padding-bottom: 2px;
+    transition: border-color 0.2s ease;
+  }
+
+  .cover-open:hover > span:first-child {
+    border-color: var(--t-accent);
+  }
+}
+
+/* The cube grid is framed above the visual column's centre (the scene lifts the
+   grid off the canvas centre), so the cover statement — the introduction — is
+   lifted to sit level with it. Relative offsets on the children, not on the
+   header itself, keep the block in the flow where the act triggers expect it.
+   Two-column layouts only; the phone story has its own band rules. */
+@media (min-width: 960px), (orientation: landscape) and (min-width: 640px) {
+  .narrative-intro > * {
+    position: relative;
+    top: -7.5rem;
+  }
 }
 
 /* ── Two-column minimum stage ─────────────────────────────────────────
@@ -701,6 +810,60 @@
   min-height: 640px;
 }
 
+
+/* ── Landscape cover ──────────────────────────────────────────────────
+   A phone on its side has ~390px of height: the stacked cover would sit on
+   the desk. Turn it into a left-hand title panel over a paper scrim, with
+   the desk keeping the right half. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .cover-block {
+    position: fixed;
+    left: 1.5rem;
+    top: 1.1rem;
+    width: 44%;
+    max-width: 24rem;
+    margin: 0;
+    align-items: flex-start;
+    padding: 0.75rem 1rem 1rem 0.75rem;
+    background: linear-gradient(
+      90deg,
+      rgba(249, 249, 248, 0.97) 0%,
+      rgba(249, 249, 248, 0.94) 72%,
+      rgba(249, 249, 248, 0) 100%
+    );
+  }
+
+  .cover-block > div:first-child {
+    justify-content: flex-start;
+  }
+
+  .cover-masthead {
+    margin-top: 0.4rem;
+    font-size: 2.25rem;
+    text-align: left;
+  }
+
+  .cover-deck {
+    margin-top: 0.4rem;
+    max-width: 21rem;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    text-align: left;
+  }
+
+  /* The byline is the first thing to go when the height is the constraint. */
+  .cover-block > p:nth-of-type(2) {
+    display: none;
+  }
+
+  .cover-open {
+    margin-top: 0.8rem;
+  }
+
+  .cover-hint {
+    display: none;
+  }
+}
 
 /* ── Mobile scroll story ──────────────────────────────────────────────
    The chart is sticky under a 44px top bar; the PinnedReading stage sits in
@@ -781,6 +944,21 @@
 .mobile-scroll {
   scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
+  /* Act 1's three.js <Html> labels live at world coordinates and can project
+     far outside the canvas; without this they widen the scroll container and
+     draw a horizontal scrollbar along the bottom of the story. */
+  overflow-x: hidden;
+}
+
+/* Same source, clipped at the pane: the chart is a fixed frame, its labels
+   never belong outside it. */
+.mobile-scroll-visual {
+  overflow: hidden;
+}
+
+/* The copy sits on the same inset as the colophon's methodology column. */
+.mobile-scroll-narrative {
+  padding-inline: 1.25rem;
 }
 
 .mobile-scroll .pinned-reading--mobile .pinned-stage {
@@ -801,6 +979,22 @@
   min-height: var(--ms-text);
   padding-block: 1rem;
   margin-bottom: 0.6rem;
+}
+
+/* Act I opens with its figure already on screen (the cubes are the landing
+   image of the story): its chapter page sits directly under the chart instead
+   of centring in the band, so the cubes and the copy read as one composition. */
+.mobile-story .mobile-scroll-narrative > .narrative-act--compact:first-child {
+  justify-content: flex-start;
+  padding-top: 2.5rem;
+}
+
+/* Landscape already has the figure beside the copy: keep the page centred. */
+@media (orientation: landscape) and (min-width: 480px) and (max-height: 500px) {
+  .mobile-story .mobile-scroll-narrative > .narrative-act--compact:first-child {
+    justify-content: center;
+    padding-top: 1rem;
+  }
 }
 
 /* The colophon's first line clears the fixed top bar and the home indicator. */

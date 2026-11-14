@@ -19,17 +19,15 @@ type TokenStyle = 'block' | 'caret';
  * the next token, so it reads like a pre-block cursor without touching the
  * glyph. Inside an active keyword the mark is suppressed: the keyword's red
  * block is already the focus.
+ *
+ * The caret is drawn by CSS on the token's own wrapper (`.token-current`), not
+ * as an inline span: it must sit OUTSIDE the line box, otherwise every move
+ * from word to word re-measures the line and can push the last word of a line
+ * onto the next one — the copy visibly jitters at line ends and around
+ * keywords/punctuation.
  */
 function CurrentToken({ word, style }: { word: string; style: TokenStyle }) {
-  if (style === 'caret') {
-    return (
-      <>
-        {word}
-        <span aria-hidden className="token-caret" />
-      </>
-    );
-  }
-
+  if (style === 'caret') return <>{word}</>;
   return <span className="word-block">{word}</span>;
 }
 
@@ -77,9 +75,22 @@ export default function PinnedReading({
 
   const sectionRef = useRef<HTMLElement>(null);
   const [readCount, setReadCount] = useState(0);
+  /**
+   * The keyword the keyboard is on. Focusing a keyword is also a reading
+   * gesture: the head jumps to the end of that phrase so the copy up to it is
+   * lit and the caret sits after it. Blur hands the head back to the scroll.
+   */
+  const [focusedKeyword, setFocusedKeyword] = useState<string | null>(null);
   const { activeStep, active, hover, setReading, setHover } = useEmphasis();
   const reducedMotion = useReducedMotion();
   const isStepActive = activeStep?.act === act && activeStep?.step === step;
+
+  const focusedRange = useMemo(
+    () => ranges.find((keyword) => keyword.index === focusedKeyword)?.range ?? null,
+    [ranges, focusedKeyword],
+  );
+  /** The head the copy draws: a focused keyword pulls it to the phrase's end. */
+  const displayReadCount = focusedRange ? focusedRange.end : readCount;
 
   // Dev-only fallback: ?token=block restores the old word block.
   const [tokenStyle, setTokenStyle] = useState<TokenStyle>('caret');
@@ -87,6 +98,9 @@ export default function PinnedReading({
     if (process.env.NODE_ENV === 'production') return;
     const value = new URLSearchParams(window.location.search).get('token');
     if (value === 'block' || value === 'caret') {
+      // Dev-only override, applied after mount so the server and the first
+      // client render agree on the default token mark.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTokenStyle(value);
     }
   }, []);
@@ -140,15 +154,37 @@ export default function PinnedReading({
       '[data-detail-scroller]',
     ) as HTMLElement | null;
 
+    // The stage is sticky at `top` (0 on the two-column page, the 58dvh chart
+    // on the phone), so a step starts READING only when its stage reaches that
+    // line — not when the section reaches the top of the scroller, which on the
+    // phone is half a screen behind the chart. Measuring the stage's own
+    // geometry keeps both layouts on the same formula.
+    const measure = () => {
+      const stage = section.querySelector<HTMLElement>('.pinned-stage');
+      const stickyTop = stage
+        ? parseFloat(getComputedStyle(stage).top) || 0
+        : 0;
+      const stageHeight =
+        stage?.offsetHeight ??
+        (scroller ? scroller.clientHeight : window.innerHeight);
+      return {
+        stickyTop,
+        stageHeight,
+        // The stage stays pinned for this much of the section's scroll.
+        travel: Math.max(section.offsetHeight - stageHeight, 1),
+      };
+    };
+
+    let metrics = measure();
+
     const sync = () => {
       const scrollerTop = scroller
         ? scroller.getBoundingClientRect().top
         : 0;
-      const viewport = scroller ? scroller.clientHeight : window.innerHeight;
-      const runway = Math.max(section.offsetHeight - viewport, 1);
+      const bandTop = scrollerTop + metrics.stickyTop;
       const progress = Math.min(
         1,
-        Math.max(0, (scrollerTop - section.getBoundingClientRect().top) / runway),
+        Math.max(0, (bandTop - section.getBoundingClientRect().top) / metrics.travel),
       );
       setReadCount(Math.round(progress * tokens.length));
     };
@@ -156,12 +192,19 @@ export default function PinnedReading({
     sync();
     const target = scroller ?? window;
     target.addEventListener('scroll', sync, { passive: true });
-    window.addEventListener('resize', sync);
-    document.fonts?.ready.then(sync);
+    const onResize = () => {
+      metrics = measure();
+      sync();
+    };
+    window.addEventListener('resize', onResize);
+    document.fonts?.ready.then(() => {
+      metrics = measure();
+      sync();
+    });
 
     return () => {
       target.removeEventListener('scroll', sync);
-      window.removeEventListener('resize', sync);
+      window.removeEventListener('resize', onResize);
     };
   }, [tokens.length]);
 
@@ -185,24 +228,36 @@ export default function PinnedReading({
     return map;
   }, [ranges]);
 
-  const activeIndex = active?.keyword ?? null;
-
   const renderWord = (token: string, index: number): ReactNode => {
     const word = token.trimEnd();
     const trailing = token.slice(word.length);
     const isCurrent =
       !hover &&
       !reducedMotion &&
-      index === readCount &&
-      readCount < tokens.length &&
+      index === displayReadCount &&
+      displayReadCount < tokens.length &&
       /[\p{L}\p{N}]/u.test(word);
+    // A focused keyword's caret belongs at the start of the next token: that is
+    // the same gap the normal current-word caret sits in, just after the
+    // phrase's trailing space.
+    const isFocusCaret =
+      focusedRange !== null && index === focusedRange.end + 1;
 
     return (
-      <span key={`w-${index}`}>
+      <span
+        key={`w-${index}`}
+        className={
+          isCurrent && tokenStyle === 'caret'
+            ? 'token-current'
+            : isFocusCaret
+              ? 'token-focus-caret'
+              : undefined
+        }
+      >
         {isCurrent ? (
           <CurrentToken word={word} style={tokenStyle} />
         ) : (
-          <span style={{ opacity: index < readCount ? 1 : 0.26 }}>{word}</span>
+          <span style={{ opacity: index < displayReadCount ? 1 : 0.45 }}>{word}</span>
         )}
         {trailing}
       </span>
@@ -247,9 +302,11 @@ export default function PinnedReading({
                 const { start, end } = hit.keyword.range!;
                 const group = tokens.slice(start, end + 1);
                 const state =
-                  activeIndex === hit.keyword.index
+                  active?.act === act &&
+                  active.step === step &&
+                  active.keyword === hit.keyword.index
                     ? 'active'
-                    : readCount > end
+                    : displayReadCount > end
                       ? 'read'
                       : 'unread';
 
@@ -266,8 +323,14 @@ export default function PinnedReading({
                       aria-label={`Annotation ${hit.keyword.index}: ${hit.keyword.noteLead} ${hit.keyword.noteText}`}
                       onMouseEnter={() => setKeywordHover(hit.keyword)}
                       onMouseLeave={() => setKeywordHover(null)}
-                      onFocus={() => setKeywordHover(hit.keyword)}
-                      onBlur={() => setKeywordHover(null)}
+                      onFocus={() => {
+                        setFocusedKeyword(hit.keyword.index);
+                        setKeywordHover(hit.keyword);
+                      }}
+                      onBlur={() => {
+                        setFocusedKeyword(null);
+                        setKeywordHover(null);
+                      }}
                     >
                       {group.map((part, offset) => {
                         const word = part.trimEnd();
@@ -275,26 +338,24 @@ export default function PinnedReading({
                         const isCurrent =
                           !hover &&
                           !reducedMotion &&
-                          start + offset === readCount &&
+                          start + offset === displayReadCount &&
                           /[\p{L}\p{N}]/u.test(word);
 
                         return (
-                          <span key={offset}>
-                            {isCurrent ? (
-                              state === 'active' ? (
-                                word
-                              ) : (
-                                <CurrentToken word={word} style={tokenStyle} />
-                              )
+                          <span
+                            key={offset}
+                            className={
+                              isCurrent && state !== 'active' && tokenStyle === 'caret'
+                                ? 'token-current'
+                                : undefined
+                            }
+                          >
+                            {isCurrent && state !== 'active' ? (
+                              <CurrentToken word={word} style={tokenStyle} />
                             ) : (
                               word
                             )}
                             {!isLast && ' '}
-                            {isLast && (
-                              <span className="t-kw__index" aria-hidden>
-                                {hit.keyword.index}
-                              </span>
-                            )}
                           </span>
                         );
                       })}

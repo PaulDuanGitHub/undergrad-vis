@@ -20,7 +20,7 @@ export const ACT3_STEPS: Act3Step[] = [
   {
     fig: '10',
     title: 'Freshman year',
-    text: 'Freshman year: each track is an assignment with more than 100 versions, and each bubble is a burst of file saves. Notice how the bubbles cluster at the right edge — the deadline. 61% of all edits happen within the last 12 hours, and 22% with 12–24 hours left. The classic pattern of a beginner: all panic, no pacing.',
+    text: 'Freshman year: each track is an assignment with more than 100 versions, and each dot is a burst of file saves. Notice how the dots cluster at the right edge — the deadline. 61% of all versions happen within the last 12 hours, and 22% with 12–24 hours left. The classic pattern of a beginner: all panic, no pacing.',
     note: 'The shading marks the deadline window while a keyword is focused.',
     keywords: [
       {
@@ -35,21 +35,21 @@ export const ACT3_STEPS: Act3Step[] = [
         index: '02',
         emphasis: 'band:0.5',
         noteLead: '61%',
-        noteText: 'of edits in the last 12 hours',
+        noteText: 'of versions in the last 12 hours',
       },
       {
         phrase: '22%',
         index: '03',
         emphasis: 'slice:0.5-1',
         noteLead: '22%',
-        noteText: 'of edits in the 12–24 hour window',
+        noteText: 'of versions in the 12–24 hour window',
       },
     ],
   },
   {
     fig: '11',
     title: 'The last year',
-    text: 'Four years later: the last year. The courses are harder — machine learning, NLP — and the projects are larger. But look at the bubble distribution. The right edge still dominates. The tools improved; the habits didn’t. 37% of all edits happened within the last 12 hours.',
+    text: 'Four years later: the last year. The courses are harder — machine learning, NLP — and the projects are larger. But look at the distribution. The right edge still dominates. The tools improved; the habits didn’t. 37% of all versions happened within the last 12 hours.',
     keywords: [
       {
         phrase: 'last year',
@@ -63,14 +63,14 @@ export const ACT3_STEPS: Act3Step[] = [
         index: '02',
         emphasis: 'band:0.5',
         noteLead: '37%',
-        noteText: 'of edits in the last 12 hours',
+        noteText: 'of versions in the last 12 hours',
       },
     ],
   },
   {
     fig: '12',
     title: 'All assignments',
-    text: 'Now all 58 major assignments compress into a single dense grid. Five years, near 24,000 commits, squeezed into one view. I am, and apparently always have been, a deadline-driven student. 54% of all edits were made within the last 12 hours. 73% within the last 2 days.',
+    text: 'Now all 58 major assignments compress into a single dense grid. Five years, near 24,000 versions, squeezed into one view. I am, and apparently always have been, a deadline-driven student. 54% of all versions were made within the last 12 hours. 73% within the last 2 days.',
     keywords: [
       {
         phrase: '58',
@@ -84,29 +84,29 @@ export const ACT3_STEPS: Act3Step[] = [
         index: '02',
         emphasis: 'band:0.5',
         noteLead: '54%',
-        noteText: 'of edits in the last 12 hours',
+        noteText: 'of versions in the last 12 hours',
       },
       {
         phrase: '73%',
         index: '03',
         emphasis: 'band:2',
         noteLead: '73%',
-        noteText: 'of edits in the last two days',
+        noteText: 'of versions in the last two days',
       },
     ],
   },
   {
     fig: '13',
     title: 'The week',
-    text: 'When exactly does the work happen? This heatmap maps ~43,000 file edits across days of the week and hours of the day. Weekend evenings burn brightest. 8pm, the undisputed peak of productivity. Weekends are not spared: a full third of all edits happen on Saturday and Sunday. Mornings, by contrast, are almost wasted.',
-    note: 'Tap a cell to read that hour’s file count.',
+    text: 'When exactly does the work happen? This heatmap maps ~43,000 versions across days of the week and hours of the day. Weekend evenings burn brightest. 8pm, the undisputed peak of productivity. Weekends are not spared: a full third of all versions happen on Saturday and Sunday. Mornings, by contrast, are almost wasted.',
+    note: 'Tap a cell to read that hour’s version count.',
     keywords: [
       {
         phrase: '43,000',
         index: '01',
         emphasis: 'all',
         noteLead: '43,000',
-        noteText: 'file edits',
+        noteText: 'versions',
       },
       {
         phrase: '8pm',
@@ -120,7 +120,7 @@ export const ACT3_STEPS: Act3Step[] = [
         index: '03',
         emphasis: 'punch:weekend',
         noteLead: '33%',
-        noteText: 'of edits on weekends',
+        noteText: 'of versions on weekends',
       },
     ],
   },

@@ -82,13 +82,29 @@ export const metadata: Metadata = {
     // A committed 1600×1200 PNG rather than a generated metadata route: the
     // GitHub Pages host serves extensionless files as octet-stream, which the
     // social crawlers refuse. It doubles as the Awwwards submission thumbnail.
-    images: [{ url: "./og.png", width: 1600, height: 1200, alt: OG_IMAGE_ALT }],
+    images: [
+      {
+        url: "./og.png",
+        type: "image/png",
+        width: 1600,
+        height: 1200,
+        alt: OG_IMAGE_ALT,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    images: ["./og.png"],
+    images: [
+      {
+        url: "./og.png",
+        type: "image/png",
+        width: 1600,
+        height: 1200,
+        alt: OG_IMAGE_ALT,
+      },
+    ],
   },
 };
 

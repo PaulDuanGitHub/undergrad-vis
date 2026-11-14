@@ -66,7 +66,7 @@ export default function FigureFrame({
         }`}
         aria-hidden={!chrome}
       >
-        <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-text-secondary">
+        <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-text-secondary">
           Fig. {fig} — {title}
         </span>
       </div>
@@ -103,23 +103,14 @@ export default function FigureFrame({
                     on ? 'delay-100' : ''
                   }`}
                 >
-                  <div className="flex items-baseline gap-1.5">
-                    <span
-                      className={`font-mono text-[9px] tracking-[0.08em] transition-colors ${
-                        on ? 'text-white' : 'text-text-secondary'
-                      }`}
-                    >
-                      {note.index}
-                    </span>
-                    <span
-                      className={`figure-note-lead text-[30px] leading-none tracking-[-0.015em] transition-colors ${
-                        on ? 'text-white' : 'text-text-primary'
-                      }`}
-                      style={{ fontFamily: 'var(--t-display)' }}
-                    >
-                      {note.lead}
-                    </span>
-                  </div>
+                  <span
+                    className={`figure-note-lead text-[30px] leading-none tracking-[-0.015em] transition-colors ${
+                      on ? 'text-white' : 'text-text-primary'
+                    }`}
+                    style={{ fontFamily: 'var(--t-display)' }}
+                  >
+                    {note.lead}
+                  </span>
                   <p
                     className={`figure-note-text mt-1 text-[14px] leading-snug transition-colors ${
                       on ? 'text-white/85' : 'text-text-primary/70'
