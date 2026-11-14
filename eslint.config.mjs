@@ -16,6 +16,7 @@ const eslintConfig = defineConfig([
     // static style explorations are not part of the app.
     ".tmp/**",
     "style-demos/**",
+    ".wrangler/**",
   ]),
 ]);
 

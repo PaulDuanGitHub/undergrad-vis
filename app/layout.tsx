@@ -9,8 +9,8 @@ import {
 import { GoogleAnalytics } from '@next/third-parties/google'
 import "./globals.css";
 
-/** Canonical origin, including the GitHub Pages project path. */
-const SITE_URL = "https://paulduangithub.github.io/undergrad-vis/";
+/** Canonical origin, including the Cloudflare Workers subpath. */
+const SITE_URL = "https://xianzhaoduan.com/undergrad-vis/";
 const SITE_TITLE = "Productivity (2021–2026) | Paul Duan";
 const SITE_DESCRIPTION =
   "A 3D data story of 567 workfiles, 34 courses and five years of undergraduate study (Fall 2021 – Winter 2026), read from OneDrive version history.";

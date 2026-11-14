@@ -1,6 +1,6 @@
 # Productivity (2021–2026) — Undergraduate Visualization
 
-[Productivity (2021–2026) — Undergraduate Visualization](https://paulduangithub.github.io/undergrad-vis/)
+[Productivity (2021–2026) — Undergraduate Visualization](https://xianzhaoduan.com/undergrad-vis/)
 
 An interactive 3D data story visualizing **567 workfiles** created across five years of undergraduate study (Fall 2021 – Winter 2026). 
 ![Undergrad Vis GIF](./undergrad-vis.gif)
@@ -32,17 +32,17 @@ The story is set as a printed report: Instrument Serif for display, Newsreader f
 # Install dependencies
 npm install
 
-# Start development server
+# Start development server (the site is mounted at /undergrad-vis)
 npm run dev
 
-# Build for production
+# Build the static export (outputs to out/)
 npm run build
 
-# Run production build
-npm start
+# Build and deploy to Cloudflare Workers
+npm run deploy
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser. The page loads a GLTF model and the cube dataset — allow a moment for assets to stream in.
+Open [http://localhost:3000/undergrad-vis/](http://localhost:3000/undergrad-vis/) in your browser. The page loads a GLTF model and the cube dataset — allow a moment for assets to stream in.
 
 ## Data
 
@@ -90,14 +90,22 @@ The top bar is also a table of contents: each of the three segments is a button 
 
 ## Metadata
 
-`app/layout.tsx` owns the Open Graph / Twitter metadata (canonical URL, theme colour, social card). The social card is the committed `public/og.png` at 1600×1200 — a typographic cover set in the report's own typefaces, deliberately a 4:3 static PNG rather than a generated metadata route, because GitHub Pages serves extensionless files as `application/octet-stream`. `app/sitemap.ts` and `app/robots.ts` are static exports for the same reason.
+`app/layout.tsx` owns the Open Graph / Twitter metadata (canonical URL, theme colour, social card). The social card is the committed `public/og.png` at 1600×1200 — a typographic cover set in the report's own typefaces, deliberately a 4:3 static PNG rather than a generated metadata route. `app/sitemap.ts` and `app/robots.ts` are static exports for the same reason.
 
 The narrative copy is also rendered as a visually hidden `StorySummary` section so the text and numbers exist in the initial HTML for crawlers and screen readers.
 
 ## Build & Deploy
 
-The site is deployed to GitHub Pages by `.github/workflows/nextjs.yml` on every push to `main`. Production builds include Google Analytics (ID `G-KNPEXFEH64`).
+The canonical site is a **Cloudflare Workers static asset** at [https://xianzhaoduan.com/undergrad-vis/](https://xianzhaoduan.com/undergrad-vis/).
+
+- `next.config.ts` uses `output: "export"` and `basePath: "/undergrad-vis"`; `npm run build` writes the static site to `out/`.
+- `wrangler.jsonc` mounts that directory with `assets.base_path: "/undergrad-vis"` and routes `xianzhaoduan.com/undergrad-vis` + `/*` to the Worker. This needs **Wrangler 4.148+**; the deploy script runs `npx wrangler@4.162.0`.
+- `npm run deploy` builds and deploys; `npm run preview` runs the Worker locally.
+- `public/_headers` sets immutable caching for `_next/static` and basic security headers.
+
+The existing GitHub Pages workflow (`.github/workflows/nextjs.yml`) still builds the same `out/` as a mirror. Its canonical/OG metadata points at the Cloudflare URL, so the mirror does not compete in search.
 
 ```bash
-npm run build   # outputs to .next/
+npm run build    # static export to out/
+npm run deploy   # build + wrangler deploy
 ```

@@ -51,7 +51,7 @@ export default function Footer({ onExit, compact = false }: FooterProps) {
                             </p>
                             <p className="t-note mb-6">
                                 You are welcome to check out the <a href="https://github.com/PaulDuanGitHub/undergrad-vis" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">GitHub Repo</a> for this website.
-                                Also <a href="https://paulduangithub.github.io/blog/2026/07/23/From-3D-to-D3-Visualizing-550-Files-and-5-Years-of-University/" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">the Epilogue on my BLOG</a>!
+                                Also <a href="https://xianzhaoduan.com/blog/2026/07/23/From-3D-to-D3-Visualizing-550-Files-and-5-Years-of-University/" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">the Epilogue on my BLOG</a>!
                                 Don&rsquo;t hesitate to star if you like this project!
                             </p>
                             <div>

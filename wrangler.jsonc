@@ -1,0 +1,19 @@
+{
+  "name": "undergrad-vis",
+  "compatibility_date": "2026-11-13",
+  "assets": {
+    "directory": "./out",
+    "base_path": "/undergrad-vis",
+    "not_found_handling": "404-page"
+  },
+  "routes": [
+    {
+      "pattern": "xianzhaoduan.com/undergrad-vis",
+      "zone_name": "xianzhaoduan.com"
+    },
+    {
+      "pattern": "xianzhaoduan.com/undergrad-vis/*",
+      "zone_name": "xianzhaoduan.com"
+    }
+  ]
+}
