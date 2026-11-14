@@ -27,10 +27,10 @@ interface StateMachineConfig {
   onJump?: (from: number, to: number) => void;
 
   /**
-   * Optional multiplier for named step transitions. Mobile scroll prototypes
-   * use this to finish the chart's morph within the scroll handoff instead of
-   * lagging a beat behind the incoming copy. The multiplier is applied to the
-   * global timeline only for the transition window, then restored.
+   * Optional multiplier for named step transitions. The phone layout uses this
+   * to finish the chart's morph within the scroll handoff instead of lagging a
+   * beat behind the incoming copy. The multiplier is applied to the global
+   * timeline only for the transition window, then restored.
    */
   speed?: number;
 }

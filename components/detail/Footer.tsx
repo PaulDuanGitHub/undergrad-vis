@@ -42,7 +42,7 @@ export default function Footer({ onExit, compact = false }: FooterProps) {
                             <p className="t-note mb-4">
                                 Designed and developed with <b>React</b> and <b>Next.js</b>.
                                 The 3D environment is rendered using <b>Three.js</b> and <b>React Three Fiber</b>.
-                                The original Landing scene was modeled using <b>Blender</b> and textures were baked by <b>Cycles</b> - Blender's ray-trace based production render engine.
+                                The original Landing scene was modeled using <b>Blender</b> and textures were baked by <b>Cycles</b> - Blender&rsquo;s ray-trace based production render engine.
                             </p>
                             <p className="t-note mb-4">
                                 Data processing and vector visualizations were mathematically generated via <b>D3.js</b>,
@@ -52,7 +52,7 @@ export default function Footer({ onExit, compact = false }: FooterProps) {
                             <p className="t-note mb-6">
                                 You are welcome to check out the <a href="https://github.com/PaulDuanGitHub/undergrad-vis" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">GitHub Repo</a> for this website.
                                 Also <a href="https://paulduangithub.github.io/blog/2026/07/23/From-3D-to-D3-Visualizing-550-Files-and-5-Years-of-University/" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">the Epilogue on my BLOG</a>!
-                                Don't hesitate to star if you like this project!
+                                Don&rsquo;t hesitate to star if you like this project!
                             </p>
                             <div>
                                 <h3 className="t-subhead mb-6">
@@ -71,19 +71,19 @@ export default function Footer({ onExit, compact = false }: FooterProps) {
                                 </p>
                                 <ul className="t-note list-disc list-inside space-y-1">
                                     <li>
-                                        "<strong>Minimalist Desk</strong>" by <a href="https://sketchfab.com/3d-models/minimalist-desk-escritorio-minimalista-447da0bd6e244a849730305aab9605bc" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">ElOsitoAzul</a>
+                                        &ldquo;<strong>Minimalist Desk</strong>&rdquo; by <a href="https://sketchfab.com/3d-models/minimalist-desk-escritorio-minimalista-447da0bd6e244a849730305aab9605bc" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">ElOsitoAzul</a>
                                         (adapted)
                                     </li>
                                     <li>
-                                        "<strong>Plain Mug</strong>" by <a href="https://sketchfab.com/3d-models/plain-mug-19c8fe5702b544d0a1409d3dac1cf90e" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">LightSwitch</a>
+                                        &ldquo;<strong>Plain Mug</strong>&rdquo; by <a href="https://sketchfab.com/3d-models/plain-mug-19c8fe5702b544d0a1409d3dac1cf90e" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">LightSwitch</a>
                                         (modified)
                                     </li>
                                     <li>
-                                        "<strong>Small plant in a pot</strong>" by <a href="https://sketchfab.com/3d-models/small-plant-in-a-pot-1c44dd662e1447e28890a75ca6d9507e" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">Jsdpk</a>
+                                        &ldquo;<strong>Small plant in a pot</strong>&rdquo; by <a href="https://sketchfab.com/3d-models/small-plant-in-a-pot-1c44dd662e1447e28890a75ca6d9507e" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">Jsdpk</a>
                                         (modified)
                                     </li>
                                     <li>
-                                        "<strong>Graduation</strong>" by <a href="https://sketchfab.com/3d-models/graduation-86895e10baf54c46896823394766fb86" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">Cyberluna</a>
+                                        &ldquo;<strong>Graduation</strong>&rdquo; by <a href="https://sketchfab.com/3d-models/graduation-86895e10baf54c46896823394766fb86" target="_blank" rel="noreferrer" className="underline hover:text-brand transition-colors">Cyberluna</a>
                                         (modified)
                                     </li>
                                 </ul>

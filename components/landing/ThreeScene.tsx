@@ -1,3 +1,7 @@
+/* Three.js textures and materials are mutated in place after they are loaded;
+   the React Compiler immutability rule does not model that imperative layer. */
+/* eslint-disable react-hooks/immutability */
+
 import React, { useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF, useTexture } from '@react-three/drei';

@@ -18,7 +18,7 @@ interface Act3VisualProps {
   availableHeight?: number;
   /** Keyword focus: `band:0.5`, `punch:evening`, `punch:weekend`, or `all`. */
   emphasis?: string | null;
-  /** Mobile scroll prototype: finish step transitions faster. */
+  /** Phone layout: finish step transitions faster than the two-column story. */
   fast?: boolean;
 }
 
@@ -68,8 +68,15 @@ const BAND_TIERS = [
   { d: 14, label: '2w', phrase: '2 weeks', alpha: 0.12 },
 ] as const;
 
-/** Height of the band strip, which hangs BELOW the axis line. */
-const STRIP_H = 6;
+/** One deadline axis: the scale, its placement, and the cumulative shares it
+ *  prints under the line. */
+type DeadlineAxis = {
+  scale: (value: number) => number;
+  x: number;
+  y: number;
+  w: number;
+  shares: number[];
+};
 
 export default function Act3Visual({ step, isActive, compact = false, availableHeight, emphasis = null, fast = false }: Act3VisualProps) {
   const { ref: svgRef, width: svgWidth, height: containerHeight, measured } =
@@ -116,7 +123,7 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
         : null;
   // ── Data computation ──
 
-  const { processedData, axes, allGroupLabels, trackX, trackWidth, timeScale } = useMemo(() => {
+  const { processedData, axes, allGroupLabels, trackX, timeScale } = useMemo(() => {
     const allData = heavy_assignments_commits;
 
     const isFreshman = (term: string) => ["2021 Fall", "2022 Winter"].includes(term);
@@ -486,7 +493,7 @@ export default function Act3Visual({ step, isActive, compact = false, availableH
     );
   };
 
-  const renderAxis = (axisDef: any, stepIndex: number | number[], className: string) => {
+  const renderAxis = (axisDef: DeadlineAxis, stepIndex: number | number[], className: string) => {
     const isVisible = Array.isArray(stepIndex) ? stepIndex.includes(step) : step === stepIndex;
     const { scale, x, y, w, shares } = axisDef;
     const toX = (t: number) => Math.max(0, Math.min(w, scale(t)));

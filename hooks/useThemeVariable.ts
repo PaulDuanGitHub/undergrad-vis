@@ -14,6 +14,9 @@ export function useThemeVariable(variableName: string): string {
   const [value, setValue] = useState<string>('');
 
   useEffect(() => {
+    // The variable is resolved from the computed style after mount; it is an
+    // external-system read, not state that can be derived during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setValue(getCssVariableValue(variableName));
   }, [variableName]);
 

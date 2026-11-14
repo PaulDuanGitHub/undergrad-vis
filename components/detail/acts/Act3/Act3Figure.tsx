@@ -30,8 +30,6 @@ export default function Act3Figure({
     <FigureFrame
       fig={config.fig}
       title={config.title}
-      step={step + 10}
-      total={13}
       notes={config.keywords.map((keyword) => ({
         index: keyword.index,
         lead: keyword.noteLead,

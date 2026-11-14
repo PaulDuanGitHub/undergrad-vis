@@ -5,31 +5,12 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Note } from './ReportType';
 import { useEmphasis } from './EmphasisContext';
 import { findPhraseRange, type ReadingKeyword } from './keywordRange';
-import { tokenizeReadingText } from './readingVariants';
+import { tokenizeReadingText } from './tokenizeReading';
 
 /** Scroll runway per word. 34px is roughly one wheel notch every two words. */
 const PX_PER_WORD = 34;
-/** The mobile scroll prototype uses a shorter runway and a 60/40 chart stage. */
+/** The phone layout uses a shorter runway under a 58dvh sticky figure. */
 const PX_PER_WORD_MOBILE = 22;
-
-type TokenStyle = 'block' | 'caret';
-
-/**
- * The current token's mark. The caret sits after the word, in the gap before
- * the next token, so it reads like a pre-block cursor without touching the
- * glyph. Inside an active keyword the mark is suppressed: the keyword's red
- * block is already the focus.
- *
- * The caret is drawn by CSS on the token's own wrapper (`.token-current`), not
- * as an inline span: it must sit OUTSIDE the line box, otherwise every move
- * from word to word re-measures the line and can push the last word of a line
- * onto the next one — the copy visibly jitters at line ends and around
- * keywords/punctuation.
- */
-function CurrentToken({ word, style }: { word: string; style: TokenStyle }) {
-  if (style === 'caret') return <>{word}</>;
-  return <span className="word-block">{word}</span>;
-}
 
 interface PinnedReadingProps {
   act: 1 | 2 | 3;
@@ -38,17 +19,17 @@ interface PinnedReadingProps {
   keywords: ReadingKeyword[];
   /** Interaction note shown under the copy, in the margin voice. */
   note?: string;
-  /** Mobile scroll prototype: shorter word runway, smaller pinned stage. */
+  /** Phone layout: shorter word runway and a smaller pinned stage. */
   compact?: boolean;
 }
 
 /**
  * A substep that pins its copy and reads it word by word.
  *
- * The narrative-lab's "04 Word block + pinned + no smooth" setup: the section
- * owns a word-sized runway, the stage is sticky, and the current word carries
- * a solid block. When the head reaches a keyword, the keyword reverses to a
- * red focus block and publishes its emphasis to the figure.
+ * The section owns a word-sized runway, the stage is sticky, and the current
+ * word carries a caret in the gap after it. When the head reaches a keyword,
+ * the phrase reverses to a red focus block and publishes its emphasis to the
+ * figure.
  *
  * The binding is bi-directional: hovering a keyword in the copy, or its note
  * in the figure, sets a hover override in `EmphasisContext`. The override
@@ -91,19 +72,6 @@ export default function PinnedReading({
   );
   /** The head the copy draws: a focused keyword pulls it to the phrase's end. */
   const displayReadCount = focusedRange ? focusedRange.end : readCount;
-
-  // Dev-only fallback: ?token=block restores the old word block.
-  const [tokenStyle, setTokenStyle] = useState<TokenStyle>('caret');
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'production') return;
-    const value = new URLSearchParams(window.location.search).get('token');
-    if (value === 'block' || value === 'caret') {
-      // Dev-only override, applied after mount so the server and the first
-      // client render agree on the default token mark.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTokenStyle(value);
-    }
-  }, []);
 
   /**
    * The keyword that owns the current stretch of copy: the last one the head
@@ -247,7 +215,7 @@ export default function PinnedReading({
       <span
         key={`w-${index}`}
         className={
-          isCurrent && tokenStyle === 'caret'
+          isCurrent
             ? 'token-current'
             : isFocusCaret
               ? 'token-focus-caret'
@@ -255,7 +223,7 @@ export default function PinnedReading({
         }
       >
         {isCurrent ? (
-          <CurrentToken word={word} style={tokenStyle} />
+          word
         ) : (
           <span style={{ opacity: index < displayReadCount ? 1 : 0.45 }}>{word}</span>
         )}
@@ -345,16 +313,12 @@ export default function PinnedReading({
                           <span
                             key={offset}
                             className={
-                              isCurrent && state !== 'active' && tokenStyle === 'caret'
+                              isCurrent && state !== 'active'
                                 ? 'token-current'
                                 : undefined
                             }
                           >
-                            {isCurrent && state !== 'active' ? (
-                              <CurrentToken word={word} style={tokenStyle} />
-                            ) : (
-                              word
-                            )}
+                            {word}
                             {!isLast && ' '}
                           </span>
                         );
