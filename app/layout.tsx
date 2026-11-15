@@ -15,7 +15,7 @@ const SITE_TITLE = "Productivity (2021–2026) | Paul Duan";
 const SITE_DESCRIPTION =
   "A 3D data story of 567 workfiles, 34 courses and five years of undergraduate study (Fall 2021 – Winter 2026), read from OneDrive version history.";
 const OG_IMAGE_ALT =
-  "Productivity (2021–2026): 567 workfiles, 34 courses, five years of undergraduate study.";
+  "Productivity (2021–2026): 567 workfiles, 34 courses and 43,662 versions across five years of undergraduate study.";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -79,15 +79,15 @@ export const metadata: Metadata = {
     locale: "en_CA",
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    // A committed 1600×1200 PNG rather than a generated metadata route: the
-    // GitHub Pages host serves extensionless files as octet-stream, which the
-    // social crawlers refuse. It doubles as the Awwwards submission thumbnail.
+    // A committed 1200×630 PNG rather than a generated metadata route: the
+    // static host serves extensionless files as octet-stream, which social
+    // crawlers refuse. Awwwards uses the separate 1600×1200 cover set.
     images: [
       {
         url: "./og.png",
         type: "image/png",
-        width: 1600,
-        height: 1200,
+        width: 1200,
+        height: 630,
         alt: OG_IMAGE_ALT,
       },
     ],
@@ -100,8 +100,8 @@ export const metadata: Metadata = {
       {
         url: "./og.png",
         type: "image/png",
-        width: 1600,
-        height: 1200,
+        width: 1200,
+        height: 630,
         alt: OG_IMAGE_ALT,
       },
     ],
