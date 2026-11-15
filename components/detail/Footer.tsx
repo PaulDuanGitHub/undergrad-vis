@@ -97,7 +97,7 @@ export default function Footer({ onExit, compact = false }: FooterProps) {
                                     >
                                         McMaster University
                                     </a>
-                                    . Used for personal, non-commercial purposes as a student of the university.
+                                    . Used for personal, non-commercial purposes as an alumnus of the university.
                                 </p>
                             </div>
                         </div>

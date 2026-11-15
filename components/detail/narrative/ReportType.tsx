@@ -44,7 +44,7 @@ export const ACT_META = {
         Most of the work happens in the <em>last 12 hours</em>.
       </>
     ),
-    deck: '23,906 versions, one deadline-shaped habit.',
+    deck: '23,906 versions across 58 major assignments, one deadline-shaped habit.',
   },
 } as const;
 

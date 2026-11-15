@@ -90,7 +90,7 @@ The top bar is also a table of contents: each of the three segments is a button 
 
 ## Metadata
 
-`app/layout.tsx` owns the Open Graph / Twitter metadata (canonical URL, theme colour, social card). The social card is the committed `public/og.png` at 1600×1200 — a typographic cover set in the report's own typefaces, deliberately a 4:3 static PNG rather than a generated metadata route. `app/sitemap.ts` and `app/robots.ts` are static exports for the same reason.
+`app/layout.tsx` owns the Open Graph / Twitter metadata (canonical URL, theme colour, social card). The social card is the committed `public/og.png` at 1200×630 — a designed card set in the report's own typefaces, deliberately a static PNG rather than a generated metadata route. `app/sitemap.ts` and `app/robots.ts` are static exports for the same reason.
 
 The narrative copy is also rendered as a visually hidden `StorySummary` section so the text and numbers exist in the initial HTML for crawlers and screen readers.
 
